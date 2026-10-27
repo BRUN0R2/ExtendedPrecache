@@ -21,7 +21,7 @@ devem acompanhar o item correspondente. As regras estão em [RULES.md](RULES.md)
 - [x] Configurar CMake e C++26 obrigatório, sem redução silenciosa do padrão.
 - [x] Criar uma DLL Windows x86 com contrato de diagnóstico versionado.
 - [x] Implementar e testar tipos de domínio e catálogo independente do motor, incluindo índices além de 512.
-- [x] Configurar verificações locais e preparar workflow de CI com toolchain e actions fixados; execução remota pendente.
+- [x] Configurar verificações locais e CI com toolchain e actions fixados; os primeiros runs de push e PR passaram.
 - [x] Executar build, testes, clang-tidy e clang-format; resultados em `verification.md`.
 
 ## 3. Investigação dos motores
@@ -37,6 +37,7 @@ devem acompanhar o item correspondente. As regras estão em [RULES.md](RULES.md)
 
 - [ ] Definir capacidades configuráveis a partir das evidências; não prometer infinitude.
 - [ ] Projetar negociação de capacidades antes de transmitir índices estendidos.
+- [ ] Implementar as entradas e o ciclo de vida do plugin Metamod do servidor.
 - [ ] Implementar adaptador HLDS com detecção exata de versão e falha segura.
 - [ ] Implementar adaptador CS 1.6 com o mesmo contrato e ciclo de vida.
 - [ ] Integrar armazenamento e todos os produtores/consumidores de índices.
@@ -52,8 +53,8 @@ devem acompanhar o item correspondente. As regras estão em [RULES.md](RULES.md)
 - [ ] Documentar instalação e matriz de versões efetivamente suportadas.
 - [x] Adotar MIT para o código original e manter fontes de pesquisa fora do produto; incorporação de terceiros exige licença comprovada.
 - [x] Configurar remoto GitHub e assinatura SSH específica, com geração e registro autorizados pelo mantenedor.
-- [ ] Revisar diff, criar commit assinado e PR, acompanhar CI e revisões.
-- [ ] Integrar somente o head revisado, verificar assinatura e CI de `main`, limpar branches com segurança.
+- [x] Revisar a fundação, criar commit assinado e PR e verificar os primeiros runs de CI.
+- [ ] Concluir publicação da extensão funcional: integrar o head revisado, verificar assinatura e CI de `main` e limpar branches com segurança.
 
 ## Estado atual
 
@@ -70,5 +71,8 @@ Publicação: repositório público
 A chave `ExtendedPrecache commit signing` foi gerada e registrada após autorização
 explícita; assinatura e verificação local foram configuradas por repositório.
 O commit de inicialização `8920ac6` foi confirmado como Verified no GitHub.
-A fundação segue pela branch `codex/projectFoundation`; CI e merge do código
-ainda precisam ser concluídos.
+A fundação foi submetida no [PR #1](https://github.com/BRUN0R2/ExtendedPrecache/pull/1),
+com os primeiros runs de [push](https://github.com/BRUN0R2/ExtendedPrecache/actions/runs/40441784269)
+e [PR](https://github.com/BRUN0R2/ExtendedPrecache/actions/runs/40441852829) aprovados
+para `5a96f33`. O PR preserva o registro de revisão e integração desse marco.
+A entrega da extensão funcional continua pendente nas etapas 3 a 5.
