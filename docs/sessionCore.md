@@ -147,6 +147,11 @@ bootstrap nativo, demos e codecs de dados continuam exigindo os componentes
 correspondentes. Nenhum desses testes é uma conexão CS 1.6/ReHLDS ou validação
 de instalação Metamod. Próximas etapas continuam em `TODO.md`.
 
+O [desenho de integração](integrationVerification.md) especifica como o futuro
+provider deve separar sua reserva privada do mapa compartilhado, preservar o
+acordo no reset inicial e retirar bindings. Esses owners e a ABI 2 continuam
+somente especificados; não são novas funções deste núcleo nem exports da DLL.
+
 Referências: [SAX](https://json.nlohmann.me/api/json_sax/),
 [parser SAX](https://json.nlohmann.me/api/basic_json/sax_parse/),
 [release JSON 3.12.0](https://github.com/nlohmann/json/releases/tag/v3.12.0),

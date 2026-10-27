@@ -33,6 +33,8 @@ do domínio permanece one-based: genéricos e decals exigirão tradução explí
 e um resultado zero desses motores não pode ser usado como um booleano de erro.
 Categoria desabilitada será um estado explícito; não construir um `CatalogLimits`
 inválido com capacidade zero nem alterar silenciosamente seu contrato atual.
+Equações, aliases e ordinais estão em [indexMapping.md](indexMapping.md). Elas
+validam o número efetivo congelado antes da capacidade/representação do consumidor.
 
 Os tetos são restrições escalares do projeto de contrato: contadores nativos
 assinados, slot zero e API de eventos. **Não são máximos implementados ou
@@ -224,3 +226,6 @@ nova conexão e geração de mapa; não alteram capacidades em uso nem o signifi
 de um handle. Uma mudança de mapa encerra o acordo ampliado e exige nova conexão
 e negociação. O mecanismo nativo de reconexão e o descarregamento seguro serão
 verificados nos adaptadores. Não há renegociação in-place no contrato 1.
+Mover caches K/A/H também exige quiescência global dos consumidores; sem essa
+prova, alterar suas capacidades exige reinício do processo. Ownership e orçamento
+compartilhado estão em [storageOwnership.md](storageOwnership.md).

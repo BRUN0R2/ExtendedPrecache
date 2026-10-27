@@ -201,3 +201,9 @@ essas traduções explicitamente, sem reutilizar um zero ambíguo como sucesso/e
 Antes de implementar cada integração, seu desenho deverá resolver as restrições
 deste relatório, definir a ABI exata e os testes em instalação isolada. A auditoria
 não aprova uma capacidade numérica universal nem suporte a builds adicionais.
+
+O desenho seguinte está registrado em [índices](indexMapping.md),
+[ownership](storageOwnership.md), [ciclo de mapa](mapLifecycle.md) e
+[ABI de integração](integrationAbi.md). A [matriz de verificação](integrationVerification.md)
+relaciona as restrições acima às decisões e às provas nativas ainda pendentes.
+Isso encerra a especificação desses contratos, sem aprovar um hook ou adaptador.

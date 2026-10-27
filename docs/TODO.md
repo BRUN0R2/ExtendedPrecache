@@ -38,7 +38,7 @@ devem acompanhar o item correspondente. As regras estão em [RULES.md](RULES.md)
 - [x] Definir capacidades configuráveis em `capabilities.md`: entradas úteis, slots, caches privados, bytes, políticas, schema fechado e exemplos; validação da especificação em `contractVerification.md`.
 - [x] Projetar negociação 1.0 em `negotiation.md`: barreira anterior ao sign-on, transportes de controle existentes, identidades, mínimo do par, confirmação mútua, deadline e recusa; corpus de 26 frames fixos, sem ativação do motor.
 - [x] Implementar leitor/validador de configuração e codec/state machine de negociação isolados em C++26, usando o corpus versionado antes dos adaptadores; API, providers e ciclo de vida em `sessionCore.md`, checks em `verification.md`.
-- [ ] Especificar conversão zero/um, ownership estável, ciclo de mapa e ABI versionada, resolvendo as restrições de `engineAudit.md` antes dos adaptadores.
+- [x] Especificar conversão zero/um, ownership estável, ciclo de mapa e ABI versionada, resolvendo as restrições de `engineAudit.md` antes dos adaptadores; contratos em `indexMapping.md`, `storageOwnership.md`, `mapLifecycle.md` e `integrationAbi.md`, matriz e verificações em `integrationVerification.md`.
 - [ ] Projetar deltas, consistência, efeitos, limites por bytes e representação em demos; definir contratos para mensagens de mods e módulos externos do perfil final.
 - [ ] Comprovar a barreira anterior a `SV_SendServerinfo`, o bootstrap de user messages, o despacho de `clc_stringcmd`, drain/reset e reconexão nos hashes selecionados antes de habilitar o transporte.
 - [ ] Implementar as entradas e o ciclo de vida do plugin Metamod do servidor.
@@ -75,10 +75,16 @@ de sign-on. A DLL continua diagnóstica: não liga esse núcleo, lê esses arqui
 ou envia frames. O perfil de dados ampliado dos exemplos continua fictício e
 indisponível, até a definição/validação completa de seus codecs.
 
+A conversão zero/um, aliases, ordinais, ownership de arenas/leases, ciclo de mapa
+e ABI de integração 2.0 foram especificados. O header C e os vetores dessa ABI
+são artefatos de contrato; não há novo export, storage nativo ou adaptador
+implementado. A ABI diagnóstica 1 permanece inalterada. As 21 provas nativas
+inventariadas continuam pendentes e condicionam a aprovação de um perfil.
+
 A ampliação funcional e os adaptadores Metamod/cliente continuam pendentes.
 Nenhum arquivo da instalação do jogo ou servidor foi alterado. Próximo trabalho:
-fechar conversão zero/um, ownership nativo, ciclo de mapa e ABI; depois completar
-contratos de dados e provar o bootstrap antes de implementar os adaptadores.
+projetar codecs de dados (deltas, consistência, efeitos, bytes, demos e mensagens
+de módulos), depois provar o bootstrap antes de implementar os adaptadores.
 
 Publicação: repositório público
 [`BRUN0R2/ExtendedPrecache`](https://github.com/BRUN0R2/ExtendedPrecache) criado.
@@ -96,4 +102,7 @@ commit Verified `41b380a`, com
 A especificação foi integrada no [PR #3](https://github.com/BRUN0R2/ExtendedPrecache/pull/3),
 commit Verified `bbd3593`, com
 [CI de main aprovado](https://github.com/BRUN0R2/ExtendedPrecache/actions/runs/40457161406).
+O núcleo de sessão foi integrado no [PR #4](https://github.com/BRUN0R2/ExtendedPrecache/pull/4),
+commit Verified `b1a5319`, com
+[CI de main aprovado](https://github.com/BRUN0R2/ExtendedPrecache/actions/runs/40463038418).
 A entrega da extensão funcional continua pendente nas etapas 4 e 5.

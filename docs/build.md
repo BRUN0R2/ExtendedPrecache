@@ -45,6 +45,8 @@ Essa configuração não produz uma DLL do motor e não comprova suporte de inte
 Os testes de configuração rodam em qualquer plataforma do núcleo; testes com CNG
 e sessões completas são adicionados em Windows. Em Windows, ambos os builds
 incluem esses testes, mesmo com a DLL desativada.
+`integrationContractTests` também verifica as equações/layouts da especificação
+de integração; ele não implementa o serviço ou adaptadores.
 
 ## Análise estática e formatação
 
@@ -59,6 +61,17 @@ continuam ativos em builds Release, sem depender de `assert`.
 No modo MSVC, `clang-tidy` recebe `/EHsc` também em seus argumentos de tooling,
 para analisar o mesmo modo de exceções da compilação. Isso permite verificar as
 fronteiras que convertem falhas de alocação em erros tipados. Não há checks desativados.
+
+O header C da ABI planejada é compilado como consumidor C17 independente,
+sem mudar a linguagem do produto. No ambiente x86, conferir explicitamente o
+target do Clang, que pode ter x64 como padrão mesmo com SDK/libs x86:
+
+```powershell
+clang-cl --target=i686-pc-windows-msvc /TC /std:c17 /W4 /WX /c /I docs/contracts tests/integrationAbiCProbe.c /Foout/windowsX86/integrationAbiCProbe.obj
+```
+
+Incluir `.h`/`.c` de `docs/contracts` e `tests` na verificação de clang-format.
+Layout e limitações dessa probe em [integrationVerification.md](integrationVerification.md).
 
 ## Artefatos e pesquisa
 
