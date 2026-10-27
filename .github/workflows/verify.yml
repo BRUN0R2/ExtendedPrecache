@@ -46,9 +46,11 @@ jobs:
           $env:PATH = (Join-Path $toolsDirectory "$archiveRoot/bin") + ';' + $env:PATH
           cmake --preset windowsX86 -DextendedPrecacheEnableAnalysis=ON
           cmake --build --preset windowsX86
+          clang-cl --target=i686-pc-windows-msvc /TC /std:c17 /W4 /WX /c /I docs/contracts `
+            tests/integrationAbiCProbe.c /Foout/windowsX86/integrationAbiCProbe.obj
           ctest --preset windowsX86
-          $sourceFiles = Get-ChildItem -Path include,src,tests -Recurse -File `
-            -Include *.hpp,*.cpp | ForEach-Object FullName
+          $sourceFiles = Get-ChildItem -Path include,src,tests,docs/contracts -Recurse -File `
+            -Include *.hpp,*.cpp,*.h,*.c | ForEach-Object FullName
           clang-format --dry-run --Werror $sourceFiles
       - name: Preserve diagnostic build
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

@@ -15,7 +15,7 @@ CS 1.6 x86                          HLDS/ReHLDS x86
 
 O domínio não depende de Windows, Metamod, SDKs do jogo ou offsets. Os adaptadores
 traduzirão as regras reais de cada motor para esse domínio. O transporte deverá
-definir capacidades e mensagens a partir da auditoria completa do protocolo.
+aplicar os contratos de capacidade e negociação, provando o bootstrap auditado.
 
 Não há interfaces abstratas especulativas: os adaptadores e o protocolo serão
 introduzidos quando existirem consumidores e evidências suficientes.
@@ -43,7 +43,8 @@ comportamento exato do motor e tratar aliases antes de registrar caminhos.
 Genéricos e decals do motor aceitam índices desde zero; ordinais da lista global
 também são um domínio distinto. A auditoria demonstrou que o catálogo atual não
 pode ser ligado diretamente a esses campos. As traduções e os resultados de erro
-precisam de contratos próprios, sem mudar silenciosamente a semântica existente.
+têm [contrato próprio](indexMapping.md), sem mudar a semântica existente. O retorno
+zero por alias no registro genérico também é separado de um índice zero válido.
 
 O catálogo oferece registro, busca por nome e congelamento. Após congelar, ainda
 resolve entradas existentes, mas recusa novos registros. Uma nova instância deve
@@ -89,6 +90,10 @@ O [orçamento](memoryBudget.md) separa tabelas de rede, caches locais, HUD e dad
 dos assets. Nenhum desses resultados aprova um adaptador por endereço fixo.
 
 Os [vetores offline](contractVerification.md) são a referência externa dos testes
-do núcleo C++26, não bytes gerados pelo codec sob teste. Estado do acordo deve ficar fora
-do `client_state_t` zerado no serverinfo; ownership, geração de handles e ABI dos
-hooks ainda exigem desenho concreto e validação antes dos adaptadores.
+do núcleo C++26, não bytes gerados pelo codec sob teste. O desenho de
+[ownership](storageOwnership.md), [ciclo de mapa](mapLifecycle.md) e
+[ABI 2.0](integrationAbi.md) define reservas duráveis, caches sem realocação sob
+empréstimo, handles vinculados à geração e retirada com quiescência. São contratos
+especificados, ainda sem código de storage/adaptador. A ABI nova copia metadados
+e não exporta ponteiros do motor; as APIs externas antigas conservam seus limites.
+Provar o bootstrap e os bindings exatos continua obrigatório antes de habilitá-los.

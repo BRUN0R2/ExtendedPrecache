@@ -36,3 +36,9 @@ contratos separados desta ABI 1. As especificações em `capabilities.md` e
 
 Mudanças incompatíveis de layout, semântica ou convenção exigem nova versão de ABI
 e documentação da migração antes da implementação.
+
+A [ABI de integração 2.0](integrationAbi.md) foi especificada separadamente, com
+declarações C somente em `docs/contracts`. Nenhum símbolo ou layout novo está
+implementado/exportado na DLL. A retirada futura da consulta foundation v1 em
+um artefato funcional está documentada como migração de major, sem alterar o
+comportamento atual ou converter ponteiros entre os dois contratos.

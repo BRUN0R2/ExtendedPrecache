@@ -99,6 +99,10 @@ auto main(int argumentCount, char *arguments[]) -> int {
         if (!suite.check(symbol != nullptr, "resolve undecorated C export")) {
             return suite.finish();
         }
+        constexpr auto plannedIntegrationExport = "extendedPrecacheGetIntegrationApi";
+        static_cast<void>(
+            suite.check(GetProcAddress(library.get(), plannedIntegrationExport) == nullptr,
+                        "planned integration ABI must not be exported by the diagnostic DLL"));
         testQuery(suite, reinterpret_cast<QueryInfo>(symbol));
         return suite.finish();
     });

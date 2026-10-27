@@ -63,3 +63,6 @@ O contrato de [capacidades](capabilities.md) expressa entradas úteis; converter
 modelos/sons/eventos em slots físicos com N+1 antes de aplicar esta tabela.
 A seleção de sessão e os exemplos configuráveis são especificações, com orçamento
 local e preparo obrigatório, sem alegação de medição ou ativação na DLL atual.
+O [contrato de ownership](storageOwnership.md) acrescenta a política de arenas
+estáveis, pins, orçamento compartilhado e pico durante sobreposição de gerações.
+Não modifica os custos estáticos desta tabela nem permite realocação sob leitores.

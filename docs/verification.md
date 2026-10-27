@@ -129,3 +129,22 @@ Reservas e disponibilidade de perfil usadas nos testes são sintéticas; não h�
 medição de RAM dos motores, integração Metamod, transporte nativo ou codecs de
 dados ampliados. A DLL mantém `engineExtensionActive=0`. Os critérios de tráfego
 legado e bootstrap ainda dependem dos próximos módulos e da integração real.
+
+## Especificação de integração — 27/10/2026
+
+Índices zero/um e aliases, ownership, arenas/leases, ciclo de mapa e ABI 2.0
+planejada foram especificados. A [matriz de verificação](integrationVerification.md)
+liga cada restrição auditada à decisão e às 21 provas nativas ainda pendentes.
+Os perfis continuam indisponíveis; não houve implementação de adaptadores.
+
+Clang 23.1.4 C++26 x86, clang-tidy, formatação e seis executáveis CTest passaram:
+**7.460 checks**, incluindo 120 das equações/layouts/inventário e o novo check
+de ausência do export planejado. GCC 16.2.0 x64 passou nos cinco executáveis do
+núcleo, **7.444 checks**. A probe C17 passou nos dois compiladores; em Clang o
+target x86 foi explícito e o Machine COFF do objeto foi conferido. Os PODs,
+tamanhos e offsets são comparados aos valores fixos do novo corpus; esses
+resultados não provam chamadas, allocators, resets ou unload de um motor.
+
+Código de produção, ABI diagnóstica atual, contratos de aplicação/dados e os
+26 frames de negociação permanecem inalterados. A nova ABI existe somente como
+documentação/header de especificação e sua migração futura está explícita.
