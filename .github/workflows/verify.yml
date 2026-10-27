@@ -1,0 +1,58 @@
+name: Verify
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  windowsX86:
+    name: C++26 Windows x86
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Prepare stable Clang and verify
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+          $llvmVersion = '23.1.4'
+          $archiveHash = '1A3F2F998E230B5791CC4E2BFE11A1F7C07FE42C96FF44F227C9DB0BEDFAF091'
+          $archiveRoot = "clang+llvm-$llvmVersion-x86_64-pc-windows-msvc"
+          $toolsDirectory = Join-Path $PWD '.local/toolchain'
+          New-Item -ItemType Directory -Path $toolsDirectory -Force | Out-Null
+          $archivePath = Join-Path $toolsDirectory 'llvm.tar.zst'
+          $archiveUrl = "https://github.com/llvm/llvm-project/releases/download/llvmorg-$llvmVersion/$archiveRoot.tar.zst"
+          Invoke-WebRequest -Uri $archiveUrl -OutFile $archivePath
+          if ((Get-FileHash -Algorithm SHA256 -LiteralPath $archivePath).Hash -ne $archiveHash) {
+            throw 'LLVM archive digest mismatch'
+          }
+          & "$env:ProgramFiles/7-Zip/7z.exe" x $archivePath "-o$toolsDirectory" -y -bso0 -bsp0
+          tar -xf (Join-Path $toolsDirectory 'llvm.tar') -C $toolsDirectory `
+            "$archiveRoot/bin/clang.exe" "$archiveRoot/bin/clang-cl.exe" `
+            "$archiveRoot/bin/clang-scan-deps.exe" `
+            "$archiveRoot/bin/clang-format.exe" "$archiveRoot/bin/clang-tidy.exe" `
+            "$archiveRoot/bin/lld-link.exe" "$archiveRoot/bin/llvm-lib.exe" `
+            "$archiveRoot/lib/clang"
+          $vswhere = "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe"
+          $visualStudioPath = & $vswhere -latest -products * `
+            -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          if (-not $visualStudioPath) { throw 'A stable Visual Studio C++ toolchain is required' }
+          Import-Module (Join-Path $visualStudioPath 'Common7/Tools/Microsoft.VisualStudio.DevShell.dll')
+          Enter-VsDevShell -VsInstallPath $visualStudioPath -SkipAutomaticLocation `
+            -DevCmdArguments '-arch=x86 -host_arch=x64'
+          $env:PATH = (Join-Path $toolsDirectory "$archiveRoot/bin") + ';' + $env:PATH
+          cmake --preset windowsX86 -DextendedPrecacheEnableAnalysis=ON
+          cmake --build --preset windowsX86
+          ctest --preset windowsX86
+          $sourceFiles = Get-ChildItem -Path include,src,tests -Recurse -File `
+            -Include *.hpp,*.cpp | ForEach-Object FullName
+          clang-format --dry-run --Werror $sourceFiles
+      - name: Preserve diagnostic build
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: extendedPrecacheFoundationWindowsX86
+          path: out/windowsX86/extendedPrecache.dll
+          if-no-files-found: error
