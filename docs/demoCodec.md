@@ -87,14 +87,29 @@ Registrar apenas dados S→C aceitos do canal, mantendo origem/ordem/tempo e gap
 nativos de não confiável. source=0 pode conter serviços mistos; classificar cada
 envelope pela rota aprovada, sem deduzir entrega do bit reliable do pacote.
 source=1 só contém dados confiáveis reassemblados; nativeSequence é a sequência
-do pacote que completou a reassemblagem. Não gravar fragmentos individuais.
-Handshake EPCN, C→S, schemas e catálogo transferidos no
-bootstrap não são duplicados como packets: seus artefatos canônicos estão no
-prelúdio. Gravar o primeiro serverinfo em bootstrap e iniciar a sequência de dados
-no valor anterior ao primeiro registro retido do snapshot inicial. As sequências
-iniciais explícitas permitem essa omissão sem relaxar a validação posterior.
+do pacote que completou a reassemblagem. Não gravar fragmentos individuais nem
+headers UDP/netchan: packetBytes começa no primeiro opcode de serviço retido.
+Handshake EPCN, C→S, schemas e catálogo transferidos no bootstrap não são
+duplicados como packets: seus artefatos canônicos estão no prelúdio. Gravar o
+primeiro serverinfo somente em bootstrap. Preservar, na ordem de captura, todos
+os demais serviços nativeExact aprovados após esse SVC 11, inclusive registros
+de user messages, lightstyles e demais dados de inicialização necessários.
 
-Manter em storage orçado os bytes de bootstrap/estado inicial enquanto o prelúdio
+O parser aprovado delimita serviços completos antes de remover apenas os
+registros omitidos. Se um pacote mistura metadados omitidos e serviços retidos,
+concatenar os serviços retidos sem alterar seus bytes/ordem e recalcular
+packetBytes; pacote resultante vazio não gera bloco. Isso exige prova de framing
+de cada gramática, não cortes por busca de opcode. O binding consome o controle
+reservado sem chamar uma NegotiationSession ou a ClientDLL prematuramente.
+
+firstReliableSequence e firstUnreliableSequence são os próximos números EPD2
+esperados no fluxo retido, não o último número aceito nem um valor decrementado.
+Como schemas/catálogo são prefixo confiável antes do snapshot, firstReliableSequence
+é a sequência de frameBegin inicial; firstUnreliableSequence é zero. Serviços
+nativeExact anteriores ao snapshot não consomem esses contadores. As sequências
+iniciais explícitas permitem omitir metadados sem relaxar a validação posterior.
+
+Manter em storage orçado os serviços de bootstrap e bytes do estado inicial enquanto o prelúdio
 é completado; não passar de limits.demoBootstrapBytes ou escrever metadados de
 outra geração. Depois do início retido, registrar todo envelope de dados aceito,
 incluindo os frames descartados por perda de base, para que a reprodução preserve

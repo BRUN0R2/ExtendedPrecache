@@ -64,7 +64,7 @@
     },
     {
       "path": "docs/deltaCodec.md",
-      "sha256": "f0b6d381b9ec9364433edf058fa84054b181fbdb9ed1c8f806a00e2f16fa2f11"
+      "sha256": "42eebc8b60c84ae7b4b93a2c902d6fb13ececf8dc8f8db7b79b93db64bb99007"
     },
     {
       "path": "docs/effectCodecs.md",
@@ -76,7 +76,7 @@
     },
     {
       "path": "docs/demoCodec.md",
-      "sha256": "fa080a8f6ebbef5b2e145b5786d4dd71a4a21c6ea71848c286a6b5012a43406b"
+      "sha256": "5de89b41b2d534e99256edaf6a683dd539ed897c1b7e88ecb6a3f8c73f33a1cd"
     },
     {
       "path": "docs/data/effectSchemasV2.json",

@@ -157,7 +157,8 @@ mantém até `limits.snapshotWindowFrames`, sem referências a memória descarta
 No snapshot inicial, gameplayAck faz também essa confirmação; não enviar frameAck
 separado antes de gameStart nem publicar callbacks por ter recebido frameEnd.
 O emissor mantém ID/hash das bases retidas e um marcador retiredThrough para
-frames já retirados. ACK de frame retirado é consumido sem progresso; não
+frames já retirados, retirando sempre o prefixo mais antigo em ordem de frameId.
+ACK de frame retirado é consumido sem progresso; não
 ressuscita base nem exige histórico ilimitado. ACK futuro/não enviado, hash
 divergente de frame ainda retido ou outra geração é erro. Se não houver base
 confirmada retida, emitir completo; nunca usar um ACK velho como acesso a memória
@@ -177,7 +178,9 @@ frame completo confiável e suspende novos frames de estado **dessa conexão** a
 seu frameAck exato; envelopes de outras classes continuam segundo suas políticas.
 Assim não surge frame mais novo que torne a recuperação obsoleta antes do ACK.
 Se a janela expirar sem base confirmada utilizável, o servidor pode iniciar a
-mesma recuperação confiável, sem aguardar um pedido perdido com o datagrama.
+mesma recuperação confiável sem aguardar resyncRequest.
+O caso inclui perda do frame inteiro, em que o cliente não chegou a produzir
+resyncRequest; o pedido C→S, quando produzido, continua confiável.
 Não fixar contagens/timeout novos nem repetir full frames sem confirmação; o
 timeout/fechamento do canal nativo permanece aplicável durante gameplay.
 Mensagens malformadas, hashes incompatíveis, valores inválidos ou contagens
