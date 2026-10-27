@@ -99,3 +99,33 @@ fundação e `engineExtensionActive=0`.
 Rebuild C++26 Windows x86 com warnings como erros e clang-tidy, CTest com 3.130
 checks de catálogo e 15 de ABI, e clang-format passaram novamente nesta mudança.
 Os 14 arquivos JSON da documentação e 65 links locais foram conferidos.
+
+## Núcleo de configuração e negociação — 27/10/2026
+
+Validador, codec de controle e máquina de estados implementados sem ligar novos
+alvos à DLL. Os vetores de referência anteriores permaneceram inalterados.
+Descrição da API e limites em [sessionCore.md](sessionCore.md).
+
+- Clang 23.1.4, C++26, Windows x86, build Debug, `/W4 /WX`, clang-tidy ativo:
+  build e cinco executáveis CTest passaram.
+- Catálogo: 3.130 checks; configuração/admissão: 112; codec/cripto: 1.733;
+  negociação: 2.349; ABI diagnóstica: 15. Total: 7.339 checks, zero falhas.
+- GCC 16.2.0/MSYS2 UCRT64, C++26, Windows x64, sem DLL e com warnings como erros:
+  quatro executáveis CTest passaram, com os mesmos 7.324 checks do núcleo.
+- `clang-format --dry-run --Werror`, 14 arquivos JSON e 75 links locais: passaram.
+- O diálogo gerado dos dois endpoints coincide com os 26 frames fixos, incluindo
+  os três hashes de transcript. Todos os 12 cenários de estado têm execução C++.
+- Casos adicionais cobrem fila recusada, ACK preparado sem envio, silêncio,
+  deadline até o drain, identidade/nonce/binding, mudança de mapa, perda da reserva,
+  cotação insuficiente/excessiva, falha de alocação, CNG indisponível e quota exata.
+- O provider CNG passou nos conhecidos SHA-256 de vazio e `abc` e nos digests dos
+  artefatos públicos; nonces são obtidos do CSPRNG do Windows.
+- O modo de exceções do tooling foi alinhado ao compilador. A análise expôs um
+  `noexcept` incorreto no construtor do catálogo que contém `unordered_map`; foi
+  removido. O harness reporta exceções inesperadas como falhas de processo,
+  mantendo todos os checks ativos.
+
+Reservas e disponibilidade de perfil usadas nos testes são sintéticas; não há
+medição de RAM dos motores, integração Metamod, transporte nativo ou codecs de
+dados ampliados. A DLL mantém `engineExtensionActive=0`. Os critérios de tráfego
+legado e bootstrap ainda dependem dos próximos módulos e da integração real.

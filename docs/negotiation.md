@@ -1,7 +1,7 @@
 # Negociação cliente/servidor — versão 1.0
 
-Estado: especificação e corpus offline, **sem transporte ou adaptadores
-implementados**. A negociação seleciona um contrato de dados disponível e limites
+Estado: especificação, corpus e [codec/máquina de estados C++26](sessionCore.md),
+**sem transporte ou adaptadores implementados**. A negociação seleciona um contrato de dados disponível e limites
 compatíveis com o mapa completo. Sua conclusão não carrega assets nem libera
 gameplay antes da validação do catálogo e do carregamento previstos nesse contrato.
 
@@ -141,8 +141,9 @@ S/C são sequências independentes, não timestamps:
 | Confirmação | Cliente arma decoder, preservando estado fora do reset nativo; C9 `clientCommitAck` |
 | Liberação | Servidor valida C9 e canal drenado, então libera o sign-on do perfil selecionado |
 
-Nenhuma implementação desta etapa envia esses frames. A ordem é o requisito
-para os futuros codecs e adaptadores, não uma afirmação de suporte atual.
+O núcleo independente gera e valida esses frames; a confirmação de fila é
+explícita e testada por um transporte sintético. Nenhum frame é enviado ao motor
+nesta etapa. A ordem continua obrigatória para os futuros adaptadores.
 
 O servidor calcula o mínimo por campo entre os dois vetores; o cliente recalcula
 e exige **igualdade exata**. Os requisitos do mapa precisam caber em cada campo.
@@ -217,6 +218,8 @@ desde já sem introduzir um protocolo de dados parcialmente definido no motor.
   desde o primeiro `new` enviado, com relógios monotônicos locais. Antes de S0/C0
   cada papel usa seu limite local. Depois, aplicar o mínimo sem reiniciar relógio.
   Isso também limita `awaitOffer` em um servidor silencioso e o preparo local.
+  O núcleo mantém esse prazo até o handoff: drain validado no servidor e primeiro
+  serverinfo validado no cliente. Depois disso, não é um prazo de carga de assets.
   Expirou quando `elapsed >= effectiveTimeout`; progresso/duplicatas não o renovam.
 - Rejeição é terminal. Enviar no máximo um `reject` se houver canal e orçamento;
   caso contrário fechar com motivo local. Nunca emitir estado ampliado, fazer

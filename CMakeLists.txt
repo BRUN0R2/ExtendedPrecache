@@ -29,12 +29,52 @@ target_include_directories(extendedPrecacheDomain PUBLIC include)
 target_compile_features(extendedPrecacheDomain PUBLIC cxx_std_26)
 extendedPrecacheApplyOptions(extendedPrecacheDomain)
 
+include(cmake/sessionDependencies.cmake)
+add_library(extendedPrecacheSession STATIC
+    src/session/sessionTypes.cpp
+    src/session/capabilities.cpp
+    src/session/configuration.cpp
+    src/session/configurationJson.cpp
+    src/session/frameCodec.cpp
+    src/session/negotiation.cpp
+    src/session/negotiationPayload.cpp
+    src/session/negotiationTranscript.cpp
+)
+target_include_directories(extendedPrecacheSession PUBLIC include)
+target_compile_features(extendedPrecacheSession PUBLIC cxx_std_26)
+target_link_libraries(extendedPrecacheSession PRIVATE nlohmann_json::nlohmann_json)
+extendedPrecacheApplyOptions(extendedPrecacheSession)
+
+if(WIN32)
+    add_library(extendedPrecacheCrypto STATIC src/platform/windows/cngDigest.cpp)
+    target_include_directories(extendedPrecacheCrypto PUBLIC include)
+    target_compile_features(extendedPrecacheCrypto PUBLIC cxx_std_26)
+    target_compile_definitions(extendedPrecacheCrypto PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX _WIN32_WINNT=0x0A00)
+    target_link_libraries(extendedPrecacheCrypto PRIVATE bcrypt)
+    extendedPrecacheApplyOptions(extendedPrecacheCrypto)
+endif()
+
 include(CTest)
 if(BUILD_TESTING)
     add_executable(resourceCatalogTests tests/resourceCatalogTests.cpp)
     target_link_libraries(resourceCatalogTests PRIVATE extendedPrecacheDomain)
     extendedPrecacheApplyOptions(resourceCatalogTests)
     add_test(NAME resourceCatalog COMMAND resourceCatalogTests)
+
+    add_executable(configurationTests tests/configurationTests.cpp)
+    target_link_libraries(configurationTests PRIVATE extendedPrecacheSession nlohmann_json::nlohmann_json)
+    extendedPrecacheApplyOptions(configurationTests)
+    add_test(NAME configuration COMMAND configurationTests "${CMAKE_CURRENT_SOURCE_DIR}/docs" "${CMAKE_CURRENT_BINARY_DIR}/configurationFixtures")
+    if(WIN32)
+        add_executable(frameCodecTests tests/frameCodecTests.cpp)
+        target_link_libraries(frameCodecTests PRIVATE extendedPrecacheSession extendedPrecacheCrypto nlohmann_json::nlohmann_json)
+        extendedPrecacheApplyOptions(frameCodecTests)
+        add_test(NAME frameCodec COMMAND frameCodecTests "${CMAKE_CURRENT_SOURCE_DIR}/docs")
+        add_executable(negotiationTests tests/negotiationTests.cpp)
+        target_link_libraries(negotiationTests PRIVATE extendedPrecacheSession extendedPrecacheCrypto nlohmann_json::nlohmann_json)
+        extendedPrecacheApplyOptions(negotiationTests)
+        add_test(NAME negotiation COMMAND negotiationTests "${CMAKE_CURRENT_SOURCE_DIR}/docs")
+    endif()
 endif()
 
 if(extendedPrecacheBuildDll)

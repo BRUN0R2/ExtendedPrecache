@@ -1,6 +1,6 @@
 # Capacidades configuráveis — contrato 1
 
-Estado: **especificação**, anterior aos adaptadores. A DLL de diagnóstico não
+Estado: contrato com [validador e núcleo de sessão](sessionCore.md), anterior aos adaptadores. A DLL de diagnóstico não
 carrega configuração, não anuncia capacidades e mantém `engineExtensionActive=0`.
 Os números abaixo definem políticas e representação; não certificam capacidade
 de um motor. A [auditoria](engineAudit.md) continua sendo a base de evidências.
@@ -55,7 +55,7 @@ dentro de 65.536 bytes, independentemente de `manifestBytes`.
 
 Formato proposto: `extendedPrecache.json`, UTF-8 sem BOM, no máximo 65.536 bytes.
 O caminho será informado ao futuro carregador; não há busca em diretórios do
-jogo nem leitor implementado nesta etapa. Sem arquivo, o futuro leitor utilizará
+jogo. O leitor independente recebe caminho e papel explícitos. Sem arquivo, utiliza
 os valores completos dos exemplos `legacyOnly`, selecionados pelo papel local.
 
 O [schema fechado](configuration.schema.json) usa
@@ -215,8 +215,9 @@ IDs atuais do mapa são pequenos. O catálogo/IDs do servidor permanece o mesmo.
 
 Validar arquivo, campos, dependências, perfil, orçamento e preparo nessa ordem,
 antes de alterar o motor. Erros informam código estável, campo e limites; não
-há coerção, clamp ou ignoração de erro. A implementação do leitor e dos
-validadores de execução continua pendente.
+há coerção, clamp ou ignoração de erro. O leitor e os validadores independentes
+estão implementados; cotação real, módulos e consumidores do motor permanecem
+responsabilidade dos perfis e adaptadores futuros.
 
 Configuração carregada vira um snapshot imutável. Mudanças entram somente em
 nova conexão e geração de mapa; não alteram capacidades em uso nem o significado

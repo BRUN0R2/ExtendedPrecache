@@ -1,9 +1,9 @@
 # Verificação dos contratos — 27/10/2026
 
 Escopo: definições de [capacidades](capabilities.md),
-[negociação 1.0](negotiation.md), schema, exemplos e corpus sintético. Não há
-leitor de configuração, codec de negociação C++ ou adaptador implementado nesta
-mudança. O resultado abaixo verifica a especificação, não um motor em execução.
+[negociação 1.0](negotiation.md), schema, exemplos e corpus sintético. O
+[núcleo C++26](sessionCore.md) agora consome os mesmos vetores em testes de
+configuração, codec e estados. Não há transporte ou adaptador de motor.
 
 ## Resultados offline
 
@@ -22,7 +22,7 @@ Os bytes dos frames foram montados com Node.js e conferidos separadamente com
 `struct`/`hashlib` do Python 3.14.8. O validador JSON Schema foi instalado apenas
 em `.local/contractValidation`; não é dependência da DLL, do CMake ou do runtime.
 O projeto não mudou de linguagem, stack ou ABI. O corpus é a entrada pública
-para os próximos testes do codec C++26.
+para os testes do codec C++26, preservada sem regeneração pelo código sob teste.
 
 Arquivos de referência:
 
@@ -30,10 +30,19 @@ Arquivos de referência:
 - [Admissão e condições legadas](protocol/capacityVectors.json).
 - [Frames, hashes e cenários de ordenação](protocol/negotiationVectors.json).
 
-Os 12 cenários de estado e 14 cenários de compatibilidade adicionais do corpus
-são critérios de aceitação para a implementação. Não foram executados por um
-state machine C++ ou pelo motor; a ordem normal e a aritmética foram conferidas
-offline. Não converter essa distinção em uma afirmação de integração testada.
+Os 12 cenários de estado são executados pela máquina C++26. Também são testados
+o diálogo de dois endpoints, reserva, filas, bindings, quotas e falhas de provider.
+Dos 14 critérios de compatibilidade, políticas/identidades são verificadas pelo
+núcleo; codificação legada de consistência, SVC 36, tamanho completo das mensagens
+e verificação dos módulos exigem os codecs/perfis futuros. Não foram executados
+pelo motor nem substituídos por uma prova numérica de compatibilidade.
+
+Execução C++: `ctest --preset windowsX86 --verbose` lê os arquivos públicos em
+`docs/protocol`. `configurationTests` cobre os 33 casos, seis lexicais e 27 de
+admissão; `frameCodecTests` cobre os 26 frames, 19 erros de framing, todos os
+prefixos truncados, tamanhos exatos, comandos e hashes CNG conhecidos;
+`negotiationTests` compara cada emissão dos dois endpoints aos bytes fixos.
+Resultados e toolchains em [verification.md](verification.md).
 
 ## Valores de referência
 
@@ -86,7 +95,7 @@ for path in Path('docs/examples').glob('*.json'):
 
 Esse comando verifica estrutura, não duplicatas já perdidas pelo parser nem
 relações entre campos. Para essas condições usar o texto lexical e os resultados
-esperados do corpus; o próximo validador C++ deverá consumi-los em testes.
+esperados do corpus; o validador C++ os consome diretamente nos testes.
 
 Os hashes podem ser recalculados diretamente dos frames públicos:
 
@@ -105,7 +114,7 @@ for name, value in [('offer', offer), ('client', client), ('selection', selectio
     print(name, value.hex())
 ```
 
-Para avaliar o futuro codec, comparar seus bytes aos frames fixos, verificar os
+Para avaliar o codec, comparar seus bytes aos frames fixos, verificar os
 erros esperados e assegurar que nenhuma transição anterior a C9 libere sign-on.
 Não gerar a saída esperada pelo próprio codec sob teste. A integração deverá
 validar também os eventos reais de reset/reconexão e o canal legado.

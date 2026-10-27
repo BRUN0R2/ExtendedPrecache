@@ -1,11 +1,26 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdio>
+#include <exception>
 #include <iostream>
 #include <source_location>
 #include <string_view>
 
 namespace extendedPrecache::tests {
+
+template <typename Run> auto runTests(Run run) noexcept -> int {
+    try {
+        return run();
+    } catch (const std::exception &error) {
+        std::fprintf(stderr, "Test execution failed: %s\n", error.what());
+        return 1;
+    } catch (...) {
+        // Exceptions at the process boundary are test failures, including foreign provider faults.
+        std::fputs("Test execution failed with an unknown exception\n", stderr);
+        return 1;
+    }
+}
 
 class TestSuite final {
   public:
