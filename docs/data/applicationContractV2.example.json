@@ -3,7 +3,7 @@
   "specificationOnly": true,
   "availability": "unavailable",
   "dataContractId": 2,
-  "dataContractSha256": "65d5a2ff89a6ad80f84550b4f1071efa8f0955fa7baed9d5ef986230575c5848",
+  "dataContractSha256": "c0dfc974082ccbb18103f8ad37b858ec72bfff43069cc3a19511cfd1ceab8d9d",
   "schemaSetSha256": "e45b93e3c606989f4ae2465fc239fd8694b21bac907d322084bac8efaceaf975",
   "limits": {
     "schemaSetBytes": 65536,
