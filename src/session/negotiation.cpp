@@ -384,7 +384,7 @@ auto NegotiationSession::confirmServerInfo(std::uint32_t protocol, SpawnCount sp
     if (const auto valid = checkContext(context); !valid) {
         return valid;
     }
-    if (state() != SessionState::armed) {
+    if (nativeHandoff || state() != SessionState::armed) {
         return reject({RejectCode::unexpectedMessage});
     }
     if (!snapshot || protocol != legacyProtocolVersion || spawn != snapshot.value().spawn) {

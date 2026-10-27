@@ -34,6 +34,7 @@ automaticamente resolvidos pelo precache.
 - [Orçamento de memória das estruturas](docs/memoryBudget.md)
 - [Capacidades, configuração e admissão](docs/capabilities.md)
 - [Protocolo de negociação 1.0](docs/negotiation.md)
+- [Bootstrap, barreira e limites de transporte](docs/transportBootstrap.md)
 - [API e ciclo de vida do núcleo de sessão](docs/sessionCore.md)
 - [Conversão de índices e namespaces](docs/indexMapping.md)
 - [Ownership e estabilidade dos endereços](docs/storageOwnership.md)
