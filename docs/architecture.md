@@ -61,10 +61,15 @@ A entrada do Metamod é apenas o carregador do lado servidor. Remover uma verifi
 de overflow ou interceptar `PrecacheModel` não amplia os demais arrays e consumidores.
 O adaptador deverá cobrir leitura, escrita, índices, carregamento e encerramento.
 
-Nenhuma largura de campo da futura extensão está definida. A negociação precisa
-ocorrer antes de transmitir índices que o par não consiga representar. Ainda devem
-ser definidos o canal inicial, a recusa de incompatibilidade, limites por sessão e
-interação com deltas, consistência, fragmentação, demos e mensagens de mods.
+A [negociação 1.0](negotiation.md) define o canal de controle, framing, seleção,
+identidades e confirmação antes de liberar o sign-on. As [capacidades](capabilities.md)
+separam contagens, IDs, caches e bytes. Esses contratos ainda não têm leitor,
+codec, state machine ou transporte implementado. Não alteram a ABI de diagnóstico.
+
+O perfil de dados ampliado proposto usa índices/contagens u32, mas seu formato
+completo ainda depende de deltas, consistência, efeitos, áudio, eventos, decals,
+demos e consumidores do mod. O perfil fictício do corpus está indisponível;
+nenhum acordo pode habilitá-lo no motor apenas por possuir um ID ou digest.
 
 Uma sessão sem extensão só poderá continuar se todos os recursos necessários
 couberem nas capacidades comprovadas do par. Não haverá truncamento, reutilização
@@ -78,3 +83,9 @@ selecionados. O [protocolo](protocolAudit.md) exige resolver contagem saturada,
 consistência 5/10/12 bits, campos s16, schemas delta e o buffer de 65.536 bytes.
 O [orçamento](memoryBudget.md) separa tabelas de rede, caches locais, HUD e dados
 dos assets. Nenhum desses resultados aprova um adaptador por endereço fixo.
+
+O próximo módulo será o validador/codec de sessão independente do motor, em C++26.
+Os [vetores offline](contractVerification.md) são a referência externa dos seus
+testes, não bytes gerados pelo codec sob teste. Estado do acordo deve ficar fora
+do `client_state_t` zerado no serverinfo; ownership, geração de handles e ABI dos
+hooks ainda exigem desenho concreto e validação antes dos adaptadores.

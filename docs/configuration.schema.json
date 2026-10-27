@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:extendedPrecache:configuration:1",
+  "title": "ExtendedPrecache configuration contract v1",
+  "description": "Specification only. The diagnostic DLL does not load this configuration.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "role",
+    "connectionPolicy",
+    "limits",
+    "storage",
+    "metadataBudgetBytes",
+    "negotiation"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "role": { "enum": ["server", "client"] },
+    "connectionPolicy": { "enum": ["legacyOnly", "preferExtended", "requireExtended"] },
+    "applicationContractSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "not": { "const": "0000000000000000000000000000000000000000000000000000000000000000" }
+    },
+    "limits": { "$ref": "#/$defs/limits" },
+    "storage": { "type": "object" },
+    "metadataBudgetBytes": { "type": "integer", "minimum": 1, "maximum": 2147483647 },
+    "negotiation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["timeoutMs", "maxBytes"],
+      "properties": {
+        "timeoutMs": { "type": "integer", "minimum": 1000, "maximum": 60000 },
+        "maxBytes": { "type": "integer", "minimum": 1544, "maximum": 4096 }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "role": { "const": "server" } } },
+      "then": { "properties": { "storage": { "$ref": "#/$defs/serverStorage" } } },
+      "else": { "properties": { "storage": { "$ref": "#/$defs/clientStorage" } } }
+    },
+    {
+      "if": { "properties": { "connectionPolicy": { "const": "legacyOnly" } } },
+      "then": {
+        "properties": {
+          "limits": {
+            "properties": {
+              "modelEntries": { "maximum": 511 },
+              "soundEntries": { "maximum": 511 },
+              "genericEntries": { "maximum": 4095 },
+              "eventEntries": { "maximum": 255 },
+              "decalEntries": { "maximum": 512 },
+              "resourceEntries": { "maximum": 4095 },
+              "consistencyEntries": { "maximum": 512 }
+            }
+          },
+          "storage": {
+            "properties": {
+              "knownModelEntries": { "maximum": 1024 },
+              "soundDescriptorEntries": { "maximum": 1024 },
+              "hudSpriteEntries": { "maximum": 256 }
+            }
+          }
+        }
+      },
+      "else": { "required": ["applicationContractSha256"] }
+    }
+  ],
+  "$defs": {
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "modelEntries",
+        "soundEntries",
+        "genericEntries",
+        "eventEntries",
+        "decalEntries",
+        "resourceEntries",
+        "consistencyEntries",
+        "manifestBytes",
+        "chunkBytes",
+        "inFlightBytes",
+        "fileBytes",
+        "reliableMessageBytes"
+      ],
+      "properties": {
+        "modelEntries": { "type": "integer", "minimum": 1, "maximum": 2147483646 },
+        "soundEntries": { "type": "integer", "minimum": 0, "maximum": 2147483646 },
+        "genericEntries": { "type": "integer", "minimum": 0, "maximum": 2147483647 },
+        "eventEntries": { "type": "integer", "minimum": 0, "maximum": 65535 },
+        "decalEntries": { "type": "integer", "minimum": 0, "maximum": 2147483647 },
+        "resourceEntries": { "type": "integer", "minimum": 1, "maximum": 2147483647 },
+        "consistencyEntries": { "type": "integer", "minimum": 0, "maximum": 2147483647 },
+        "manifestBytes": { "type": "integer", "minimum": 1, "maximum": 2147483647 },
+        "chunkBytes": { "type": "integer", "minimum": 1, "maximum": 65536 },
+        "inFlightBytes": { "type": "integer", "minimum": 1, "maximum": 2147483647 },
+        "fileBytes": { "type": "integer", "minimum": 1, "maximum": 16777215 },
+        "reliableMessageBytes": { "type": "integer", "minimum": 1, "maximum": 65536 }
+      }
+    },
+    "serverStorage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["knownModelEntries", "localModelReserve"],
+      "properties": {
+        "knownModelEntries": { "type": "integer", "minimum": 1, "maximum": 5478274 },
+        "localModelReserve": { "type": "integer", "minimum": 0, "maximum": 5478274 }
+      }
+    },
+    "clientStorage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "knownModelEntries",
+        "localModelReserve",
+        "soundDescriptorEntries",
+        "localSoundReserve",
+        "hudSpriteEntries"
+      ],
+      "properties": {
+        "knownModelEntries": { "type": "integer", "minimum": 1, "maximum": 5478274 },
+        "localModelReserve": { "type": "integer", "minimum": 0, "maximum": 5478274 },
+        "soundDescriptorEntries": { "type": "integer", "minimum": 0, "maximum": 29826161 },
+        "localSoundReserve": { "type": "integer", "minimum": 0, "maximum": 29826161 },
+        "hudSpriteEntries": { "type": "integer", "minimum": 0, "maximum": 178956970 }
+      }
+    }
+  }
+}

@@ -81,3 +81,21 @@ commit resultante em `main` devem passar nos checks exigidos por `RULES.md`.
 Relatórios de protocolo e memória descrevem evidências estáticas e vetores de
 aceitação futuros. Não representam testes reais de sign-on, efeitos, áudio,
 consistência, demos ou uso de memória. A extensão funcional permanece pendente.
+
+## Definição de capacidades e negociação — 27/10/2026
+
+Schema fechado, quatro configurações, contrato de negociação 1.0 e corpus de
+referência foram definidos sem alterar código C++, ABI ou motores. A verificação
+offline cobre 33 casos de configuração, 6 lexicais, 19 de framing e 27 de admissão,
+além dos campos/hashes de 26 frames fixos. Método, valores e limitações em
+[contractVerification.md](contractVerification.md).
+
+Esses resultados verificam a especificação. Não são testes de um leitor de
+configuração ou state machine C++ implementado. Os cenários de estado,
+compatibilidade, bootstrap e códigos de recusa ainda devem ser incorporados aos
+testes do próximo módulo e à integração isolada. A DLL mantém estágio de
+fundação e `engineExtensionActive=0`.
+
+Rebuild C++26 Windows x86 com warnings como erros e clang-tidy, CTest com 3.130
+checks de catálogo e 15 de ABI, e clang-format passaram novamente nesta mudança.
+Os 14 arquivos JSON da documentação e 65 links locais foram conferidos.

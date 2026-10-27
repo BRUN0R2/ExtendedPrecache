@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "contractId": 1,
+  "exampleOnly": true,
+  "availability": "unavailable",
+  "purpose": "Negotiation fixtures only; resource, delta, effect and demo codecs are not specified here",
+  "resourceIndexBits": 32,
+  "resourceCountBits": 32,
+  "pathBytes": 63,
+  "decalNameBytes": 15,
+  "fileBytes": 16777215,
+  "maxChunkOverheadBytes": 64
+}

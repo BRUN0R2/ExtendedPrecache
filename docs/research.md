@@ -146,13 +146,23 @@ termos aplicáveis. A implementação atual é original e não depende da NitroA
 
 ## Questões abertas
 
-- Projetar os contratos a partir da auditoria estática dos dois hashes, incluindo
+- Implementar os contratos de capacidades/negociação já especificados, mantendo
   as fronteiras externas e lacunas de análise declaradas, sem alegar prova universal.
 - Definir e validar em execução o primeiro par suportado; hash auditado não é suporte.
 - Verificar HLDS original separadamente do ReHLDS.
 - Determinar carregamento do cliente, ABI do Metamod e disponibilidade dos hooks.
 - Validar em execução serialização, deltas, efeitos, áudio, eventos, decals,
   demos e troca de mapa; a auditoria estática dos codecs está documentada.
-- Medir o orçamento real de memória e definir capacidades/negociação a partir
-  dos custos estáticos e limites por bytes levantados.
+- Medir o orçamento real de memória e validar as capacidades/negociação definidas
+  a partir dos custos estáticos e limites por bytes levantados.
 - Comprovar a integração em uma instalação de teste isolada com recursos reais.
+
+## Fontes que condicionam o bootstrap
+
+Na revisão ReHLDS fixada, `SV_SendServerinfo_internal` emite as descrições delta
+antes de `SV_New_f` chamar `SV_SendUserReg` e a GameDLL `ClientConnect`.
+`SV_ParseStringCommand` pode encaminhar texto para a GameDLL ou command buffer;
+`Netchan_Clear` remove fragments e estado confiável pendente. Por isso, o desenho
+da negociação exige uma barreira anterior ao sign-on e parsers dedicados, em vez
+de depender de um callback tardio. Referências em [negotiation.md](negotiation.md).
+São observações em fonte, não aprovação de hooks ou execução nesses binários.

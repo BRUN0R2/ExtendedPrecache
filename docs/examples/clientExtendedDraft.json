@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "role": "client",
+  "connectionPolicy": "preferExtended",
+  "limits": {
+    "modelEntries": 2048,
+    "soundEntries": 2048,
+    "genericEntries": 4096,
+    "eventEntries": 512,
+    "decalEntries": 512,
+    "resourceEntries": 8192,
+    "consistencyEntries": 1024,
+    "manifestBytes": 2097152,
+    "chunkBytes": 8192,
+    "inFlightBytes": 32768,
+    "fileBytes": 16777215,
+    "reliableMessageBytes": 65536
+  },
+  "storage": {
+    "knownModelEntries": 4096,
+    "localModelReserve": 64,
+    "soundDescriptorEntries": 4096,
+    "localSoundReserve": 64,
+    "hudSpriteEntries": 256
+  },
+  "metadataBudgetBytes": 33554432,
+  "negotiation": {
+    "timeoutMs": 15000,
+    "maxBytes": 4096
+  },
+  "applicationContractSha256": "db2254cb4b74fe68551509d621a9fb157bc8dc1dd42879db40af07519cd18fe5"
+}

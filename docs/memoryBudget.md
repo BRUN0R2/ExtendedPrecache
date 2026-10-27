@@ -58,3 +58,8 @@ até demonstrar que todos os consumidores e o ABI legado foram substituídos.
 Este orçamento encerra o levantamento estático de custos da etapa 3. Medições
 de desempenho, memória residente, estabilidade e uma capacidade padrão aprovada
 continuam pendentes. Nenhuma fórmula aqui autoriza uma configuração do motor.
+
+O contrato de [capacidades](capabilities.md) expressa entradas úteis; converter
+modelos/sons/eventos em slots físicos com N+1 antes de aplicar esta tabela.
+A seleção de sessão e os exemplos configuráveis são especificações, com orçamento
+local e preparo obrigatório, sem alegação de medição ou ativação na DLL atual.

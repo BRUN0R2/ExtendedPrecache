@@ -1,0 +1,494 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Schema and base constraints only; no runtime readiness or adapter support is implied",
+  "fixtureChunkOverheadBytes": 64,
+  "cases": [
+    {
+      "name": "serverLegacy",
+      "base": "../examples/serverLegacy.json",
+      "changes": [],
+      "expected": "validBaseConstraints",
+      "field": null
+    },
+    {
+      "name": "clientLegacy",
+      "base": "../examples/clientLegacy.json",
+      "changes": [],
+      "expected": "validBaseConstraints",
+      "field": null
+    },
+    {
+      "name": "serverExtendedDraft",
+      "base": "../examples/serverExtendedDraft.json",
+      "changes": [],
+      "expected": "validBaseConstraints",
+      "field": null
+    },
+    {
+      "name": "clientExtendedDraft",
+      "base": "../examples/clientExtendedDraft.json",
+      "changes": [],
+      "expected": "validBaseConstraints",
+      "field": null
+    },
+    {
+      "name": "unknownRootKey",
+      "base": "../examples/serverLegacy.json",
+      "changes": [
+        {
+          "path": [
+            "unlimited"
+          ],
+          "value": true
+        }
+      ],
+      "expected": "schemaError",
+      "field": null
+    },
+    {
+      "name": "unknownLimit",
+      "base": "../examples/serverLegacy.json",
+      "changes": [
+        {
+          "path": [
+            "limits",
+            "spriteEntries"
+          ],
+          "value": 1024
+        }
+      ],
+      "expected": "schemaError",
+      "field": null
+    },
+    {
+      "name": "unknownRole",
+      "base": "../examples/serverLegacy.json",
+      "changes": [
+        {
+          "path": [
+            "role"
+          ],
+          "value": "proxy"
+        }
+      ],
+      "expected": "schemaError",
+      "field": null
+    },
+    {
+      "name": "unknownPolicy",
+      "base": "../examples/serverLegacy.json",
+      "changes": [
+        {
+          "path": [
+            "connectionPolicy"
+          ],
+          "value": "automatic"
+        }
+      ],
+      "expected": "schemaError",
+      "field": null
+    },
+    {
+      "name": "unknownSchemaVersion",
+      "base": "../examples/serverLegacy.json",
+      "changes": [
+        {
+          "path": [
+            "schemaVersion"
+          ],
+          "value": 2
+        }
+      ],
+      "expected": "schemaError",
+      "field": null
+    },
+    {
+      "name": "numericString",
+      "base": "../examples/serverLegacy.json",
+      "changes": [
+        {
+          "path": [
+            "limits",
+            "modelEntries"
+          ],
+          "value": "511"
+        }
+      ],
+      "expected": "schemaError",
+      "field": null
+    },
+    {
+      "name": "negativeEntryCount",
+      "base": "../examples/serverLegacy.json",
+      "changes": [
+        {
+          "path": [
+            "limits",
+            "soundEntries"
+          ],
+          "value": -1
+        }
+      ],
+      "expected": "schemaError",
+      "field": null
+    },
+    {
+      "name": "zeroWorldCapacity",
+      "base": "../examples/serverLegacy.json",
+      "changes": [
+        {
+          "path": [
+            "limits",
+            "modelEntries"
+          ],
+          "value": 0
+        }
+      ],
+      "expected": "schemaError",
+      "field": null
+    },
+    {
+      "name": "legacyModelOverflow",
+      "base": "../examples/serverLegacy.json",
+      "changes": [
+        {
+          "path": [
+            "limits",
+            "modelEntries"
+          ],
+          "value": 512
+        }
+      ],
+      "expected": "schemaError",
+      "field": null
+    },
+    {
+      "name": "legacyResourceCount4096",
+      "base": "../examples/serverLegacy.json",
+      "changes": [
+        {
+          "path": [
+            "limits",
+            "resourceEntries"
+          ],
+          "value": 4096
+        }
+      ],
+      "expected": "schemaError",
+      "field": null
+    },
+    {
+      "name": "eventApiOverflow",
+      "base": "../examples/serverExtendedDraft.json",
+      "changes": [
+        {
+          "path": [
+            "limits",
+            "eventEntries"
+          ],
+          "value": 65536
+        }
+      ],
+      "expected": "schemaError",
+      "field": null
+    },
+    {
+      "name": "fileSizeOverflow",
+      "base": "../examples/serverExtendedDraft.json",
+      "changes": [
+        {
+          "path": [
+            "limits",
+            "fileBytes"
+          ],
+          "value": 16777216
+        }
+      ],
+      "expected": "schemaError",
+      "field": null
+    },
+    {
+      "name": "messageBufferOverflow",
+      "base": "../examples/serverExtendedDraft.json",
+      "changes": [
+        {
+          "path": [
+            "limits",
+            "reliableMessageBytes"
+          ],
+          "value": 65537
+        }
+      ],
+      "expected": "schemaError",
+      "field": null
+    },
+    {
+      "name": "controlBudgetTooSmall",
+      "base": "../examples/clientLegacy.json",
+      "changes": [
+        {
+          "path": [
+            "negotiation",
+            "maxBytes"
+          ],
+          "value": 1543
+        }
+      ],
+      "expected": "schemaError",
+      "field": null
+    },
+    {
+      "name": "tooShortDeadline",
+      "base": "../examples/clientLegacy.json",
+      "changes": [
+        {
+          "path": [
+            "negotiation",
+            "timeoutMs"
+          ],
+          "value": 999
+        }
+      ],
+      "expected": "schemaError",
+      "field": null
+    },
+    {
+      "name": "serverCannotConfigureHud",
+      "base": "../examples/serverLegacy.json",
+      "changes": [
+        {
+          "path": [
+            "storage",
+            "hudSpriteEntries"
+          ],
+          "value": 256
+        }
+      ],
+      "expected": "schemaError",
+      "field": null
+    },
+    {
+      "name": "zeroContractHash",
+      "base": "../examples/serverExtendedDraft.json",
+      "changes": [
+        {
+          "path": [
+            "applicationContractSha256"
+          ],
+          "value": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "expected": "schemaError",
+      "field": null
+    },
+    {
+      "name": "missingExtendedContract",
+      "base": "../examples/serverExtendedDraft.json",
+      "changes": [
+        {
+          "remove": [
+            "applicationContractSha256"
+          ]
+        }
+      ],
+      "expected": "schemaError",
+      "field": null
+    },
+    {
+      "name": "serverModelCacheShort",
+      "base": "../examples/serverExtendedDraft.json",
+      "changes": [
+        {
+          "path": [
+            "storage",
+            "knownModelEntries"
+          ],
+          "value": 4100
+        }
+      ],
+      "expected": "semanticError",
+      "field": "storage.knownModelEntries"
+    },
+    {
+      "name": "clientModelCacheShort",
+      "base": "../examples/clientExtendedDraft.json",
+      "changes": [
+        {
+          "path": [
+            "storage",
+            "knownModelEntries"
+          ],
+          "value": 2300
+        }
+      ],
+      "expected": "semanticError",
+      "field": "storage.knownModelEntries"
+    },
+    {
+      "name": "clientSoundCacheShort",
+      "base": "../examples/clientExtendedDraft.json",
+      "changes": [
+        {
+          "path": [
+            "storage",
+            "soundDescriptorEntries"
+          ],
+          "value": 2048
+        }
+      ],
+      "expected": "semanticError",
+      "field": "storage.soundDescriptorEntries"
+    },
+    {
+      "name": "insufficientChunkFraming",
+      "base": "../examples/clientExtendedDraft.json",
+      "changes": [
+        {
+          "path": [
+            "limits",
+            "reliableMessageBytes"
+          ],
+          "value": 8192
+        }
+      ],
+      "expected": "semanticError",
+      "field": "limits.reliableMessageBytes"
+    },
+    {
+      "name": "insufficientQueueFraming",
+      "base": "../examples/clientExtendedDraft.json",
+      "changes": [
+        {
+          "path": [
+            "limits",
+            "inFlightBytes"
+          ],
+          "value": 8192
+        }
+      ],
+      "expected": "semanticError",
+      "field": "limits.inFlightBytes"
+    },
+    {
+      "name": "tooManyConsistencyEntries",
+      "base": "../examples/clientExtendedDraft.json",
+      "changes": [
+        {
+          "path": [
+            "limits",
+            "consistencyEntries"
+          ],
+          "value": 8193
+        }
+      ],
+      "expected": "semanticError",
+      "field": "limits.consistencyEntries"
+    },
+    {
+      "name": "metadataBelowFloor",
+      "base": "../examples/serverExtendedDraft.json",
+      "changes": [
+        {
+          "path": [
+            "metadataBudgetBytes"
+          ],
+          "value": 1
+        }
+      ],
+      "expected": "semanticError",
+      "field": "metadataBudgetBytes"
+    },
+    {
+      "name": "applicationModelReserve",
+      "base": "../examples/clientExtendedDraft.json",
+      "changes": [
+        {
+          "path": [
+            "storage",
+            "localModelReserve"
+          ],
+          "value": 63
+        }
+      ],
+      "expected": "semanticError",
+      "field": "storage.localModelReserve"
+    },
+    {
+      "name": "applicationSoundReserve",
+      "base": "../examples/clientExtendedDraft.json",
+      "changes": [
+        {
+          "path": [
+            "storage",
+            "localSoundReserve"
+          ],
+          "value": 63
+        }
+      ],
+      "expected": "semanticError",
+      "field": "storage.localSoundReserve"
+    },
+    {
+      "name": "applicationHudReserve",
+      "base": "../examples/clientExtendedDraft.json",
+      "changes": [
+        {
+          "path": [
+            "storage",
+            "hudSpriteEntries"
+          ],
+          "value": 255
+        }
+      ],
+      "expected": "semanticError",
+      "field": "storage.hudSpriteEntries"
+    },
+    {
+      "name": "disableSoundCategory",
+      "base": "../examples/clientLegacy.json",
+      "changes": [
+        {
+          "path": [
+            "limits",
+            "soundEntries"
+          ],
+          "value": 0
+        }
+      ],
+      "expected": "validBaseConstraints",
+      "field": null
+    }
+  ],
+  "lexicalCases": [
+    {
+      "name": "duplicateKey",
+      "rawJson": "{\"schemaVersion\":1,\"schemaVersion\":1}",
+      "expected": "duplicateKey"
+    },
+    {
+      "name": "fractionalIntegerToken",
+      "rawJson": "{\"schemaVersion\":1.0}",
+      "expected": "invalidNumberToken"
+    },
+    {
+      "name": "exponentIntegerToken",
+      "rawJson": "{\"schemaVersion\":1e0}",
+      "expected": "invalidNumberToken"
+    },
+    {
+      "name": "nonFiniteNumber",
+      "rawJson": "{\"schemaVersion\":NaN}",
+      "expected": "invalidNumberToken"
+    },
+    {
+      "name": "bom",
+      "rawJson": "﻿{}",
+      "expected": "invalidEncoding"
+    },
+    {
+      "name": "malformedJson",
+      "rawJson": "{",
+      "expected": "invalidJson"
+    }
+  ]
+}

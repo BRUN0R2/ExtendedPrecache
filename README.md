@@ -7,6 +7,9 @@ com cliente e servidor trabalhando de forma coordenada.
 e ainda não é um plugin carregável pelo Metamod.** Não há versões do motor
 declaradas como suportadas nesta etapa.
 
+As capacidades configuráveis e a negociação 1.0 estão especificadas. O leitor
+de configuração, os codecs e os adaptadores ainda não estão implementados.
+
 O objetivo é substituir limites fixos por capacidades configuráveis e verificadas,
 respeitando memória, índices e protocolo. Não existe capacidade literalmente infinita.
 Sprites de rede compartilham o domínio de modelos; sprites do HUD têm um cache
@@ -25,6 +28,9 @@ automaticamente resolvidos pelo precache.
 - [Auditoria dos consumidores e ciclos de vida](docs/engineAudit.md)
 - [Auditoria do protocolo e fronteiras de índices](docs/protocolAudit.md)
 - [Orçamento de memória das estruturas](docs/memoryBudget.md)
+- [Capacidades, configuração e admissão](docs/capabilities.md)
+- [Protocolo de negociação 1.0](docs/negotiation.md)
+- [Verificação dos contratos e vetores offline](docs/contractVerification.md)
 - [Compilação e verificações](docs/build.md)
 - [Contrato público da DLL](docs/abi.md)
 - [Resultados e limites da verificação](docs/verification.md)

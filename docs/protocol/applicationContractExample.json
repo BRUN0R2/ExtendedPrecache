@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "exampleOnly": true,
+  "availability": "unavailable",
+  "requiredServerLocalModels": 64,
+  "requiredClientLocalModels": 64,
+  "requiredClientLocalSounds": 64,
+  "requiredClientHudSprites": 256,
+  "moduleProfiles": []
+}

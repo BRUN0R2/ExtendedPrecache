@@ -30,5 +30,9 @@ Não atravessam essa fronteira exceções, containers STL, strings alocadas, own
 ou referências C++. A consulta é sem alocação, `noexcept` e não altera o motor.
 Ela não é o handshake de rede nem a API do Metamod.
 
+O arquivo de configuração com `schemaVersion=1` e a negociação de rede 1.0 são
+contratos separados desta ABI 1. As especificações em `capabilities.md` e
+`negotiation.md` não adicionam ativação, estruturas ou exports à DLL atual.
+
 Mudanças incompatíveis de layout, semântica ou convenção exigem nova versão de ABI
 e documentação da migração antes da implementação.

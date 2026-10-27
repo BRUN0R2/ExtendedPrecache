@@ -1,0 +1,481 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Offline conformance corpus; all readiness is synthetic; no engine or network was executed",
+  "fields": [
+    {
+      "id": 1,
+      "name": "modelEntries"
+    },
+    {
+      "id": 2,
+      "name": "soundEntries"
+    },
+    {
+      "id": 3,
+      "name": "genericEntries"
+    },
+    {
+      "id": 4,
+      "name": "eventEntries"
+    },
+    {
+      "id": 5,
+      "name": "decalEntries"
+    },
+    {
+      "id": 6,
+      "name": "resourceEntries"
+    },
+    {
+      "id": 7,
+      "name": "consistencyEntries"
+    },
+    {
+      "id": 8,
+      "name": "manifestBytes"
+    },
+    {
+      "id": 9,
+      "name": "chunkBytes"
+    },
+    {
+      "id": 10,
+      "name": "inFlightBytes"
+    },
+    {
+      "id": 11,
+      "name": "fileBytes"
+    },
+    {
+      "id": 12,
+      "name": "reliableMessageBytes"
+    }
+  ],
+  "messageKinds": {
+    "serverOffer": 1,
+    "applicationContract": 2,
+    "dataContract": 3,
+    "requirementsPage": 4,
+    "serverLimitsPage": 5,
+    "offerEnd": 6,
+    "clientHello": 7,
+    "offerReference": 8,
+    "clientLimitsPage": 9,
+    "clientCapabilitiesEnd": 10,
+    "selectionPage": 11,
+    "selectionEnd": 12,
+    "clientReady": 13,
+    "serverCommit": 14,
+    "clientCommitAck": 15,
+    "reject": 16,
+    "catalogIdentity": 17
+  },
+  "identities": {
+    "serverNonceHex": "102132435465768798a9bacbdcedfe0f",
+    "clientNonceHex": "00112233445566778899aabbccddeeff",
+    "applicationContractSha256": "db2254cb4b74fe68551509d621a9fb157bc8dc1dd42879db40af07519cd18fe5",
+    "dataContractSha256": "0363144866e709fa502a8db0d4c864e98f706c3a5c3b79b638dbf2b65114c819",
+    "catalogDigestSeedHex": "457874656e64656450726563616368652073796e74686574696320636174616c6f6720666f72206e65676f74696174696f6e20746573747320763100",
+    "catalogSha256": "bbbc064acf9edcddf641965f2170aa9a7a0d85bf03de02a1c0f676c65529e3de"
+  },
+  "serverConfiguration": "../examples/serverExtendedDraft.json",
+  "clientConfiguration": "../examples/clientExtendedDraft.json",
+  "requirements": {
+    "modelEntries": 600,
+    "soundEntries": 520,
+    "genericEntries": 100,
+    "eventEntries": 300,
+    "decalEntries": 300,
+    "resourceEntries": 1820,
+    "consistencyEntries": 700,
+    "manifestBytes": 125000,
+    "chunkBytes": 512,
+    "inFlightBytes": 8192,
+    "fileBytes": 1048576,
+    "reliableMessageBytes": 32768
+  },
+  "selectedLimits": {
+    "modelEntries": 2048,
+    "soundEntries": 2048,
+    "genericEntries": 4096,
+    "eventEntries": 512,
+    "decalEntries": 512,
+    "resourceEntries": 8192,
+    "consistencyEntries": 1024,
+    "manifestBytes": 2097152,
+    "chunkBytes": 8192,
+    "inFlightBytes": 32768,
+    "fileBytes": 16777215,
+    "reliableMessageBytes": 65536
+  },
+  "digests": {
+    "offerSha256": "4ed6a71b7738f2788f3122b8552edc20efeff663d1561d0884980d17e2d47602",
+    "clientSha256": "fb804fee59a39d4ce582389fd90866a1c7df58c9148410019925953fc0094f3f",
+    "selectionSha256": "964796632de0ac40818505ce120225fbe84ab4f5f1f42581863e9877b0f21254"
+  },
+  "sizes": {
+    "headerBytes": 28,
+    "maxBodyBytes": 32,
+    "maxFrameBytes": 60,
+    "serverFrames": 16,
+    "clientFrames": 10,
+    "serverLogicalBytes": 952,
+    "clientLogicalBytes": 592,
+    "combinedLogicalBytes": 1544,
+    "serverWithGoldSrcFramingBytes": 1003,
+    "clientWithGoldSrcFramingBytes": 1254
+  },
+  "frames": [
+    {
+      "direction": "server",
+      "sequence": 0,
+      "kind": "serverOffer",
+      "bodyHex": "00000200250000000900000000000000983a000001000000",
+      "frameHex": "4550434e01011800102132435465768798a9bacbdcedfe0f0000000000000200250000000900000000000000983a000001000000"
+    },
+    {
+      "direction": "server",
+      "sequence": 1,
+      "kind": "applicationContract",
+      "bodyHex": "db2254cb4b74fe68551509d621a9fb157bc8dc1dd42879db40af07519cd18fe5",
+      "frameHex": "4550434e01022000102132435465768798a9bacbdcedfe0f01000000db2254cb4b74fe68551509d621a9fb157bc8dc1dd42879db40af07519cd18fe5"
+    },
+    {
+      "direction": "server",
+      "sequence": 2,
+      "kind": "dataContract",
+      "bodyHex": "0363144866e709fa502a8db0d4c864e98f706c3a5c3b79b638dbf2b65114c819",
+      "frameHex": "4550434e01032000102132435465768798a9bacbdcedfe0f020000000363144866e709fa502a8db0d4c864e98f706c3a5c3b79b638dbf2b65114c819"
+    },
+    {
+      "direction": "server",
+      "sequence": 3,
+      "kind": "catalogIdentity",
+      "bodyHex": "bbbc064acf9edcddf641965f2170aa9a7a0d85bf03de02a1c0f676c65529e3de",
+      "frameHex": "4550434e01112000102132435465768798a9bacbdcedfe0f03000000bbbc064acf9edcddf641965f2170aa9a7a0d85bf03de02a1c0f676c65529e3de"
+    },
+    {
+      "direction": "server",
+      "sequence": 4,
+      "kind": "requirementsPage",
+      "bodyHex": "010000005802000002000000080200000300000064000000040000002c010000",
+      "frameHex": "4550434e01042000102132435465768798a9bacbdcedfe0f04000000010000005802000002000000080200000300000064000000040000002c010000"
+    },
+    {
+      "direction": "server",
+      "sequence": 5,
+      "kind": "requirementsPage",
+      "bodyHex": "050000002c010000060000001c07000007000000bc0200000800000048e80100",
+      "frameHex": "4550434e01042000102132435465768798a9bacbdcedfe0f05000000050000002c010000060000001c07000007000000bc0200000800000048e80100"
+    },
+    {
+      "direction": "server",
+      "sequence": 6,
+      "kind": "requirementsPage",
+      "bodyHex": "09000000000200000a000000002000000b000000000010000c00000000800000",
+      "frameHex": "4550434e01042000102132435465768798a9bacbdcedfe0f0600000009000000000200000a000000002000000b000000000010000c00000000800000"
+    },
+    {
+      "direction": "server",
+      "sequence": 7,
+      "kind": "serverLimitsPage",
+      "bodyHex": "0100000000100000020000000010000003000000002000000400000000040000",
+      "frameHex": "4550434e01052000102132435465768798a9bacbdcedfe0f070000000100000000100000020000000010000003000000002000000400000000040000"
+    },
+    {
+      "direction": "server",
+      "sequence": 8,
+      "kind": "serverLimitsPage",
+      "bodyHex": "0500000000040000060000000040000007000000000800000800000000004000",
+      "frameHex": "4550434e01052000102132435465768798a9bacbdcedfe0f080000000500000000040000060000000040000007000000000800000800000000004000"
+    },
+    {
+      "direction": "server",
+      "sequence": 9,
+      "kind": "serverLimitsPage",
+      "bodyHex": "09000000004000000a000000000001000b000000ffffff000c00000000000100",
+      "frameHex": "4550434e01052000102132435465768798a9bacbdcedfe0f0900000009000000004000000a000000000001000b000000ffffff000c00000000000100"
+    },
+    {
+      "direction": "server",
+      "sequence": 10,
+      "kind": "offerEnd",
+      "bodyHex": "4ed6a71b7738f2788f3122b8552edc20efeff663d1561d0884980d17e2d47602",
+      "frameHex": "4550434e01062000102132435465768798a9bacbdcedfe0f0a0000004ed6a71b7738f2788f3122b8552edc20efeff663d1561d0884980d17e2d47602"
+    },
+    {
+      "direction": "client",
+      "sequence": 0,
+      "kind": "clientHello",
+      "bodyHex": "0000010000112233445566778899aabbccddeeff983a0000",
+      "frameHex": "4550434e01071800102132435465768798a9bacbdcedfe0f000000000000010000112233445566778899aabbccddeeff983a0000"
+    },
+    {
+      "direction": "client",
+      "sequence": 1,
+      "kind": "offerReference",
+      "bodyHex": "4ed6a71b7738f2788f3122b8552edc20efeff663d1561d0884980d17e2d47602",
+      "frameHex": "4550434e01082000102132435465768798a9bacbdcedfe0f010000004ed6a71b7738f2788f3122b8552edc20efeff663d1561d0884980d17e2d47602"
+    },
+    {
+      "direction": "client",
+      "sequence": 2,
+      "kind": "applicationContract",
+      "bodyHex": "db2254cb4b74fe68551509d621a9fb157bc8dc1dd42879db40af07519cd18fe5",
+      "frameHex": "4550434e01022000102132435465768798a9bacbdcedfe0f02000000db2254cb4b74fe68551509d621a9fb157bc8dc1dd42879db40af07519cd18fe5"
+    },
+    {
+      "direction": "client",
+      "sequence": 3,
+      "kind": "dataContract",
+      "bodyHex": "0363144866e709fa502a8db0d4c864e98f706c3a5c3b79b638dbf2b65114c819",
+      "frameHex": "4550434e01032000102132435465768798a9bacbdcedfe0f030000000363144866e709fa502a8db0d4c864e98f706c3a5c3b79b638dbf2b65114c819"
+    },
+    {
+      "direction": "client",
+      "sequence": 4,
+      "kind": "clientLimitsPage",
+      "bodyHex": "0100000000080000020000000008000003000000001000000400000000020000",
+      "frameHex": "4550434e01092000102132435465768798a9bacbdcedfe0f040000000100000000080000020000000008000003000000001000000400000000020000"
+    },
+    {
+      "direction": "client",
+      "sequence": 5,
+      "kind": "clientLimitsPage",
+      "bodyHex": "0500000000020000060000000020000007000000000400000800000000002000",
+      "frameHex": "4550434e01092000102132435465768798a9bacbdcedfe0f050000000500000000020000060000000020000007000000000400000800000000002000"
+    },
+    {
+      "direction": "client",
+      "sequence": 6,
+      "kind": "clientLimitsPage",
+      "bodyHex": "09000000002000000a000000008000000b000000ffffff000c00000000000100",
+      "frameHex": "4550434e01092000102132435465768798a9bacbdcedfe0f0600000009000000002000000a000000008000000b000000ffffff000c00000000000100"
+    },
+    {
+      "direction": "client",
+      "sequence": 7,
+      "kind": "clientCapabilitiesEnd",
+      "bodyHex": "fb804fee59a39d4ce582389fd90866a1c7df58c9148410019925953fc0094f3f",
+      "frameHex": "4550434e010a2000102132435465768798a9bacbdcedfe0f07000000fb804fee59a39d4ce582389fd90866a1c7df58c9148410019925953fc0094f3f"
+    },
+    {
+      "direction": "server",
+      "sequence": 11,
+      "kind": "selectionPage",
+      "bodyHex": "0100000000080000020000000008000003000000001000000400000000020000",
+      "frameHex": "4550434e010b2000102132435465768798a9bacbdcedfe0f0b0000000100000000080000020000000008000003000000001000000400000000020000"
+    },
+    {
+      "direction": "server",
+      "sequence": 12,
+      "kind": "selectionPage",
+      "bodyHex": "0500000000020000060000000020000007000000000400000800000000002000",
+      "frameHex": "4550434e010b2000102132435465768798a9bacbdcedfe0f0c0000000500000000020000060000000020000007000000000400000800000000002000"
+    },
+    {
+      "direction": "server",
+      "sequence": 13,
+      "kind": "selectionPage",
+      "bodyHex": "09000000002000000a000000008000000b000000ffffff000c00000000000100",
+      "frameHex": "4550434e010b2000102132435465768798a9bacbdcedfe0f0d00000009000000002000000a000000008000000b000000ffffff000c00000000000100"
+    },
+    {
+      "direction": "server",
+      "sequence": 14,
+      "kind": "selectionEnd",
+      "bodyHex": "964796632de0ac40818505ce120225fbe84ab4f5f1f42581863e9877b0f21254",
+      "frameHex": "4550434e010c2000102132435465768798a9bacbdcedfe0f0e000000964796632de0ac40818505ce120225fbe84ab4f5f1f42581863e9877b0f21254"
+    },
+    {
+      "direction": "client",
+      "sequence": 8,
+      "kind": "clientReady",
+      "bodyHex": "964796632de0ac40818505ce120225fbe84ab4f5f1f42581863e9877b0f21254",
+      "frameHex": "4550434e010d2000102132435465768798a9bacbdcedfe0f08000000964796632de0ac40818505ce120225fbe84ab4f5f1f42581863e9877b0f21254"
+    },
+    {
+      "direction": "server",
+      "sequence": 15,
+      "kind": "serverCommit",
+      "bodyHex": "964796632de0ac40818505ce120225fbe84ab4f5f1f42581863e9877b0f21254",
+      "frameHex": "4550434e010e2000102132435465768798a9bacbdcedfe0f0f000000964796632de0ac40818505ce120225fbe84ab4f5f1f42581863e9877b0f21254"
+    },
+    {
+      "direction": "client",
+      "sequence": 9,
+      "kind": "clientCommitAck",
+      "bodyHex": "964796632de0ac40818505ce120225fbe84ab4f5f1f42581863e9877b0f21254",
+      "frameHex": "4550434e010f2000102132435465768798a9bacbdcedfe0f09000000964796632de0ac40818505ce120225fbe84ab4f5f1f42581863e9877b0f21254"
+    }
+  ],
+  "framingCases": [
+    {
+      "name": "validOffer",
+      "frameHex": "4550434e01011800102132435465768798a9bacbdcedfe0f0000000000000200250000000900000000000000983a000001000000",
+      "expected": "valid"
+    },
+    {
+      "name": "shortHeader",
+      "frameHex": "4550434e01011800102132435465768798a9bacbdcedfe0f000000",
+      "expected": "malformedFrame"
+    },
+    {
+      "name": "wrongMagic",
+      "frameHex": "0050434e01011800102132435465768798a9bacbdcedfe0f0000000000000200250000000900000000000000983a000001000000",
+      "expected": "malformedFrame"
+    },
+    {
+      "name": "unsupportedMajor",
+      "frameHex": "4550434e02011800102132435465768798a9bacbdcedfe0f0000000000000200250000000900000000000000983a000001000000",
+      "expected": "unsupportedVersion"
+    },
+    {
+      "name": "unknownKind",
+      "frameHex": "4550434e01ff1800102132435465768798a9bacbdcedfe0f0000000000000200250000000900000000000000983a000001000000",
+      "expected": "unexpectedMessage"
+    },
+    {
+      "name": "oversizedBody",
+      "frameHex": "4550434e01012100102132435465768798a9bacbdcedfe0f0000000000000200250000000900000000000000983a000001000000",
+      "expected": "malformedFrame"
+    },
+    {
+      "name": "declaredLengthMismatch",
+      "frameHex": "4550434e01011700102132435465768798a9bacbdcedfe0f0000000000000200250000000900000000000000983a000001000000",
+      "expected": "malformedFrame"
+    },
+    {
+      "name": "zeroSessionNonce",
+      "frameHex": "4550434e01011800000000000000000000000000000000000000000000000200250000000900000000000000983a000001000000",
+      "expected": "malformedFrame"
+    },
+    {
+      "name": "sequenceOutOfRange",
+      "frameHex": "4550434e01011800102132435465768798a9bacbdcedfe0f2000000000000200250000000900000000000000983a000001000000",
+      "expected": "unexpectedSequence"
+    },
+    {
+      "name": "nonzeroReserved",
+      "frameHex": "4550434e01011800102132435465768798a9bacbdcedfe0f0000000000000201250000000900000000000000983a000001000000",
+      "expected": "malformedFrame"
+    },
+    {
+      "name": "unsupportedMinor",
+      "frameHex": "4550434e01011800102132435465768798a9bacbdcedfe0f0000000001000200250000000900000000000000983a000001000000",
+      "expected": "unsupportedVersion"
+    },
+    {
+      "name": "duplicateCapacityId",
+      "frameHex": "4550434e01042000102132435465768798a9bacbdcedfe0f04000000010000005802000001000000080200000300000064000000040000002c010000",
+      "expected": "malformedFrame"
+    },
+    {
+      "name": "unknownCapacityId",
+      "frameHex": "4550434e01042000102132435465768798a9bacbdcedfe0f040000000d0000005802000002000000080200000300000064000000040000002c010000",
+      "expected": "malformedFrame"
+    },
+    {
+      "name": "capacityReservedBytes",
+      "frameHex": "4550434e01042000102132435465768798a9bacbdcedfe0f04000000010100005802000002000000080200000300000064000000040000002c010000",
+      "expected": "malformedFrame"
+    },
+    {
+      "name": "zeroClientNonce",
+      "frameHex": "4550434e01071800102132435465768798a9bacbdcedfe0f000000000000010000000000000000000000000000000000983a0000",
+      "expected": "malformedFrame"
+    },
+    {
+      "name": "validRejection",
+      "frameHex": "4550434e01100c00102132435465768798a9bacbdcedfe0f0b000000060001000008000001080000",
+      "expected": "valid"
+    },
+    {
+      "name": "unknownRejectionCode",
+      "frameHex": "4550434e01100c00102132435465768798a9bacbdcedfe0f0b0000000f0001000008000001080000",
+      "expected": "malformedFrame"
+    },
+    {
+      "name": "unknownRejectionField",
+      "frameHex": "4550434e01100c00102132435465768798a9bacbdcedfe0f0b00000006000d000008000001080000",
+      "expected": "malformedFrame"
+    },
+    {
+      "name": "rejectionReservedByte",
+      "frameHex": "4550434e01100c00102132435465768798a9bacbdcedfe0f0b000000060001010008000001080000",
+      "expected": "malformedFrame"
+    }
+  ],
+  "sequencingCases": [
+    {
+      "name": "exactDuplicate",
+      "operation": "repeat identical last frame",
+      "expected": "ignoreWithoutAdvancingOrExtendingDeadline"
+    },
+    {
+      "name": "alteredDuplicate",
+      "operation": "change body of an already received sequence",
+      "expected": "unexpectedSequence"
+    },
+    {
+      "name": "gap",
+      "operation": "deliver sequence 2 while sequence 1 is expected",
+      "expected": "unexpectedSequence"
+    },
+    {
+      "name": "staleSession",
+      "operation": "deliver a frame with a previous nonzero nonce",
+      "expected": "discardWithoutAdvancingOrExtendingDeadline"
+    },
+    {
+      "name": "prematureCommit",
+      "operation": "deliver serverCommit before selectionEnd and clientReady",
+      "expected": "unexpectedMessage"
+    },
+    {
+      "name": "wrongSelectionEcho",
+      "operation": "change clientReady digest",
+      "expected": "transcriptMismatch"
+    },
+    {
+      "name": "expired",
+      "operation": "reach effective deadline while waiting for clientCommitAck",
+      "expected": "deadlineExceeded"
+    },
+    {
+      "name": "mapChanged",
+      "operation": "change mapEpoch before release",
+      "expected": "mapChanged"
+    },
+    {
+      "name": "readyOnly",
+      "operation": "receive clientReady without clientCommitAck",
+      "expected": "keepSignonBlocked"
+    },
+    {
+      "name": "unavailableDataContract",
+      "operation": "use the example data contract in a real endpoint",
+      "expected": "unsupportedContract"
+    },
+    {
+      "name": "wrongOfferHash",
+      "operation": "change offerEnd digest",
+      "expected": "transcriptMismatch"
+    },
+    {
+      "name": "noOfferDeadline",
+      "operation": "reach local deadline in awaitOffer without receiving serverOffer or legacy signon",
+      "expected": "deadlineExceeded"
+    }
+  ],
+  "rejectionExample": {
+    "point": "Server rejects after C7, before S11",
+    "direction": "server",
+    "sequence": 11,
+    "errorCode": 6,
+    "fieldId": 1,
+    "offered": 2048,
+    "required": 2049,
+    "frameHex": "4550434e01100c00102132435465768798a9bacbdcedfe0f0b000000060001000008000001080000"
+  }
+}
