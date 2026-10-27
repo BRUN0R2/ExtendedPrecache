@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "role": "server",
+  "connectionPolicy": "legacyOnly",
+  "limits": {
+    "modelEntries": 511,
+    "soundEntries": 511,
+    "genericEntries": 4095,
+    "eventEntries": 255,
+    "decalEntries": 512,
+    "resourceEntries": 4095,
+    "consistencyEntries": 512,
+    "manifestBytes": 4194304,
+    "chunkBytes": 16384,
+    "inFlightBytes": 65536,
+    "fileBytes": 16777215,
+    "reliableMessageBytes": 65536
+  },
+  "storage": {
+    "knownModelEntries": 1024,
+    "localModelReserve": 64
+  },
+  "metadataBudgetBytes": 16777216,
+  "negotiation": {
+    "timeoutMs": 15000,
+    "maxBytes": 4096
+  }
+}

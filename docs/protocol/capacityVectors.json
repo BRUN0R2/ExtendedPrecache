@@ -1,0 +1,566 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Synthetic admission arithmetic, independent of actual map serialization or runtime support",
+  "negotiationVectors": "negotiationVectors.json",
+  "cases": [
+    {
+      "name": "mapAboveLegacyTablesFitsExtendedPair",
+      "changes": [],
+      "expected": "admit"
+    },
+    {
+      "name": "modelEntriesAtLimit",
+      "changes": [
+        {
+          "path": [
+            "modelEntries"
+          ],
+          "value": 2048
+        },
+        {
+          "path": [
+            "resourceEntries"
+          ],
+          "value": 3268
+        }
+      ],
+      "expected": "admit",
+      "fieldId": 0
+    },
+    {
+      "name": "modelEntriesAboveLimit",
+      "changes": [
+        {
+          "path": [
+            "modelEntries"
+          ],
+          "value": 2049
+        },
+        {
+          "path": [
+            "resourceEntries"
+          ],
+          "value": 3269
+        }
+      ],
+      "expected": "capacityInsufficient",
+      "fieldId": 1
+    },
+    {
+      "name": "soundEntriesAtLimit",
+      "changes": [
+        {
+          "path": [
+            "soundEntries"
+          ],
+          "value": 2048
+        },
+        {
+          "path": [
+            "resourceEntries"
+          ],
+          "value": 3348
+        }
+      ],
+      "expected": "admit",
+      "fieldId": 0
+    },
+    {
+      "name": "soundEntriesAboveLimit",
+      "changes": [
+        {
+          "path": [
+            "soundEntries"
+          ],
+          "value": 2049
+        },
+        {
+          "path": [
+            "resourceEntries"
+          ],
+          "value": 3349
+        }
+      ],
+      "expected": "capacityInsufficient",
+      "fieldId": 2
+    },
+    {
+      "name": "genericEntriesAtLimit",
+      "changes": [
+        {
+          "path": [
+            "genericEntries"
+          ],
+          "value": 4096
+        },
+        {
+          "path": [
+            "resourceEntries"
+          ],
+          "value": 5816
+        }
+      ],
+      "expected": "admit",
+      "fieldId": 0
+    },
+    {
+      "name": "genericEntriesAboveLimit",
+      "changes": [
+        {
+          "path": [
+            "genericEntries"
+          ],
+          "value": 4097
+        },
+        {
+          "path": [
+            "resourceEntries"
+          ],
+          "value": 5817
+        }
+      ],
+      "expected": "capacityInsufficient",
+      "fieldId": 3
+    },
+    {
+      "name": "eventEntriesAtLimit",
+      "changes": [
+        {
+          "path": [
+            "eventEntries"
+          ],
+          "value": 512
+        },
+        {
+          "path": [
+            "resourceEntries"
+          ],
+          "value": 2032
+        }
+      ],
+      "expected": "admit",
+      "fieldId": 0
+    },
+    {
+      "name": "eventEntriesAboveLimit",
+      "changes": [
+        {
+          "path": [
+            "eventEntries"
+          ],
+          "value": 513
+        },
+        {
+          "path": [
+            "resourceEntries"
+          ],
+          "value": 2033
+        }
+      ],
+      "expected": "capacityInsufficient",
+      "fieldId": 4
+    },
+    {
+      "name": "decalEntriesAtLimit",
+      "changes": [
+        {
+          "path": [
+            "decalEntries"
+          ],
+          "value": 512
+        },
+        {
+          "path": [
+            "resourceEntries"
+          ],
+          "value": 2032
+        }
+      ],
+      "expected": "admit",
+      "fieldId": 0
+    },
+    {
+      "name": "decalEntriesAboveLimit",
+      "changes": [
+        {
+          "path": [
+            "decalEntries"
+          ],
+          "value": 513
+        },
+        {
+          "path": [
+            "resourceEntries"
+          ],
+          "value": 2033
+        }
+      ],
+      "expected": "capacityInsufficient",
+      "fieldId": 5
+    },
+    {
+      "name": "consistencyEntriesAtLimit",
+      "changes": [
+        {
+          "path": [
+            "consistencyEntries"
+          ],
+          "value": 1024
+        }
+      ],
+      "expected": "admit",
+      "fieldId": 0
+    },
+    {
+      "name": "consistencyEntriesAboveLimit",
+      "changes": [
+        {
+          "path": [
+            "consistencyEntries"
+          ],
+          "value": 1025
+        }
+      ],
+      "expected": "capacityInsufficient",
+      "fieldId": 7
+    },
+    {
+      "name": "manifestBytesAtLimit",
+      "changes": [
+        {
+          "path": [
+            "manifestBytes"
+          ],
+          "value": 2097152
+        }
+      ],
+      "expected": "admit",
+      "fieldId": 0
+    },
+    {
+      "name": "manifestBytesAboveLimit",
+      "changes": [
+        {
+          "path": [
+            "manifestBytes"
+          ],
+          "value": 2097153
+        }
+      ],
+      "expected": "capacityInsufficient",
+      "fieldId": 8
+    },
+    {
+      "name": "chunkBytesAtLimit",
+      "changes": [
+        {
+          "path": [
+            "chunkBytes"
+          ],
+          "value": 8192
+        },
+        {
+          "path": [
+            "inFlightBytes"
+          ],
+          "value": 8256
+        }
+      ],
+      "expected": "admit",
+      "fieldId": 0
+    },
+    {
+      "name": "chunkBytesAboveLimit",
+      "changes": [
+        {
+          "path": [
+            "chunkBytes"
+          ],
+          "value": 8193
+        },
+        {
+          "path": [
+            "inFlightBytes"
+          ],
+          "value": 8257
+        }
+      ],
+      "expected": "capacityInsufficient",
+      "fieldId": 9
+    },
+    {
+      "name": "inFlightBytesAtLimit",
+      "changes": [
+        {
+          "path": [
+            "inFlightBytes"
+          ],
+          "value": 32768
+        }
+      ],
+      "expected": "admit",
+      "fieldId": 0
+    },
+    {
+      "name": "inFlightBytesAboveLimit",
+      "changes": [
+        {
+          "path": [
+            "inFlightBytes"
+          ],
+          "value": 32769
+        }
+      ],
+      "expected": "capacityInsufficient",
+      "fieldId": 10
+    },
+    {
+      "name": "fileBytesAtLimit",
+      "changes": [
+        {
+          "path": [
+            "fileBytes"
+          ],
+          "value": 16777215
+        }
+      ],
+      "expected": "admit",
+      "fieldId": 0
+    },
+    {
+      "name": "fileBytesAboveLimit",
+      "changes": [
+        {
+          "path": [
+            "fileBytes"
+          ],
+          "value": 16777216
+        }
+      ],
+      "expected": "capacityInsufficient",
+      "fieldId": 11
+    },
+    {
+      "name": "reliableMessageBytesAtLimit",
+      "changes": [
+        {
+          "path": [
+            "reliableMessageBytes"
+          ],
+          "value": 65536
+        }
+      ],
+      "expected": "admit",
+      "fieldId": 0
+    },
+    {
+      "name": "reliableMessageBytesAboveLimit",
+      "changes": [
+        {
+          "path": [
+            "reliableMessageBytes"
+          ],
+          "value": 65537
+        }
+      ],
+      "expected": "capacityInsufficient",
+      "fieldId": 12
+    },
+    {
+      "name": "resourceEntriesAtLimit",
+      "changes": [
+        {
+          "path": [
+            "modelEntries"
+          ],
+          "value": 2048
+        },
+        {
+          "path": [
+            "soundEntries"
+          ],
+          "value": 2048
+        },
+        {
+          "path": [
+            "genericEntries"
+          ],
+          "value": 3072
+        },
+        {
+          "path": [
+            "eventEntries"
+          ],
+          "value": 512
+        },
+        {
+          "path": [
+            "decalEntries"
+          ],
+          "value": 512
+        },
+        {
+          "path": [
+            "resourceEntries"
+          ],
+          "value": 8192
+        }
+      ],
+      "expected": "admit",
+      "fieldId": 0
+    },
+    {
+      "name": "resourceEntriesAboveLimit",
+      "changes": [
+        {
+          "path": [
+            "modelEntries"
+          ],
+          "value": 2048
+        },
+        {
+          "path": [
+            "soundEntries"
+          ],
+          "value": 2048
+        },
+        {
+          "path": [
+            "genericEntries"
+          ],
+          "value": 3073
+        },
+        {
+          "path": [
+            "eventEntries"
+          ],
+          "value": 512
+        },
+        {
+          "path": [
+            "decalEntries"
+          ],
+          "value": 512
+        },
+        {
+          "path": [
+            "resourceEntries"
+          ],
+          "value": 8193
+        }
+      ],
+      "expected": "capacityInsufficient",
+      "fieldId": 6
+    },
+    {
+      "name": "inconsistentSnapshotCount",
+      "changes": [
+        {
+          "path": [
+            "resourceEntries"
+          ],
+          "value": 1821
+        }
+      ],
+      "expected": "invalidSnapshot"
+    },
+    {
+      "name": "tooManyChecksForSnapshot",
+      "changes": [
+        {
+          "path": [
+            "consistencyEntries"
+          ],
+          "value": 1821
+        }
+      ],
+      "expected": "invalidSnapshot"
+    }
+  ],
+  "compatibilityCases": [
+    {
+      "name": "requireWithoutOptIn",
+      "serverPolicy": "requireExtended",
+      "optIn": false,
+      "legacyFits": true,
+      "expected": "legacyIncompatible"
+    },
+    {
+      "name": "preferLegacyFits",
+      "serverPolicy": "preferExtended",
+      "optIn": false,
+      "legacyFits": true,
+      "expected": "legacy"
+    },
+    {
+      "name": "preferLegacyCannotFit",
+      "serverPolicy": "preferExtended",
+      "optIn": false,
+      "legacyFits": false,
+      "expected": "legacyIncompatible"
+    },
+    {
+      "name": "timeoutAfterOfferNeverDowngrades",
+      "serverPolicy": "preferExtended",
+      "offerStarted": true,
+      "legacyFits": true,
+      "expected": "deadlineExceeded"
+    },
+    {
+      "name": "applicationDigestMismatch",
+      "mismatch": "applicationContractSha256",
+      "expected": "unsupportedContract"
+    },
+    {
+      "name": "dataDigestMismatch",
+      "mismatch": "dataContractSha256",
+      "expected": "unsupportedContract"
+    },
+    {
+      "name": "engineHashComparedLocally",
+      "serverEngineHash": "f6c552ca46e933c6d02ee4fb888cc99bbe8f8aab04a4afbe9ff45d74f896cd02",
+      "clientEngineHash": "9ba9a2db5e07598fd59afa35507a98c86162e4e15b3835177b78c11842cd2295",
+      "expected": "doNotRequireEqualEngineHashes"
+    },
+    {
+      "name": "consistencyAbsolute1024",
+      "lastOrdinal": 0,
+      "ordinal": 1024,
+      "expected": "legacyIncompatible"
+    },
+    {
+      "name": "consistencyDelta31",
+      "lastOrdinal": 1023,
+      "ordinal": 1054,
+      "expected": "representableConsistencyStep"
+    },
+    {
+      "name": "consistencyGap32Above1023",
+      "lastOrdinal": 1023,
+      "ordinal": 1055,
+      "expected": "legacyIncompatible"
+    },
+    {
+      "name": "legacyMessage65536",
+      "wireBytes": 65536,
+      "expected": "representableMessageSize"
+    },
+    {
+      "name": "legacyMessage65537",
+      "wireBytes": 65537,
+      "expected": "legacyIncompatible"
+    },
+    {
+      "name": "decalName255",
+      "svc": 36,
+      "index": 255,
+      "expected": "representableIndex"
+    },
+    {
+      "name": "decalName256",
+      "svc": 36,
+      "index": 256,
+      "expected": "legacyIncompatible"
+    }
+  ]
+}
