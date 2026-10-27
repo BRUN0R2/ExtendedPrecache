@@ -1,0 +1,919 @@
+{
+  "schemaVersion": 1,
+  "auditedOn": "2026-10-27",
+  "observation": "static",
+  "runtimeValidated": false,
+  "adaptersApproved": false,
+  "sourceCommit": "196300131858d1e087267fb2fb60cb935f8f8873",
+  "nextClientReferenceCommit": "4391300983eff82c752eae179c070abed7b268de",
+  "deltaSha256": "22ecb88fa68a748465f5a88d10edf06f3f46d5a9c8375b5c95a3a9310cc43db9",
+  "artifacts": [
+    {
+      "role": "client",
+      "file": "hw.dll",
+      "sha256": "9ba9a2db5e07598fd59afa35507a98c86162e4e15b3835177b78c11842cd2295",
+      "fileBytes": 3598176,
+      "imageBase": "0x10000000",
+      "architecture": "x86:LE:32:default",
+      "ghidraVersion": "12.1.4",
+      "compilerSpec": "windows",
+      "metrics": {
+        "instructionCount": 742074,
+        "functionCount": 6920,
+        "referenceCount": 287340,
+        "unownedInstructions": 49028,
+        "computedFlowCount": 11643,
+        "initializedExecutableBytes": 2819072,
+        "recognizedExecutableInstructionBytes": 2657735,
+        "definedExecutableDataBytes": 7154,
+        "unclassifiedExecutableBytes": 154183
+      },
+      "referenceFile": "clientReferences.csv",
+      "referenceFileSha256": "02d8a0ee1f55ef311211191b6f638b511803e16a6983e742c0da13b1097f587a",
+      "matchedRegionSites": 350,
+      "matchedFunctions": 78,
+      "unownedMatchedSites": [
+        {
+          "region": "clientStateRoot",
+          "address": "0x101ae337",
+          "value": "0x11257f60",
+          "onePastEnd": false
+        },
+        {
+          "region": "clientStateRoot",
+          "address": "0x101ae888",
+          "value": "0x11257f60",
+          "onePastEnd": false
+        },
+        {
+          "region": "clientStateRoot",
+          "address": "0x101aea9f",
+          "value": "0x11257f60",
+          "onePastEnd": false
+        },
+        {
+          "region": "clientStateRoot",
+          "address": "0x101afed4",
+          "value": "0x11257f60",
+          "onePastEnd": false
+        }
+      ],
+      "regions": [
+        {
+          "name": "eventPrecache",
+          "start": "0x113f5410",
+          "bytes": 4096,
+          "interiorSites": 19,
+          "onePastEndSites": 12,
+          "functions": [
+            "0x10196210",
+            "0x1019f0d0",
+            "0x101a18d0",
+            "0x101a2fa0",
+            "0x101a44c0",
+            "0x101a8580",
+            "0x101a95e0",
+            "0x101c77d0",
+            "0x101c79e0",
+            "0x101c7b00",
+            "0x101d0920",
+            "0x10246f80",
+            "0x1024b7f0"
+          ]
+        },
+        {
+          "name": "modelPrecache",
+          "start": "0x113f6410",
+          "bytes": 2048,
+          "interiorSites": 24,
+          "onePastEndSites": 5,
+          "functions": [
+            "0x10196110",
+            "0x1019f0d0",
+            "0x101a18d0",
+            "0x101a2fa0",
+            "0x101a44c0",
+            "0x101a8580",
+            "0x101c77d0",
+            "0x101d0920",
+            "0x101f3ff0",
+            "0x10246f80",
+            "0x1024b7f0"
+          ]
+        },
+        {
+          "name": "modelCount",
+          "start": "0x113f6c10",
+          "bytes": 4,
+          "interiorSites": 5,
+          "onePastEndSites": 8,
+          "functions": [
+            "0x101957d0",
+            "0x101a44c0",
+            "0x101a5e10",
+            "0x101a8410",
+            "0x101c77d0",
+            "0x101f3ff0",
+            "0x101f4140"
+          ]
+        },
+        {
+          "name": "soundPrecache",
+          "start": "0x113f6c14",
+          "bytes": 2048,
+          "interiorSites": 9,
+          "onePastEndSites": 4,
+          "functions": [
+            "0x101957d0",
+            "0x101a44c0",
+            "0x101a5e10",
+            "0x101a6ef0",
+            "0x101a8410",
+            "0x101a8a60",
+            "0x101f4140"
+          ]
+        },
+        {
+          "name": "consistencyList",
+          "start": "0x113f7414",
+          "bytes": 22528,
+          "interiorSites": 13,
+          "onePastEndSites": 4,
+          "functions": [
+            "0x101a6ef0",
+            "0x101a8a60",
+            "0x101f4140"
+          ]
+        },
+        {
+          "name": "decalNames",
+          "start": "0x11249f00",
+          "bytes": 8192,
+          "interiorSites": 10,
+          "onePastEndSites": 3,
+          "functions": [
+            "0x101bef80",
+            "0x101bf300",
+            "0x101bf400",
+            "0x101bf490",
+            "0x1023b510",
+            "0x1023b6c0"
+          ]
+        },
+        {
+          "name": "knownModels",
+          "start": "0x10dd5e40",
+          "bytes": 401408,
+          "interiorSites": 40,
+          "onePastEndSites": 27,
+          "functions": [
+            "0x101f0b60",
+            "0x1023e500",
+            "0x1023e610",
+            "0x1023e950",
+            "0x1023f060",
+            "0x1023ff90",
+            "0x10240070",
+            "0x10240290",
+            "0x102405f0",
+            "0x102407c0",
+            "0x102408f0",
+            "0x10240aa0",
+            "0x10240d70",
+            "0x10240f50",
+            "0x10241620",
+            "0x102416e0",
+            "0x10241830"
+          ]
+        },
+        {
+          "name": "modelCrcInfo",
+          "start": "0x109860f0",
+          "bytes": 12288,
+          "interiorSites": 11,
+          "onePastEndSites": 3,
+          "functions": [
+            "0x1023e610",
+            "0x10240290",
+            "0x10240f50",
+            "0x10241620",
+            "0x10241830"
+          ]
+        },
+        {
+          "name": "clientStateRoot",
+          "start": "0x11257f60",
+          "bytes": 4,
+          "interiorSites": 20,
+          "onePastEndSites": 10,
+          "functions": [
+            "0x101960b0",
+            "0x1019f0d0",
+            "0x101a18d0",
+            "0x101a30c0",
+            "0x101a43d0",
+            "0x101a44c0",
+            "0x101a4870",
+            "0x101a5e10",
+            "0x101a6a60",
+            "0x101a6b80",
+            "0x101a6c60",
+            "0x101a8500",
+            "0x101a8580",
+            "0x101ffe80",
+            "0x101ffeb0",
+            "0x101fff00",
+            "0x101fffa0",
+            "0x10201500",
+            "0x102318a0"
+          ]
+        },
+        {
+          "name": "outgoingResourceList",
+          "start": "0x11258074",
+          "bytes": 174080,
+          "interiorSites": 19,
+          "onePastEndSites": 9,
+          "functions": [
+            "0x101a18d0",
+            "0x101a5590",
+            "0x101a78c0"
+          ]
+        },
+        {
+          "name": "knownSfxPointer",
+          "start": "0x111b1a34",
+          "bytes": 4,
+          "interiorSites": 7,
+          "onePastEndSites": 3,
+          "functions": [
+            "0x101fd540",
+            "0x101fd6b0",
+            "0x101fe340",
+            "0x101feef0"
+          ]
+        },
+        {
+          "name": "knownSfxCount",
+          "start": "0x111b1a30",
+          "bytes": 4,
+          "interiorSites": 6,
+          "onePastEndSites": 7,
+          "functions": [
+            "0x101fd540",
+            "0x101fd6b0",
+            "0x101fe340"
+          ]
+        },
+        {
+          "name": "knownModelCount",
+          "start": "0x109860e4",
+          "bytes": 4,
+          "interiorSites": 8,
+          "onePastEndSites": 3,
+          "functions": [
+            "0x1023e500",
+            "0x1023e610",
+            "0x102408f0",
+            "0x10240aa0",
+            "0x10240d70",
+            "0x102416e0"
+          ]
+        },
+        {
+          "name": "hudSpritePointer",
+          "start": "0x1032e5bc",
+          "bytes": 4,
+          "interiorSites": 21,
+          "onePastEndSites": 15,
+          "functions": [
+            "0x1019ca90",
+            "0x1019ce70",
+            "0x1019ceb0",
+            "0x1019cee0",
+            "0x1019cf40",
+            "0x1019cf80",
+            "0x1019d090",
+            "0x1019d140",
+            "0x1019d1d0",
+            "0x1019d250"
+          ]
+        },
+        {
+          "name": "hudSpriteCapacity",
+          "start": "0x1032e5c0",
+          "bytes": 4,
+          "interiorSites": 15,
+          "onePastEndSites": 10,
+          "functions": [
+            "0x1019ca90",
+            "0x1019cc30",
+            "0x1019ccb0",
+            "0x1019cd30",
+            "0x1019cdc0",
+            "0x1019ce70",
+            "0x1019ceb0",
+            "0x1019cee0",
+            "0x1019cf40",
+            "0x1019cf80",
+            "0x1019d090",
+            "0x1019d140",
+            "0x1019d1d0",
+            "0x1019d250"
+          ]
+        }
+      ],
+      "rawScan": {
+        "fileByteWindows": 3598173,
+        "highLowRelocations": 64017,
+        "unsupportedRelocationTypes": [],
+        "candidates": 427,
+        "relocatedCandidates": 274,
+        "relocatedOutsideRecognizedInstructions": [
+          {
+            "region": "outgoingResourceList",
+            "address": "0x101a1a66",
+            "value": "0x11282874",
+            "onePastEnd": true
+          },
+          {
+            "region": "clientStateRoot",
+            "address": "0x101a8522",
+            "value": "0x11257f60",
+            "onePastEnd": false
+          },
+          {
+            "region": "knownSfxCount",
+            "address": "0x101fd658",
+            "value": "0x111b1a30",
+            "onePastEnd": false
+          },
+          {
+            "region": "knownSfxPointer",
+            "address": "0x101fd661",
+            "value": "0x111b1a34",
+            "onePastEnd": false
+          },
+          {
+            "region": "knownSfxCount",
+            "address": "0x101fd661",
+            "value": "0x111b1a34",
+            "onePastEnd": true
+          }
+        ]
+      },
+      "decompiledMatchedFunctions": 78,
+      "allMatchedFunctionsDecompiled": true
+    },
+    {
+      "role": "server",
+      "file": "swds.dll",
+      "sha256": "f6c552ca46e933c6d02ee4fb888cc99bbe8f8aab04a4afbe9ff45d74f896cd02",
+      "fileBytes": 1212208,
+      "imageBase": "0x04970000",
+      "architecture": "x86:LE:32:default",
+      "ghidraVersion": "12.1.4",
+      "compilerSpec": "windows",
+      "metrics": {
+        "instructionCount": 240999,
+        "functionCount": 4187,
+        "referenceCount": 104505,
+        "unownedInstructions": 7548,
+        "computedFlowCount": 2410,
+        "initializedExecutableBytes": 793088,
+        "recognizedExecutableInstructionBytes": 759134,
+        "definedExecutableDataBytes": 3162,
+        "unclassifiedExecutableBytes": 30792
+      },
+      "referenceFile": "serverReferences.csv",
+      "referenceFileSha256": "f85e413c8648c0111bacd875f07e9a21f2531d46a197c62ff0a75a65dd129a35",
+      "matchedRegionSites": 674,
+      "matchedFunctions": 119,
+      "unownedMatchedSites": [
+        {
+          "region": "decalWadPointer",
+          "address": "0x0497eacb",
+          "value": "0x4c72ae8",
+          "onePastEnd": true
+        },
+        {
+          "region": "serverStateRoot",
+          "address": "0x04986d80",
+          "value": "0x4d0d7f0",
+          "onePastEnd": false
+        },
+        {
+          "region": "serverStateRoot",
+          "address": "0x0498ca6a",
+          "value": "0x4d0d7f4",
+          "onePastEnd": true
+        },
+        {
+          "region": "serverStateRoot",
+          "address": "0x0498caad",
+          "value": "0x4d0d7f4",
+          "onePastEnd": true
+        },
+        {
+          "region": "serverStateRoot",
+          "address": "0x0498cb1a",
+          "value": "0x4d0d7f4",
+          "onePastEnd": true
+        },
+        {
+          "region": "serverStateRoot",
+          "address": "0x0498cb5d",
+          "value": "0x4d0d7f4",
+          "onePastEnd": true
+        },
+        {
+          "region": "serverStateRoot",
+          "address": "0x0498cc6c",
+          "value": "0x4d0d7f0",
+          "onePastEnd": false
+        },
+        {
+          "region": "serverStateRoot",
+          "address": "0x0498cd18",
+          "value": "0x4d0d7f0",
+          "onePastEnd": false
+        },
+        {
+          "region": "serverStateRoot",
+          "address": "0x0498ceba",
+          "value": "0x4d0d7f0",
+          "onePastEnd": false
+        },
+        {
+          "region": "serverStateRoot",
+          "address": "0x049993df",
+          "value": "0x4d0d7f0",
+          "onePastEnd": false
+        },
+        {
+          "region": "serverStateRoot",
+          "address": "0x049a7660",
+          "value": "0x4d0d7f0",
+          "onePastEnd": false
+        }
+      ],
+      "regions": [
+        {
+          "name": "legacyResourceList",
+          "start": "0x4d0d938",
+          "bytes": 174080,
+          "interiorSites": 0,
+          "onePastEndSites": 24,
+          "functions": [
+            "0x0498cee0",
+            "0x0498d040",
+            "0x049a9500",
+            "0x049b2b50",
+            "0x049b2bc0",
+            "0x049b33a0",
+            "0x049b4090",
+            "0x049c5580",
+            "0x049c57f0",
+            "0x049d8ca0",
+            "0x049d8cf0"
+          ]
+        },
+        {
+          "name": "resourceCount",
+          "start": "0x4d38138",
+          "bytes": 4,
+          "interiorSites": 24,
+          "onePastEndSites": 11,
+          "functions": [
+            "0x0498cee0",
+            "0x0498d040",
+            "0x049a1ba0",
+            "0x049a9500",
+            "0x049b2b50",
+            "0x049b2bc0",
+            "0x049b33a0",
+            "0x049b4090",
+            "0x049c5520",
+            "0x049c5580",
+            "0x049c57f0",
+            "0x049d8ca0",
+            "0x049d8cf0",
+            "0x049d8e20"
+          ]
+        },
+        {
+          "name": "consistencyList",
+          "start": "0x4d3813c",
+          "bytes": 22528,
+          "interiorSites": 34,
+          "onePastEndSites": 5,
+          "functions": [
+            "0x049a1ba0",
+            "0x049b4090",
+            "0x049c5520",
+            "0x049c5580",
+            "0x049c57a0",
+            "0x049c57f0",
+            "0x049d8c80",
+            "0x049d8c90",
+            "0x049d8e20"
+          ]
+        },
+        {
+          "name": "modelNames",
+          "start": "0x4d3d940",
+          "bytes": 2048,
+          "interiorSites": 44,
+          "onePastEndSites": 27,
+          "functions": [
+            "0x04993c00",
+            "0x0499b9e0",
+            "0x0499ba90",
+            "0x0499c400",
+            "0x0499c800",
+            "0x0499ea30",
+            "0x0499ec00",
+            "0x049a2d80",
+            "0x049a37a0",
+            "0x049a5550",
+            "0x049a58c0",
+            "0x049a5ae0",
+            "0x049a5bf0",
+            "0x049b16b0",
+            "0x049b33a0",
+            "0x049b3790",
+            "0x049b3e50",
+            "0x049b48b0",
+            "0x049c5da0",
+            "0x049cf030",
+            "0x049cf4c0",
+            "0x049cf840",
+            "0x049d0280",
+            "0x049d8e40"
+          ]
+        },
+        {
+          "name": "modelObjects",
+          "start": "0x4d3e140",
+          "bytes": 2048,
+          "interiorSites": 34,
+          "onePastEndSites": 4,
+          "functions": [
+            "0x04993c00",
+            "0x0499b9e0",
+            "0x0499ba90",
+            "0x0499c400",
+            "0x0499c800",
+            "0x0499ea30",
+            "0x0499ec00",
+            "0x049a2d80",
+            "0x049a37a0",
+            "0x049a5550",
+            "0x049a58c0",
+            "0x049a5ae0",
+            "0x049a5bf0",
+            "0x049b16b0",
+            "0x049b33a0",
+            "0x049b3e50",
+            "0x049b48b0",
+            "0x049c5da0",
+            "0x049cf030",
+            "0x049cf4c0",
+            "0x049cf840",
+            "0x049d0280",
+            "0x049d1140",
+            "0x049d8e40"
+          ]
+        },
+        {
+          "name": "modelFlags",
+          "start": "0x4d3e940",
+          "bytes": 512,
+          "interiorSites": 10,
+          "onePastEndSites": 2,
+          "functions": [
+            "0x0499dc60",
+            "0x0499ea30",
+            "0x0499ec00",
+            "0x049a2d80",
+            "0x049b33a0",
+            "0x049b48b0",
+            "0x049d8e60"
+          ]
+        },
+        {
+          "name": "eventPrecache",
+          "start": "0x4d3eb40",
+          "bytes": 4096,
+          "interiorSites": 32,
+          "onePastEndSites": 12,
+          "functions": [
+            "0x0499bf80",
+            "0x0499d950",
+            "0x0499dac0",
+            "0x0499dc60",
+            "0x0499e2d0",
+            "0x049a7ad0",
+            "0x049a81a0",
+            "0x049b33a0",
+            "0x049b3540",
+            "0x049b48b0",
+            "0x049d8e60"
+          ]
+        },
+        {
+          "name": "soundPrecache",
+          "start": "0x4d3fb40",
+          "bytes": 2048,
+          "interiorSites": 26,
+          "onePastEndSites": 10,
+          "functions": [
+            "0x0499bf80",
+            "0x0499d950",
+            "0x0499dac0",
+            "0x0499dc60",
+            "0x049a7ad0",
+            "0x049a81a0",
+            "0x049b33a0",
+            "0x049b48b0"
+          ]
+        },
+        {
+          "name": "soundHash",
+          "start": "0x4d40340",
+          "bytes": 2046,
+          "interiorSites": 10,
+          "onePastEndSites": 0,
+          "functions": [
+            "0x0499d950",
+            "0x0499dac0",
+            "0x049a81a0"
+          ]
+        },
+        {
+          "name": "legacyGeneric",
+          "start": "0x4d40b44",
+          "bytes": 2048,
+          "interiorSites": 0,
+          "onePastEndSites": 0,
+          "functions": []
+        },
+        {
+          "name": "legacyGenericNames",
+          "start": "0x4d41344",
+          "bytes": 32768,
+          "interiorSites": 0,
+          "onePastEndSites": 4,
+          "functions": [
+            "0x049b2fc0",
+            "0x049d8ec0",
+            "0x049d8ed0"
+          ]
+        },
+        {
+          "name": "extendedGenericNames",
+          "start": "0x5010690",
+          "bytes": 262144,
+          "interiorSites": 13,
+          "onePastEndSites": 9,
+          "functions": [
+            "0x0499ed60",
+            "0x0499ef20",
+            "0x049b33a0",
+            "0x049b48b0"
+          ]
+        },
+        {
+          "name": "extendedGenericCount",
+          "start": "0x5050690",
+          "bytes": 4,
+          "interiorSites": 9,
+          "onePastEndSites": 3,
+          "functions": [
+            "0x0498a6f0",
+            "0x0499ed60",
+            "0x0499ef20",
+            "0x0499f500",
+            "0x049b33a0",
+            "0x049b48b0"
+          ]
+        },
+        {
+          "name": "knownModels",
+          "start": "0x4c75e70",
+          "bytes": 401408,
+          "interiorSites": 30,
+          "onePastEndSites": 34,
+          "functions": [
+            "0x04990720",
+            "0x049909f0",
+            "0x04990dd0",
+            "0x04991730",
+            "0x049919d0",
+            "0x04991ea0",
+            "0x049920f0",
+            "0x049922a0",
+            "0x049923a0",
+            "0x04992fc0",
+            "0x04993090",
+            "0x049937f0",
+            "0x049938c0",
+            "0x04993b80",
+            "0x049b48b0"
+          ]
+        },
+        {
+          "name": "modelCrcInfo",
+          "start": "0x4c72e38",
+          "bytes": 12288,
+          "interiorSites": 9,
+          "onePastEndSites": 1,
+          "functions": [
+            "0x04990720",
+            "0x049909f0",
+            "0x04990dd0"
+          ]
+        },
+        {
+          "name": "serverStateRoot",
+          "start": "0x4d0d7f0",
+          "bytes": 4,
+          "interiorSites": 51,
+          "onePastEndSites": 19,
+          "functions": [
+            "0x049833f0",
+            "0x04983e30",
+            "0x04984260",
+            "0x049844f0",
+            "0x04986310",
+            "0x04986a00",
+            "0x04986f00",
+            "0x04987410",
+            "0x04987d00",
+            "0x04988390",
+            "0x049887c0",
+            "0x04988930",
+            "0x04988c70",
+            "0x0498bd00",
+            "0x0498c940",
+            "0x04994140",
+            "0x049a1410",
+            "0x049a1470",
+            "0x049a7750",
+            "0x049a7830",
+            "0x049a79c0",
+            "0x049a83b0",
+            "0x049aa2f0",
+            "0x049ad060",
+            "0x049ae650",
+            "0x049b3cf0",
+            "0x049b4090",
+            "0x049b48b0",
+            "0x049b5bd0",
+            "0x049b6480",
+            "0x049b8600",
+            "0x049c8610",
+            "0x049d5c10",
+            "0x049d8d20",
+            "0x049d8d30",
+            "0x049d8d40",
+            "0x049d8d50"
+          ]
+        },
+        {
+          "name": "extendedResources",
+          "start": "0x4f88690",
+          "bytes": 557056,
+          "interiorSites": 91,
+          "onePastEndSites": 9,
+          "functions": [
+            "0x0498cee0",
+            "0x0498d040",
+            "0x0499ed60",
+            "0x0499ef20",
+            "0x049a9500",
+            "0x049b2b50",
+            "0x049b2bc0",
+            "0x049b33a0",
+            "0x049b4090",
+            "0x049c5580",
+            "0x049c57f0",
+            "0x049d8d00"
+          ]
+        },
+        {
+          "name": "knownModelCount",
+          "start": "0x04c75e6c",
+          "bytes": 4,
+          "interiorSites": 7,
+          "onePastEndSites": 7,
+          "functions": [
+            "0x04990720",
+            "0x049909f0",
+            "0x04993b80",
+            "0x049b48b0"
+          ]
+        },
+        {
+          "name": "decalNameCount",
+          "start": "0x04d53c0c",
+          "bytes": 4,
+          "interiorSites": 9,
+          "onePastEndSites": 7,
+          "functions": [
+            "0x0497c3f0",
+            "0x0499f4b0",
+            "0x049b33a0",
+            "0x049d8cb0",
+            "0x049d8cc0"
+          ]
+        },
+        {
+          "name": "decalNames",
+          "start": "0x04d53c10",
+          "bytes": 8704,
+          "interiorSites": 11,
+          "onePastEndSites": 12,
+          "functions": [
+            "0x0497c3f0",
+            "0x04983e30",
+            "0x04985d7e",
+            "0x04986670",
+            "0x04987f90",
+            "0x04988390",
+            "0x049887c0",
+            "0x04988930",
+            "0x04989860",
+            "0x0498bd00",
+            "0x0499f4b0",
+            "0x049b33a0",
+            "0x049cb4f0"
+          ]
+        },
+        {
+          "name": "decalWadPointer",
+          "start": "0x04c72ae4",
+          "bytes": 4,
+          "interiorSites": 21,
+          "onePastEndSites": 5,
+          "functions": [
+            "0x0497c0d0",
+            "0x0497c3f0",
+            "0x0497eb30",
+            "0x04985d7e",
+            "0x049b33a0",
+            "0x049d53c0"
+          ]
+        },
+        {
+          "name": "soundHashBuilt",
+          "start": "0x04d40b40",
+          "bytes": 4,
+          "interiorSites": 4,
+          "onePastEndSites": 0,
+          "functions": [
+            "0x0499d950",
+            "0x0499dac0",
+            "0x049a81a0"
+          ]
+        }
+      ],
+      "rawScan": {
+        "fileByteWindows": 1212205,
+        "highLowRelocations": 29815,
+        "unsupportedRelocationTypes": [],
+        "candidates": 1907,
+        "relocatedCandidates": 442,
+        "relocatedOutsideRecognizedInstructions": [
+          {
+            "region": "legacyResourceList",
+            "address": "0x49c4f50",
+            "value": "0x4d38138",
+            "onePastEnd": true
+          },
+          {
+            "region": "resourceCount",
+            "address": "0x49c4f50",
+            "value": "0x4d38138",
+            "onePastEnd": false
+          },
+          {
+            "region": "extendedResources",
+            "address": "0x49c4f62",
+            "value": "0x4f88690",
+            "onePastEnd": false
+          },
+          {
+            "region": "consistencyList",
+            "address": "0x49c53db",
+            "value": "0x4d3d93c",
+            "onePastEnd": true
+          }
+        ]
+      },
+      "decompiledMatchedFunctions": 119,
+      "allMatchedFunctionsDecompiled": true
+    }
+  ],
+  "sourceReferenceLines": 313
+}
