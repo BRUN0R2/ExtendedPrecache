@@ -1,0 +1,46 @@
+{
+  "version": 10,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 31,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "windowsX86",
+      "displayName": "Windows x86 with Clang for MSVC",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/windowsX86",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_COMPILER": "clang-cl",
+        "CMAKE_CXX_COMPILER_TARGET": "i686-pc-windows-msvc",
+        "BUILD_TESTING": "ON",
+        "extendedPrecacheBuildDll": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "windowsX86",
+      "configurePreset": "windowsX86"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "windowsX86",
+      "configurePreset": "windowsX86",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    }
+  ]
+}
