@@ -56,7 +56,7 @@
   "normativeArtifacts": [
     {
       "path": "docs/dataCodecs.md",
-      "sha256": "46e2d6c7fc1407ae66da0799267bb9e335b7ad523f44f1e774a891cda19de157"
+      "sha256": "8488298f87c1e3f7694fa96457dd84ddfb364cdf5b5d9c51817686e5d137a4f7"
     },
     {
       "path": "docs/catalogCodec.md",
@@ -72,7 +72,7 @@
     },
     {
       "path": "docs/moduleContracts.md",
-      "sha256": "b0cfdaabd93e42e5f73a6955deec3956a261a3693f9558a237f19a98f959c53a"
+      "sha256": "3fb65d2fa26697f3654b210939b60d0554b9e867c6936dceb54adc48a6bc02da"
     },
     {
       "path": "docs/demoCodec.md",
@@ -84,7 +84,7 @@
     },
     {
       "path": "docs/data/applicationContractV2.schema.json",
-      "sha256": "ae356c223f0b205151a447875a556669038569611dc78aae470c16737c9acadf"
+      "sha256": "94896a50b45d09278676f544107a43d0afa9eb9028fe3668b949c9cc4e17ed8b"
     }
   ]
 }

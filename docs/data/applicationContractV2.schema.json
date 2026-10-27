@@ -641,7 +641,7 @@
         "messageId",
         "name",
         "direction",
-        "delivery",
+        "deliveries",
         "schemaId",
         "wireMode",
         "nativeSize",
@@ -664,11 +664,17 @@
             "C2S"
           ]
         },
-        "delivery": {
-          "enum": [
-            "reliable",
-            "unreliable"
-          ]
+        "deliveries": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "reliable",
+              "unreliable"
+            ]
+          },
+          "minItems": 1,
+          "maxItems": 2,
+          "uniqueItems": true
         },
         "schemaId": {
           "type": "integer",
@@ -783,8 +789,10 @@
           },
           "then": {
             "properties": {
-              "delivery": {
-                "const": "reliable"
+              "deliveries": {
+                "const": [
+                  "reliable"
+                ]
               }
             }
           }
@@ -954,7 +962,7 @@
       "required": [
         "effectId",
         "ownerModuleId",
-        "delivery",
+        "deliveries",
         "wireSchema",
         "schemaId",
         "resourcePolicy"
@@ -970,11 +978,17 @@
           "minimum": 1,
           "maximum": 65535
         },
-        "delivery": {
-          "enum": [
-            "reliable",
-            "unreliable"
-          ]
+        "deliveries": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "reliable",
+              "unreliable"
+            ]
+          },
+          "minItems": 1,
+          "maxItems": 2,
+          "uniqueItems": true
         },
         "wireSchema": {
           "enum": [

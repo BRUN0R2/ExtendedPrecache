@@ -37,7 +37,7 @@ leitor. Um callback tardio da ClientDLL/GameDLL não é essa prova.
 | Direção/opcode | Kinds do novo envelope e entrega permitida |
 | --- | --- |
 | S→C SVC 14 | 1 schema, 2 schemaSetEnd; confiável |
-| S→C SVC 43 | 1 catalogBegin, 2 catalogChunk, 3 catalogEnd, 4 gameStart, 5 modMessage, 6 moduleState, 255 fatal; confiável, exceto modMessage se o contrato permitir não confiável |
+| S→C SVC 43 | 1 catalogBegin, 2 catalogChunk, 3 catalogEnd, 4 gameStart, 5 modMessage, 6 moduleState, 255 fatal; catálogo/gameStart/fatal confiáveis; modMessage conforme contrato; moduleState conforme frame |
 | C→S CLC 7 | 1 consistencyPage, 2 consistencyEnd, 3 assetsReady, 4 gameplayAck, 5 frameAck, 6 resyncRequest, 7 modMessage, 255 fatal; confiável |
 | S→C SVC 22 | 1 frameBegin, 2 frameObject, 3 frameEnd; snapshot inicial confiável |
 | S→C SVC 40/41 | 1 frameBegin, 2 frameObject, 3 frameEnd; frame completo/delta, respectivamente; uma entrega por transação |

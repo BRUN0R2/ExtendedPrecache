@@ -82,7 +82,9 @@ versionamento próprio antes de ser implementada.
 ## Mensagens de mods
 
 Cada mensagem declara messageId u16 não zero no namespace do módulo, name ASCII
-de até 15 bytes, direção, entrega, schemaId, wireMode, nativeSize e legacyFields.
+de até 15 bytes, direção, deliveries, schemaId, wireMode, nativeSize e legacyFields.
+deliveries é uma lista única não vazia de reliable/unreliable; cada emissão
+seleciona uma delas e o receptor confere a mesma política.
 O schema deve ter role modMessage e representar todos os campos/arrays/strings;
 nenhum campo opaco pode esconder índices sem uma prova resourceFree completa.
 IDs e nomes não são slots numéricos de user message escolhidos antecipadamente.
@@ -95,7 +97,7 @@ após o gate de gameplay. Estado de inicialização vai no snapshot tipado, não
 em callbacks de gameplay durante carga. IDs são DomainId u32 tipados; não
 passá-los ao handler antigo que espera `READ_BYTE`/`READ_SHORT`. Os dois papéis precisam de implementação
 compatível. Entrega é confiável ou não confiável conforme declaração e envelope;
-C→S typed2 é sempre confiável neste contrato, pois não existe fluxo EPD2 C→S
+C→S typed2 declara somente reliable neste contrato, pois não existe fluxo EPD2 C→S
 não confiável. typed2 usa nativeSize=-1 e resourcePolicy=typedReferences, sem
 legacyFields; esse marcador não solicita registro de uma user message nativa.
 
@@ -186,8 +188,10 @@ ou áudio idênticos entre hardwares/implementações nativas.
 
 Antes de negociar, conferir fechamentos, unicidade, schemas/hashes, ambos os
 bindings das mensagens, registries de serviços, faixas legacy e reservas de pico.
-`effectPolicies` aprova cada effectId usado, entrega e ownerModuleId. Para um
-schema base do registro normativo, wireSchema=builtin, schemaId=0 e
+`effectPolicies` aprova cada effectId usado, deliveries e ownerModuleId. A lista
+de entregas tem a mesma regra das mensagens. ownerModuleId identifica o binding
+do codec; todos os produtores indiretos continuam sujeitos ao perfil aprovado.
+Para um schema base do registro normativo, wireSchema=builtin, schemaId=0 e
 resourcePolicy=typedReferences. Outros IDs exigem wireSchema=application,
 schemaId role effect e resourcePolicy=resourceFree com prova no binding; não
 podem substituir um builtin, alias HIGH ou ID obsoleto. Toda ausência recusa o
