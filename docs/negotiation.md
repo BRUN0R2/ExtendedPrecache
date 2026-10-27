@@ -195,11 +195,10 @@ contrato aprovado, com LF, sem BOM, incluindo seu newline final. Não reserializ
 JSON para comparar hashes: uma edição produz uma nova identidade. O digest do
 catálogo segue o formato canônico definido pelo próprio contrato de dados.
 
-O ID 1 no corpus é apenas um exemplo **indisponível**. Antes de aprová-lo serão
-necessários os formatos completos de catálogo, consistência, deltas, áudio,
-eventos, efeitos, decals e demos. Nenhum slot SVC novo foi reservado aqui.
-A escolha desses codecs permanece no TODO; a negociação pode recusar esse ID
-desde já sem introduzir um protocolo de dados parcialmente definido no motor.
+O ID 1 no corpus é apenas um exemplo **indisponível**, preservado sem alterações.
+O [plano de dados 2.0](dataCodecs.md) especifica esses formatos sob ID 2 e digest
+próprio. Também está indisponível: implementação, módulos aprovados e provas de
+transporte continuam pendentes. Nenhum slot SVC novo foi reservado aqui.
 
 ## Repetição, falha e deadline
 
@@ -256,10 +255,10 @@ somente antes de S0 e após validar o caminho legado; cliente `requireExtended`
 recusa. Depois de S0 não há downgrade por timeout, erro ou ausência de confirmação.
 
 Uma demo nunca inicia negociação de rede ou emite C0/C8/C9. O contrato de dados
-precisará registrar seleção, identidades e catálogo suficientes para validar
-playback local sem o cliente remoto. Não supor que o transcript C→S esteja na
-demo GoldSrc. Um perfil ampliado sem definição/testes desse registro continua
-indisponível; isso não declara compatibilidade com demos existentes.
+registra seleção, identidades e catálogo no [container próprio](demoCodec.md),
+para validar playback local sem o cliente remoto. Não supor que o transcript
+C→S esteja na demo GoldSrc. Recorder/player ainda não foram implementados;
+isso não declara compatibilidade com demos existentes.
 
 O [corpus binário](protocol/negotiationVectors.json) contém 26 frames sintéticos,
 hashes e casos negativos. Ele verifica o acordo no nível de especificação,

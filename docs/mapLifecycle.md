@@ -87,15 +87,16 @@ seus IDs em uma nova conexão/mapa.
    não incrementa a geração local por si só. Qualquer reset fora desse caminho,
    outro serverinfo, mudança de spawn/epoch, desconexão ou troca de peer fecha
    o acordo e inicia retirada; não reinterpretar como continuação permitida.
-6. Receber o manifesto pelo futuro codec; validar IDs, contagens, duplicatas,
+6. Receber o manifesto pelo [codec especificado](catalogCodec.md); validar IDs, contagens, duplicatas,
    nomes, bytes e digest contra o acordo antes de `frozen`. Só então a ABI pode
    devolver snapshot. Carregar assets, executar bindings pós-reset e publicar
    todas as views na geração correta antes de `active`.
 
 O deadline atual do núcleo termina no handoff validado; não é um timeout de
-download/carga. Esses prazos e as confirmações de catálogo/assets/gameplay serão
-definidos com os codecs de dados. Não inventar frames de controle para preencher
-essa etapa nem aprovar o perfil exemplo indisponível.
+download/carga. Prazos e confirmações de catálogo/assets/gameplay têm
+[contrato de dados próprio](dataCodecs.md), ainda sem implementação.
+Não inventar frames de controle para preencher essa etapa nem aprovar o perfil
+exemplo indisponível.
 
 ## Retirada, reconexão e descarregamento
 
@@ -121,8 +122,9 @@ function pointers em uso. Não fazer esse trabalho em `DllMain`.
 Uma reconexão ao mesmo mapa tem nonce/tokens novos e não reaproveita um acordo
 anterior; o mapa compartilhado do servidor pode permanecer. Não há renegociação
 in-place na versão 1. Demo é um ciclo local diferente: não cria negociação de
-rede nem emite C0/C8/C9. Playback ampliado permanece indisponível até seu contrato
-de dados/gerações ser definido e testado.
+rede nem emite C0/C8/C9. O [contrato de demo](demoCodec.md) define contexto de replay
+local e reset único. Playback ampliado permanece indisponível sem implementação
+e provas nativas de todos os produtores/consumidores.
 
 ## Critérios antes dos adaptadores
 

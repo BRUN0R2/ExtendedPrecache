@@ -9,7 +9,9 @@ declaradas como suportadas nesta etapa.
 
 O validador de configuração, o codec de controle e a máquina de estados da
 negociação 1.0 estão implementados e testados em um núcleo C++26 isolado.
-Os adaptadores e os codecs de dados ampliados continuam pendentes.
+Os codecs de dados 2.0 estão especificados, incluindo deltas, consistência,
+efeitos, demos e mensagens de módulos. Sua implementação e os adaptadores
+continuam pendentes; nenhum perfil de motor foi habilitado.
 
 O objetivo é substituir limites fixos por capacidades configuráveis e verificadas,
 respeitando memória, índices e protocolo. Não existe capacidade literalmente infinita.
@@ -37,6 +39,12 @@ automaticamente resolvidos pelo precache.
 - [Ciclo de mapa, conexão e reset](docs/mapLifecycle.md)
 - [ABI de integração 2.0 planejada](docs/integrationAbi.md)
 - [Verificação dos contratos de integração](docs/integrationVerification.md)
+- [Plano de dados 2.0 e limites por bytes](docs/dataCodecs.md)
+- [Catálogo, assets e consistência](docs/catalogCodec.md)
+- [Schemas e frames delta transacionais](docs/deltaCodec.md)
+- [Áudio, eventos e efeitos](docs/effectCodecs.md)
+- [Container de demos estendidas](docs/demoCodec.md)
+- [Contratos de mods e módulos externos](docs/moduleContracts.md)
 - [Verificação dos contratos e vetores offline](docs/contractVerification.md)
 - [Compilação e verificações](docs/build.md)
 - [Contrato público da DLL](docs/abi.md)
@@ -67,4 +75,6 @@ Leia [RULES.md](docs/RULES.md) antes de alterar o projeto. Mudanças de código 
 incluir documentação e verificações pertinentes. Não envie binários do jogo,
 segredos ou bases de engenharia reversa. A licença do código original é MIT;
 referências de pesquisa não são dependências incorporadas ao produto.
+Testes offline/locais, seus arquivos e resultados ficam em área local ignorada;
+não os publique em commits, pushes ou PRs.
 O parser JSON privado e sua licença estão em [thirdPartyNotices.md](docs/thirdPartyNotices.md).

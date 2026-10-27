@@ -63,10 +63,15 @@ ponta a ponta. Uma fundação sem integração deve se identificar explicitament
 - Comentários explicam motivos, não repetem a implementação.
 - Manter [TODO.md](TODO.md) com `[ ]` e `[x]`. Nunca marcar trabalho parcial,
   bloqueado, hipotético ou não testado como concluído.
-- Registrar verificações executadas, resultados, limitações e próximo passo concreto.
+- Registrar verificações executadas e resultados localmente, em área ignorada.
+  Documentar contratos, limitações e próximo passo concreto sem publicar relatórios locais.
 
 ## Git, revisão e publicação
 
+- Testes offline ou locais, seu código, arquivos, vetores e resultados permanecem
+  locais. Nunca enviá-los ao GitHub, inclusive em commits, pushes, PRs ou comentários.
+  Artefatos normativos de especificação não são fixtures de teste. Preservar os
+  checks já publicados; esta regra não autoriza apagar histórico ou enfraquecer CI.
 - Buscar o remoto primeiro e criar branches `codex/` a partir de `main` atualizado
   quando houver repositório e remoto. Não inventar histórico em uma pasta vazia.
 - Commits, PRs, correções de CI, squash merge e limpeza estão autorizados dentro
