@@ -166,3 +166,7 @@ arquivo ausente, digest inválido, módulo diferente ou reset inesperado fecha o
 recorder/player e retira seus owners; não remove o arquivo para ocultar falha.
 Dados de arquivo não satisfazem uma negociação de rede e não tornam demos antigas
 automaticamente compatíveis com o perfil ampliado.
+
+O timestamp do header do bloco end deve repetir o último timestamp anterior;
+metadados e bootstrap têm tempo zero. O núcleo incremental e suas fronteiras
+de validação estão descritos em [dataCore.md](dataCore.md).

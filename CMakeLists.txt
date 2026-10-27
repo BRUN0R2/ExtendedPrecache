@@ -45,8 +45,41 @@ target_compile_features(extendedPrecacheSession PUBLIC cxx_std_26)
 target_link_libraries(extendedPrecacheSession PRIVATE nlohmann_json::nlohmann_json)
 extendedPrecacheApplyOptions(extendedPrecacheSession)
 
+add_library(extendedPrecacheData STATIC
+    src/data/types.cpp
+    src/data/envelope.cpp
+    src/data/schema.cpp
+    src/data/values.cpp
+    src/data/catalog.cpp
+    src/data/chunks.cpp
+    src/data/consistency.cpp
+    src/data/stateCodec.cpp
+    src/data/stateSnapshot.cpp
+    src/data/stateTracker.cpp
+    src/data/applicationJson.cpp
+    src/data/applicationModules.cpp
+    src/data/application.cpp
+    src/data/applicationPreflight.cpp
+    src/data/applicationSizes.cpp
+    src/data/effects.cpp
+    src/data/media.cpp
+    src/data/modMessages.cpp
+    src/data/readiness.cpp
+    src/data/demoCodec.cpp
+    src/data/demoRecords.cpp
+    src/data/demoStream.cpp
+    src/data/codec.cpp
+    src/data/messageBuilder.cpp
+)
+target_include_directories(extendedPrecacheData PUBLIC include)
+target_compile_features(extendedPrecacheData PUBLIC cxx_std_26)
+target_link_libraries(extendedPrecacheData PUBLIC extendedPrecacheSession
+    PRIVATE extendedPrecacheDomain nlohmann_json::nlohmann_json)
+extendedPrecacheApplyOptions(extendedPrecacheData)
+
 if(WIN32)
-    add_library(extendedPrecacheCrypto STATIC src/platform/windows/cngDigest.cpp)
+    add_library(extendedPrecacheCrypto STATIC src/platform/windows/cngDigest.cpp
+        src/platform/windows/cngStream.cpp)
     target_include_directories(extendedPrecacheCrypto PUBLIC include)
     target_compile_features(extendedPrecacheCrypto PUBLIC cxx_std_26)
     target_compile_definitions(extendedPrecacheCrypto PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX _WIN32_WINNT=0x0A00)

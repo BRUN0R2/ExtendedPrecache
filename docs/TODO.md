@@ -40,7 +40,7 @@ devem acompanhar o item correspondente. As regras estão em [RULES.md](RULES.md)
 - [x] Implementar leitor/validador de configuração e codec/state machine de negociação isolados em C++26, usando o corpus versionado antes dos adaptadores; API, providers e ciclo de vida em `sessionCore.md`, checks em `verification.md`.
 - [x] Especificar conversão zero/um, ownership estável, ciclo de mapa e ABI versionada, resolvendo as restrições de `engineAudit.md` antes dos adaptadores; contratos em `indexMapping.md`, `storageOwnership.md`, `mapLifecycle.md` e `integrationAbi.md`, matriz e verificações em `integrationVerification.md`.
 - [x] Projetar catálogo/consistência, deltas, áudio/eventos/efeitos, limites por bytes e demos em `dataCodecs.md` e contratos vinculados; definir schema fechado para mensagens de mods e módulos externos, sem aprovar um perfil final ou implementar codecs/adaptadores.
-- [ ] Implementar os codecs de dados 2.0 e os preflights semânticos de aplicação isoladamente, após estabilizar o desenho; manter verificadores e resultados locais fora do GitHub.
+- [x] Implementar os codecs de dados 2.0 e os preflights semânticos de aplicação isoladamente; API, ownership, orçamentos e fronteiras em `dataCore.md`. Verificadores, vetores e resultados permanecem locais fora do GitHub.
 - [ ] Comprovar a barreira anterior a `SV_SendServerinfo`, o bootstrap de user messages, o despacho de `clc_stringcmd`, drain/reset e reconexão nos hashes selecionados antes de habilitar o transporte.
 - [ ] Implementar as entradas e o ciclo de vida do plugin Metamod do servidor.
 - [ ] Implementar adaptador HLDS com detecção exata de versão e falha segura.
@@ -85,14 +85,16 @@ inventariadas continuam pendentes e condicionam a aprovação de um perfil.
 
 A ampliação funcional e os adaptadores Metamod/cliente continuam pendentes.
 Nenhum arquivo da instalação do jogo ou servidor foi alterado. O plano de dados
-2.0 está especificado em [dataCodecs.md](dataCodecs.md): formatos binários,
-reservas por bytes, estado transacional, gate de assets/gameplay, demos e contrato
-fechado de aplicação. Os descritores de `docs/data` são artefatos normativos
-indisponíveis, sem perfil final de módulos aprovado. Verificadores/vetores e
-resultados novos permanecem locais em área ignorada.
+2.0 possui um [núcleo C++26 isolado](dataCore.md): catálogo, schemas/valores,
+consistência, envelopes, deltas transacionais, áudio/eventos/efeitos, mensagens de
+mods, readiness e container de demos. Os preflights verificam vínculos de
+aplicação, faixas legadas, cobertura de serviços, bytes e cotações por autoridade
+local; não reservam armazenamento nativo nem habilitam um perfil. Os descritores
+de `docs/data` permanecem indisponíveis, sem módulos finais aprovados.
+Verificadores, vetores e resultados novos permanecem locais em área ignorada.
 
-Próximo trabalho: implementar os codecs isolados e comprovar o bootstrap,
-dispatch, drain/reset e reconexão nos hashes selecionados antes dos adaptadores.
+Próximo trabalho: comprovar o bootstrap, dispatch, drain/reset e reconexão nos
+hashes selecionados antes de habilitar transporte ou implementar adaptadores.
 
 Publicação: repositório público
 [`BRUN0R2/ExtendedPrecache`](https://github.com/BRUN0R2/ExtendedPrecache) criado.

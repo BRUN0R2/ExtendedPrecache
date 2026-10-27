@@ -143,8 +143,9 @@ O harness transforma exceções inesperadas de fixture em saída de falha; não 
 transforma em checks aprovados. Análise estática mantém todos os checks ativos.
 
 Os casos de bytes/índices de tráfego legado, comparações de hashes dos binários,
-bootstrap nativo, demos e codecs de dados continuam exigindo os componentes
-correspondentes. Nenhum desses testes é uma conexão CS 1.6/ReHLDS ou validação
+bootstrap nativo e integração de demos continuam exigindo os componentes
+correspondentes. Os [codecs de dados isolados](dataCore.md) compõem um alvo próprio.
+Nenhum desses testes é uma conexão CS 1.6/ReHLDS ou validação
 de instalação Metamod. Próximas etapas continuam em `TODO.md`.
 
 O [desenho de integração](integrationVerification.md) especifica como o futuro
