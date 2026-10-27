@@ -7,8 +7,9 @@ com cliente e servidor trabalhando de forma coordenada.
 e ainda não é um plugin carregável pelo Metamod.** Não há versões do motor
 declaradas como suportadas nesta etapa.
 
-As capacidades configuráveis e a negociação 1.0 estão especificadas. O leitor
-de configuração, os codecs e os adaptadores ainda não estão implementados.
+O validador de configuração, o codec de controle e a máquina de estados da
+negociação 1.0 estão implementados e testados em um núcleo C++26 isolado.
+Os adaptadores e os codecs de dados ampliados continuam pendentes.
 
 O objetivo é substituir limites fixos por capacidades configuráveis e verificadas,
 respeitando memória, índices e protocolo. Não existe capacidade literalmente infinita.
@@ -30,6 +31,7 @@ automaticamente resolvidos pelo precache.
 - [Orçamento de memória das estruturas](docs/memoryBudget.md)
 - [Capacidades, configuração e admissão](docs/capabilities.md)
 - [Protocolo de negociação 1.0](docs/negotiation.md)
+- [API e ciclo de vida do núcleo de sessão](docs/sessionCore.md)
 - [Verificação dos contratos e vetores offline](docs/contractVerification.md)
 - [Compilação e verificações](docs/build.md)
 - [Contrato público da DLL](docs/abi.md)
@@ -60,3 +62,4 @@ Leia [RULES.md](docs/RULES.md) antes de alterar o projeto. Mudanças de código 
 incluir documentação e verificações pertinentes. Não envie binários do jogo,
 segredos ou bases de engenharia reversa. A licença do código original é MIT;
 referências de pesquisa não são dependências incorporadas ao produto.
+O parser JSON privado e sua licença estão em [thirdPartyNotices.md](docs/thirdPartyNotices.md).

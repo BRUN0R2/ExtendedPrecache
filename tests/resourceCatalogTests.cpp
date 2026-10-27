@@ -136,14 +136,16 @@ void testFreeze(TestSuite &suite) {
 } // namespace
 
 auto main() -> int {
-    TestSuite suite;
-    testCategory<ResourceKind::model>(suite);
-    testCategory<ResourceKind::sound>(suite);
-    testCategory<ResourceKind::generic>(suite);
-    testCategory<ResourceKind::event>(suite);
-    testCategory<ResourceKind::decal>(suite);
-    testCapacityAndEncoding(suite);
-    testPathsAndOwnership(suite);
-    testFreeze(suite);
-    return suite.finish();
+    return extendedPrecache::tests::runTests([] {
+        TestSuite suite;
+        testCategory<ResourceKind::model>(suite);
+        testCategory<ResourceKind::sound>(suite);
+        testCategory<ResourceKind::generic>(suite);
+        testCategory<ResourceKind::event>(suite);
+        testCategory<ResourceKind::decal>(suite);
+        testCapacityAndEncoding(suite);
+        testPathsAndOwnership(suite);
+        testFreeze(suite);
+        return suite.finish();
+    });
 }

@@ -37,7 +37,7 @@ devem acompanhar o item correspondente. As regras estão em [RULES.md](RULES.md)
 
 - [x] Definir capacidades configuráveis em `capabilities.md`: entradas úteis, slots, caches privados, bytes, políticas, schema fechado e exemplos; validação da especificação em `contractVerification.md`.
 - [x] Projetar negociação 1.0 em `negotiation.md`: barreira anterior ao sign-on, transportes de controle existentes, identidades, mínimo do par, confirmação mútua, deadline e recusa; corpus de 26 frames fixos, sem ativação do motor.
-- [ ] Implementar leitor/validador de configuração e codec/state machine de negociação isolados em C++26, usando o corpus versionado antes dos adaptadores.
+- [x] Implementar leitor/validador de configuração e codec/state machine de negociação isolados em C++26, usando o corpus versionado antes dos adaptadores; API, providers e ciclo de vida em `sessionCore.md`, checks em `verification.md`.
 - [ ] Especificar conversão zero/um, ownership estável, ciclo de mapa e ABI versionada, resolvendo as restrições de `engineAudit.md` antes dos adaptadores.
 - [ ] Projetar deltas, consistência, efeitos, limites por bytes e representação em demos; definir contratos para mensagens de mods e módulos externos do perfil final.
 - [ ] Comprovar a barreira anterior a `SV_SendServerinfo`, o bootstrap de user messages, o despacho de `clc_stringcmd`, drain/reset e reconexão nos hashes selecionados antes de habilitar o transporte.
@@ -68,15 +68,17 @@ por constantes/hooks isolados. Relatórios, inventários e escopo de cobertura e
 [engineAudit.md](engineAudit.md). Isso não é certificação dinâmica nem prova de
 consumidores em módulos externos não selecionados.
 
-Capacidades e negociação foram definidas em especificações versionadas,
-com schema, exemplos e corpus offline. A DLL continua diagnóstica: não lê esses
-arquivos nem envia frames. O perfil de dados ampliado dos exemplos é fictício e
-indisponível, até a definição/validação completa dos seus codecs.
+Capacidades, configuração e negociação possuem contratos versionados e um núcleo
+C++26 testado contra o corpus independente. Há leitor/validador, codec e máquina
+de estados para os dois papéis, com preparo durável, confirmação de fila e gate
+de sign-on. A DLL continua diagnóstica: não liga esse núcleo, lê esses arquivos
+ou envia frames. O perfil de dados ampliado dos exemplos continua fictício e
+indisponível, até a definição/validação completa de seus codecs.
 
-A ampliação funcional, o código da negociação e os adaptadores Metamod/cliente
-continuam pendentes. Nenhum arquivo da instalação do jogo ou servidor foi alterado.
-Próximo trabalho: implementar os validadores e o codec/state machine independente,
-fechar contratos de dados/ownership/ABI e provar o bootstrap antes dos adaptadores.
+A ampliação funcional e os adaptadores Metamod/cliente continuam pendentes.
+Nenhum arquivo da instalação do jogo ou servidor foi alterado. Próximo trabalho:
+fechar conversão zero/um, ownership nativo, ciclo de mapa e ABI; depois completar
+contratos de dados e provar o bootstrap antes de implementar os adaptadores.
 
 Publicação: repositório público
 [`BRUN0R2/ExtendedPrecache`](https://github.com/BRUN0R2/ExtendedPrecache) criado.
@@ -91,4 +93,7 @@ para `5a96f33`. O PR foi integrado em `main` no commit Verified `a664f14`, com
 A auditoria foi integrada no [PR #2](https://github.com/BRUN0R2/ExtendedPrecache/pull/2),
 commit Verified `41b380a`, com
 [CI de main aprovado](https://github.com/BRUN0R2/ExtendedPrecache/actions/runs/40450700641).
+A especificação foi integrada no [PR #3](https://github.com/BRUN0R2/ExtendedPrecache/pull/3),
+commit Verified `bbd3593`, com
+[CI de main aprovado](https://github.com/BRUN0R2/ExtendedPrecache/actions/runs/40457161406).
 A entrega da extensão funcional continua pendente nas etapas 4 e 5.

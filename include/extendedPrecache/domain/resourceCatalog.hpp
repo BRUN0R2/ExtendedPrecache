@@ -23,7 +23,7 @@ struct ResourcePathHash final {
 
 template <ResourceKind kind> class ResourceCatalog final {
   public:
-    explicit ResourceCatalog(CatalogLimits limits) noexcept : catalogLimits{limits} {}
+    explicit ResourceCatalog(CatalogLimits limits) : catalogLimits{limits} {}
 
     [[nodiscard]] auto intern(std::string_view path)
         -> std::expected<ResourceIndex<kind>, ResourceError> {

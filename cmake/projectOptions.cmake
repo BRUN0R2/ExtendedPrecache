@@ -15,8 +15,13 @@ function(extendedPrecacheApplyOptions targetName)
 
     if(extendedPrecacheEnableAnalysis)
         find_program(extendedPrecacheClangTidy NAMES clang-tidy REQUIRED)
+        set(analysisArguments "${extendedPrecacheClangTidy};--warnings-as-errors=*")
+        if(MSVC)
+            # clang-tidy's tooling driver needs the exception mode explicitly as well.
+            list(APPEND analysisArguments "--extra-arg=/EHsc")
+        endif()
         set_target_properties(${targetName} PROPERTIES
-            CXX_CLANG_TIDY "${extendedPrecacheClangTidy};--warnings-as-errors=*"
+            CXX_CLANG_TIDY "${analysisArguments}"
         )
     endif()
 endfunction()

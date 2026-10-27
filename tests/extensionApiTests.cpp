@@ -79,24 +79,27 @@ void testQuery(TestSuite &suite, QueryInfo query) {
 } // namespace
 
 auto main(int argumentCount, char *arguments[]) -> int {
-    static_assert(sizeof(void *) == 4, "The engine DLL and its test must be x86");
-    TestSuite suite;
-    if (!suite.check(argumentCount == 2, "provide DLL path")) {
+    return extendedPrecache::tests::runTests([&] {
+        static_assert(sizeof(void *) == 4, "The engine DLL and its test must be x86");
+        TestSuite suite;
+        if (!suite.check(argumentCount == 2, "provide DLL path")) {
+            return suite.finish();
+        }
+        const auto path = std::filesystem::absolute(std::filesystem::path{arguments[1]});
+        const auto library =
+            std::unique_ptr<std::remove_pointer_t<HMODULE>, decltype(&FreeLibrary)>{
+                LoadLibraryExW(path.c_str(), nullptr,
+                               LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS),
+                &FreeLibrary};
+        if (!suite.check(library != nullptr, "load generated x86 DLL")) {
+            std::cerr << "Windows error: " << GetLastError() << '\n';
+            return suite.finish();
+        }
+        const auto symbol = GetProcAddress(library.get(), "extendedPrecacheQueryInfo");
+        if (!suite.check(symbol != nullptr, "resolve undecorated C export")) {
+            return suite.finish();
+        }
+        testQuery(suite, reinterpret_cast<QueryInfo>(symbol));
         return suite.finish();
-    }
-    const auto path = std::filesystem::absolute(std::filesystem::path{arguments[1]});
-    const auto library = std::unique_ptr<std::remove_pointer_t<HMODULE>, decltype(&FreeLibrary)>{
-        LoadLibraryExW(path.c_str(), nullptr,
-                       LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR | LOAD_LIBRARY_SEARCH_DEFAULT_DIRS),
-        &FreeLibrary};
-    if (!suite.check(library != nullptr, "load generated x86 DLL")) {
-        std::cerr << "Windows error: " << GetLastError() << '\n';
-        return suite.finish();
-    }
-    const auto symbol = GetProcAddress(library.get(), "extendedPrecacheQueryInfo");
-    if (!suite.check(symbol != nullptr, "resolve undecorated C export")) {
-        return suite.finish();
-    }
-    testQuery(suite, reinterpret_cast<QueryInfo>(symbol));
-    return suite.finish();
+    });
 }

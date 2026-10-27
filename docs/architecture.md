@@ -24,9 +24,11 @@ introduzidos quando existirem consumidores e evidências suficientes.
 
 - `include/extendedPrecache/domain`: tipos fortes e catálogo de caminhos por categoria.
 - `src/domain`: validação de caminhos canônicos, independente do motor.
+- `include/extendedPrecache/session` e `src/session`: configuração, admissão,
+  codec e máquina de estados, sem dependência de APIs do motor.
 - `include/extendedPrecache/abi`: contrato POD com linkage C e versão explícita.
-- `src/platform/windows`: DLL de diagnóstico sem hooks ou inicialização em `DllMain`.
-- `tests`: testes de comportamento do domínio e carregamento dinâmico da DLL.
+- `src/platform/windows`: DLL diagnóstica sem hooks e provider CNG em alvo estático separado.
+- `tests`: domínio, configuração, corpus do protocolo, sessões e carregamento da DLL.
 - `cmake`: opções de compilação aplicadas por alvo.
 
 ## Catálogo
@@ -63,8 +65,10 @@ O adaptador deverá cobrir leitura, escrita, índices, carregamento e encerramen
 
 A [negociação 1.0](negotiation.md) define o canal de controle, framing, seleção,
 identidades e confirmação antes de liberar o sign-on. As [capacidades](capabilities.md)
-separam contagens, IDs, caches e bytes. Esses contratos ainda não têm leitor,
-codec, state machine ou transporte implementado. Não alteram a ABI de diagnóstico.
+separam contagens, IDs, caches e bytes. O [núcleo de sessão](sessionCore.md)
+implementa validador, codec e estados por interfaces de digest e preparo durável.
+O transporte nativo permanece pendente. Os alvos novos não são ligados à DLL
+nem alteram sua ABI de diagnóstico.
 
 O perfil de dados ampliado proposto usa índices/contagens u32, mas seu formato
 completo ainda depende de deltas, consistência, efeitos, áudio, eventos, decals,
@@ -84,8 +88,7 @@ consistência 5/10/12 bits, campos s16, schemas delta e o buffer de 65.536 bytes
 O [orçamento](memoryBudget.md) separa tabelas de rede, caches locais, HUD e dados
 dos assets. Nenhum desses resultados aprova um adaptador por endereço fixo.
 
-O próximo módulo será o validador/codec de sessão independente do motor, em C++26.
-Os [vetores offline](contractVerification.md) são a referência externa dos seus
-testes, não bytes gerados pelo codec sob teste. Estado do acordo deve ficar fora
+Os [vetores offline](contractVerification.md) são a referência externa dos testes
+do núcleo C++26, não bytes gerados pelo codec sob teste. Estado do acordo deve ficar fora
 do `client_state_t` zerado no serverinfo; ownership, geração de handles e ABI dos
 hooks ainda exigem desenho concreto e validação antes dos adaptadores.
