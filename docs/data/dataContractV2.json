@@ -56,7 +56,7 @@
   "normativeArtifacts": [
     {
       "path": "docs/dataCodecs.md",
-      "sha256": "8488298f87c1e3f7694fa96457dd84ddfb364cdf5b5d9c51817686e5d137a4f7"
+      "sha256": "85eb6518fe15ce0e7a032ff5a5dba834431f1a10053e61b253d630734619cffa"
     },
     {
       "path": "docs/catalogCodec.md",
@@ -76,7 +76,7 @@
     },
     {
       "path": "docs/demoCodec.md",
-      "sha256": "5de89b41b2d534e99256edaf6a683dd539ed897c1b7e88ecb6a3f8c73f33a1cd"
+      "sha256": "64b2173e3333ed5027889b2b1a678b21621ba6658be85b20a09de12338831c09"
     },
     {
       "path": "docs/data/effectSchemasV2.json",

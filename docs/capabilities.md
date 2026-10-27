@@ -94,8 +94,9 @@ estão explicitamente **indisponíveis para ativação**. Servem aos vetores off
 copiar os exemplos não habilita suporte. Um perfil real precisa identificar os
 módulos locais e todos os codecs aprovados. Não existe perfil coringa.
 
-O [contrato de dados 2.0](dataCodecs.md) é uma especificação separada sob ID 2,
-também indisponível. Define overhead máximo de chunk de 48 bytes, referências
+O [contrato de dados 2.0](dataCodecs.md) usa ID 2 e possui um
+[núcleo isolado](dataCore.md); o perfil de integração permanece indisponível.
+Define overhead máximo de chunk de 48 bytes, referências
 DomainId u32 e limites adicionais fechados de aplicação para schemas, estado,
 datagramas, prazos e demos. Esses limites entram no digest de aplicação e no
 preparo de ambos os papéis; não são campos novos no schema de configuração 1.

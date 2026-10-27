@@ -9,8 +9,9 @@ declaradas como suportadas nesta etapa.
 
 O validador de configuração, o codec de controle e a máquina de estados da
 negociação 1.0 estão implementados e testados em um núcleo C++26 isolado.
-Os codecs de dados 2.0 estão especificados, incluindo deltas, consistência,
-efeitos, demos e mensagens de módulos. Sua implementação e os adaptadores
+Os codecs de dados 2.0 e os preflights semânticos de aplicação também estão
+implementados em um alvo estático isolado, incluindo deltas, consistência,
+efeitos, demos e mensagens de módulos. A integração nativa e os adaptadores
 continuam pendentes; nenhum perfil de motor foi habilitado.
 
 O objetivo é substituir limites fixos por capacidades configuráveis e verificadas,
@@ -40,6 +41,7 @@ automaticamente resolvidos pelo precache.
 - [ABI de integração 2.0 planejada](docs/integrationAbi.md)
 - [Verificação dos contratos de integração](docs/integrationVerification.md)
 - [Plano de dados 2.0 e limites por bytes](docs/dataCodecs.md)
+- [API, ownership e limites do núcleo de dados](docs/dataCore.md)
 - [Catálogo, assets e consistência](docs/catalogCodec.md)
 - [Schemas e frames delta transacionais](docs/deltaCodec.md)
 - [Áudio, eventos e efeitos](docs/effectCodecs.md)

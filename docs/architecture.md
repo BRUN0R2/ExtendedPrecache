@@ -26,6 +26,8 @@ introduzidos quando existirem consumidores e evidências suficientes.
 - `src/domain`: validação de caminhos canônicos, independente do motor.
 - `include/extendedPrecache/session` e `src/session`: configuração, admissão,
   codec e máquina de estados, sem dependência de APIs do motor.
+- `include/extendedPrecache/data` e `src/data`: codecs 2.0, preflights e estado,
+  sem SDKs/offsets do motor; APIs e ownership em [dataCore.md](dataCore.md).
 - `include/extendedPrecache/abi`: contrato POD com linkage C e versão explícita.
 - `src/platform/windows`: DLL diagnóstica sem hooks e provider CNG em alvo estático separado.
 - `tests`: domínio, configuração, corpus do protocolo, sessões e carregamento da DLL.
@@ -75,8 +77,9 @@ O [plano de dados 2.0](dataCodecs.md) especifica referências u32 por categoria,
 catálogo/consistência paginados por bytes, schemas aprovados e frames atômicos,
 áudio/eventos/efeitos, demos locais e contratos de módulos. Seu descritor é
 independente do exemplo fictício ID 1 do corpus. Ambos continuam indisponíveis:
-não há codecs de dados ou bindings nativos implementados. ID/digest não habilitam
-um perfil sem cobertura integral e reserva de todos os consumidores.
+os [codecs de dados](dataCore.md) estão implementados isoladamente, mas nenhum
+binding nativo ou perfil foi aprovado. ID/digest não habilitam um perfil sem
+cobertura integral e reserva de todos os consumidores.
 
 Uma sessão sem extensão só poderá continuar se todos os recursos necessários
 couberem nas capacidades comprovadas do par. Não haverá truncamento, reutilização

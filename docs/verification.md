@@ -148,3 +148,10 @@ resultados não provam chamadas, allocators, resets ou unload de um motor.
 Código de produção, ABI diagnóstica atual, contratos de aplicação/dados e os
 26 frames de negociação permanecem inalterados. A nova ABI existe somente como
 documentação/header de especificação e sua migração futura está explícita.
+
+## Núcleo de dados 2.0
+
+As APIs e fronteiras implementadas estão em [dataCore.md](dataCore.md).
+Verificadores, vetores e resultados desta etapa permanecem em área local
+ignorada, conforme [RULES.md](RULES.md). Os registros históricos acima descrevem
+suas respectivas etapas e não são evidência de integração dos codecs com o motor.

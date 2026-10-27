@@ -1,6 +1,7 @@
 # Codecs de dados — contrato 2, versão 2.0
 
-Estado: **especificação indisponível**, sem codecs de produção ou adaptadores.
+Estado: **perfil indisponível**. Codecs e preflights isolados implementados em
+[dataCore.md](dataCore.md); integração nativa e adaptadores pendentes.
 O ID 2 é distinto do exemplo fictício ID 1 de `docs/protocol`, que permanece
 inalterado. [dataContractV2.json](data/dataContractV2.json) identifica este desenho
 e os hashes das suas definições. Nenhum perfil fica disponível por possuir esse
