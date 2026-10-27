@@ -1,4 +1,4 @@
-# Verificação da fundação
+# Verificação
 
 Verificações locais em 26/10/2026 e CI em 27/10/2026, America/Fortaleza. O escopo é o código
 independente do motor e a DLL de diagnóstico, sem instalação no CS 1.6 ou HLDS.
@@ -52,7 +52,32 @@ commit resultante em `main` devem passar nos checks exigidos por `RULES.md`.
 
 - Não há integração de precache, plugin Metamod ou carregador do cliente nesta DLL.
 - Não houve teste de jogo, conexão, mapa, demo, download ou stress do motor.
-- A pesquisa REA é estática e parcial; ver `research.md`.
+- A auditoria dos hashes selecionados é estática e tem fronteiras de cobertura
+  explícitas; ver `engineAudit.md` e `auditMethod.md`.
 - A DLL gerada pelo preset é Debug, destinada à validação local desta fundação.
 - A assinatura SSH específica foi autorizada e configurada, e o commit de
   inicialização e o primeiro commit de código foram confirmados como Verified.
+
+## Auditoria de 27/10/2026
+
+- Rebuild Windows x86 em C++26, clang-tidy ativo e warnings como erros: passou.
+  CTest: 3.130 checks de catálogo e 15 de ABI, zero falhas. clang-format em modo
+  `--dry-run --Werror`: passou. Código de produção permaneceu inalterado.
+- Ghidra 12.1.4: exportação integral das instruções/referências definidas dos dois
+  artefatos, recuperação explícita do dispatcher e inspeção das funções dos CSVs;
+  78 funções do cliente e 119 do servidor decompiladas, sem falhas nesses conjuntos.
+- Scripts compilados e executados pelo Ghidra, e checados separadamente com
+  `javac -Xlint:all -Werror`; particularidade do classpath em `auditMethod.md`.
+- Censo de operandos e interiores de regiões cruzado com scan de cada janela
+  de quatro bytes e relocations PE32. Métricas e referências sem código
+  proprietário preservadas em `docs/audit/`.
+- SHA-256 dos originais e das cópias de pesquisa conferidos. Arquivos do jogo e
+  servidor preservados; sem execução de motores nem implementação de adaptadores.
+- Fontes ReHLDS fixadas em `196300131858d1e087267fb2fb60cb935f8f8873`;
+  `delta.lst` local identificado por hash, sem assumir configuração universal.
+- Integridade dos CSVs, métricas de cobertura, requests por hash e 38 links locais
+  conferida; nenhuma base de análise ou cópia de código recuperado incluída no Git.
+
+Relatórios de protocolo e memória descrevem evidências estáticas e vetores de
+aceitação futuros. Não representam testes reais de sign-on, efeitos, áudio,
+consistência, demos ou uso de memória. A extensão funcional permanece pendente.

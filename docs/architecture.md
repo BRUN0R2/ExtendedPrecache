@@ -38,6 +38,10 @@ Não equivale ao tamanho total de um array legado, que pode incluir slots reserv
 O catálogo armazena uma cópia do nome, compara bytes e diferencia maiúsculas de
 minúsculas. Não normaliza nomes silenciosamente. O adaptador deve selecionar o
 comportamento exato do motor e tratar aliases antes de registrar caminhos.
+Genéricos e decals do motor aceitam índices desde zero; ordinais da lista global
+também são um domínio distinto. A auditoria demonstrou que o catálogo atual não
+pode ser ligado diretamente a esses campos. As traduções e os resultados de erro
+precisam de contratos próprios, sem mudar silenciosamente a semântica existente.
 
 O catálogo oferece registro, busca por nome e congelamento. Após congelar, ainda
 resolve entradas existentes, mas recusa novos registros. Uma nova instância deve
@@ -68,3 +72,9 @@ de slots, índices fictícios ou descarte silencioso de recursos para contornar 
 
 O protocolo original, o HLDS original e o ReHLDS são contratos distintos a verificar.
 Uma referência em fonte ReHLDS não prova identidade com qualquer binário Valve.
+
+A [auditoria estática](engineAudit.md) encerra a investigação dos dois hashes
+selecionados. O [protocolo](protocolAudit.md) exige resolver contagem saturada,
+consistência 5/10/12 bits, campos s16, schemas delta e o buffer de 65.536 bytes.
+O [orçamento](memoryBudget.md) separa tabelas de rede, caches locais, HUD e dados
+dos assets. Nenhum desses resultados aprova um adaptador por endereço fixo.

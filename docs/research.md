@@ -1,6 +1,12 @@
 # Registro de investigação
 
-Data da investigação: 26/10/2026, America/Fortaleza.
+Investigação inicial: 26/10/2026. Auditoria ampliada: 27/10/2026, America/Fortaleza.
+
+O relatório vigente é [engineAudit.md](engineAudit.md), com
+[protocolo](protocolAudit.md), [memória](memoryBudget.md),
+[proveniência](auditMethod.md) e inventários por hash. O registro abaixo preserva
+as primeiras evidências; pendências daquela exploração foram atualizadas para
+refletir a auditoria estática concluída, sem declarar suporte em execução.
 
 ## Método e limites
 
@@ -19,7 +25,7 @@ uma promessa de persistência do banco temporário do Ghidra.
 | Identificação | Arquivo | SHA-256 | Estado |
 | --- | --- | --- | --- |
 | Servidor indicado pelo mantenedor | `REHLDS-Rezombie/swds.dll` | `f6c552ca46e933c6d02ee4fb888cc99bbe8f8aab04a4afbe9ff45d74f896cd02` | PE x86, analisado estaticamente |
-| Cliente Steam instalado | `Half-Life/hw.dll` | `9ba9a2db5e07598fd59afa35507a98c86162e4e15b3835177b78c11842cd2295` | PE x86, análise inicial; suporte não declarado |
+| Cliente Steam instalado | `Half-Life/hw.dll` | `9ba9a2db5e07598fd59afa35507a98c86162e4e15b3835177b78c11842cd2295` | PE x86, auditoria estática; suporte não declarado |
 | Servidor Valve instalado | `Half-Life/swds.dll` | `64b6872f9c2875ea7da88eb694a34e6e46f2aac7cb35fb436744f462611c03ae` | Inventariado; ainda não analisado |
 
 A DLL do servidor contém strings que informam `3.15.0.896-dev` e commit
@@ -30,7 +36,9 @@ origem. O commit público correspondente é
 ## Fontes de referência
 
 - ReHLDS, revisão
-  [`550f2d62f13f4ebeb029c1d9d1c212133202611d`](https://github.com/rehlds/ReHLDS/tree/550f2d62f13f4ebeb029c1d9d1c212133202611d).
+  [`196300131858d1e087267fb2fb60cb935f8f8873`](https://github.com/rehlds/ReHLDS/tree/196300131858d1e087267fb2fb60cb935f8f8873),
+  correspondente ao commit autodeclarado pelo servidor. Substitui como referência
+  principal a revisão `550f2d6` usada no levantamento inicial.
   Consultados: `rehlds/common/qlimits.h`, `rehlds/public/rehlds/custom.h`,
   `rehlds/engine/server.h`, `pr_cmds.cpp` e `sv_main.cpp`.
 - NextClient, revisão
@@ -50,7 +58,7 @@ desses projetos foi incorporado ao ExtendedPrecache.
 | Camada na revisão ReHLDS consultada | Valor | Consequência |
 | --- | --- | --- |
 | Tabelas de modelos e sons | 512 slots cada | Não equivalem a 512 recursos úteis se houver índices reservados |
-| Genéricos e decals base | 512 slots cada | Exigem consumidores específicos |
+| Genéricos legados e decals base | 512 slots cada | Genéricos ativos em `REHLDS_FIXES` usam 4096 nomes de 64 bytes |
 | Eventos | 256 slots | Não inferir largura de todas as mensagens a partir desse tamanho |
 | Lista legada em `custom.h` | 1280 slots | Não confundir com o armazenamento alternativo de `REHLDS_FIXES` |
 | `RESOURCE_INDEX_BITS` | 12 bits | Valor máximo codificável: 4095, inclusive para a contagem enviada |
@@ -58,8 +66,10 @@ desses projetos foi incorporado ao ExtendedPrecache.
 | Nome de caminho `MAX_QPATH` | 64 bytes no buffer | Um nome terminado em NUL precisa reservar espaço para o terminador |
 
 `REHLDS_FIXES` possui armazenamento alternativo com capacidade de 4096 recursos.
-Isso não prova que uma contagem de 4096 seja transmissível no campo de 12 bits.
-A extensão precisa validar armazenamento, maior índice e contagem separadamente.
+O escritor satura a contagem em 4095, mas emite os 4096 registros se o contador
+atingir essa capacidade. O defeito de enquadramento foi confirmado no binário.
+A extensão precisa validar armazenamento, maior índice, contagem e tamanho total
+da mensagem separadamente; ver `protocolAudit.md`.
 
 O enum de recursos também declara `t_skin` e `t_world`; o próprio cabeçalho
 descreve `t_world` como um tipo artificial associado a modelos. Ainda não há
@@ -109,8 +119,11 @@ ou os consumidores estejam preparados. A análise não provou a validação de
 A busca por referências ao endereço exato da string inicial de `CL_ParseResourceList`
 não retornou resultados
 (`ev_09bac24004ad77e5775acceaf0e227fb283fa215a643e9fa358c05e65df02be7`).
-Isso não prova ausência da função. O rastreamento do parser permanece pendente.
-As sessões REA foram exportadas e encerradas; nenhum motor foi executado.
+Isso não prova ausência da função. Na auditoria ampliada, uma busca binária
+positiva recuperou a tabela de serviços e o wrapper `0x101aa270`; seu corpo
+`0x101a7690` foi decompilado em projeto Ghidra próprio, junto com os demais
+handlers e consumidores. As sessões REA foram exportadas e encerradas; nenhum
+motor foi executado. A proveniência completa está em `auditMethod.md`.
 
 ## Avaliação do NextClient
 
@@ -133,10 +146,13 @@ termos aplicáveis. A implementação atual é original e não depende da NitroA
 
 ## Questões abertas
 
-- Completar os consumidores diretos, indiretos e acessos aos interiores das tabelas.
-- Auditar o cliente Steam identificado e definir qual build será o primeiro suportado.
+- Projetar os contratos a partir da auditoria estática dos dois hashes, incluindo
+  as fronteiras externas e lacunas de análise declaradas, sem alegar prova universal.
+- Definir e validar em execução o primeiro par suportado; hash auditado não é suporte.
 - Verificar HLDS original separadamente do ReHLDS.
 - Determinar carregamento do cliente, ABI do Metamod e disponibilidade dos hooks.
-- Cobrir serialização, deltas, efeitos, áudio, eventos, decals, demos e troca de mapa.
-- Definir orçamento de memória, limites por sessão e negociação antes do sign-on estendido.
+- Validar em execução serialização, deltas, efeitos, áudio, eventos, decals,
+  demos e troca de mapa; a auditoria estática dos codecs está documentada.
+- Medir o orçamento real de memória e definir capacidades/negociação a partir
+  dos custos estáticos e limites por bytes levantados.
 - Comprovar a integração em uma instalação de teste isolada com recursos reais.

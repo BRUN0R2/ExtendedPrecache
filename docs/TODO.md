@@ -28,15 +28,17 @@ devem acompanhar o item correspondente. As regras estão em [RULES.md](RULES.md)
 
 - [x] Identificar os artefatos iniciais de CS 1.6 e ReHLDS por arquitetura e SHA-256.
 - [x] Executar investigação estática inicial com REA no precache do servidor e do cliente, sem modificar os originais.
-- [ ] Mapear todas as referências às tabelas de modelos, sons, genéricos, eventos e decals.
-- [ ] Mapear serialização, deltas, mensagens temporárias, carregamento e descarregamento.
-- [ ] Registrar pontos de integração e limites demonstrados por versão.
-- [ ] Determinar os orçamentos de memória e o custo das tabelas ampliadas.
+- [x] Concluir o censo estático das referências às regiões de modelos, sons, genéricos, eventos, decals e caches dos dois hashes selecionados: 350 sites/78 funções no cliente e 674 sites/119 funções no servidor; CSVs e limites de cobertura em `engineAudit.md` e `audit/profiles.json`.
+- [x] Auditar os pares de serialização/leitura, deltas locais, efeitos temporários, carga e reset: dispatcher recuperado, 56 raízes de serviços inspecionadas e restrições registradas em `protocolAudit.md`.
+- [x] Registrar fronteiras de integração, ownership e limites por hash, incluindo API ReHLDS, caches de áudio/modelos e handles de HUD; nenhum hook ou ABI interna foi aprovado para uso.
+- [x] Calcular os custos das estruturas x86 e o orçamento por bytes do sign-on em `memoryBudget.md` e `protocolAudit.md`; medições reais permanecem na etapa 5.
 
 ## 4. Extensão integrada
 
 - [ ] Definir capacidades configuráveis a partir das evidências; não prometer infinitude.
 - [ ] Projetar negociação de capacidades antes de transmitir índices estendidos.
+- [ ] Especificar conversão zero/um, ownership estável, ciclo de mapa e ABI versionada, resolvendo as restrições de `engineAudit.md` antes dos adaptadores.
+- [ ] Projetar deltas, consistência, efeitos, limites por bytes e representação em demos; definir contratos para mensagens de mods e módulos externos do perfil final.
 - [ ] Implementar as entradas e o ciclo de vida do plugin Metamod do servidor.
 - [ ] Implementar adaptador HLDS com detecção exata de versão e falha segura.
 - [ ] Implementar adaptador CS 1.6 com o mesmo contrato e ciclo de vida.
@@ -58,13 +60,16 @@ devem acompanhar o item correspondente. As regras estão em [RULES.md](RULES.md)
 
 ## Estado atual
 
-Fundação local implementada e verificada: núcleo C++26 e DLL x86 de diagnóstico.
-A ampliação do precache e os adaptadores Metamod/cliente continuam pendentes.
-Nenhum arquivo da instalação do jogo ou servidor foi alterado.
+Fundação publicada: núcleo C++26 e DLL x86 de diagnóstico. Auditoria estática
+dos dois motores selecionados concluída com parecer contrário a uma ampliação
+por constantes/hooks isolados. Relatórios, inventários e escopo de cobertura em
+[engineAudit.md](engineAudit.md). Isso não é certificação dinâmica nem prova de
+consumidores em módulos externos não selecionados.
 
-Próximo trabalho técnico: completar a auditoria dos consumidores e do parser do
-cliente, definir integração e negociação com base nas evidências e só então
-implementar a extensão do motor.
+A ampliação funcional, a negociação e os adaptadores Metamod/cliente continuam
+pendentes. Nenhum arquivo da instalação do jogo ou servidor foi alterado.
+Próximo trabalho técnico: desenhar capacidades e contratos da etapa 4 a partir
+das restrições encontradas, antes de implementar os adaptadores.
 
 Publicação: repositório público
 [`BRUN0R2/ExtendedPrecache`](https://github.com/BRUN0R2/ExtendedPrecache) criado.
@@ -74,5 +79,6 @@ O commit de inicialização `8920ac6` foi confirmado como Verified no GitHub.
 A fundação foi submetida no [PR #1](https://github.com/BRUN0R2/ExtendedPrecache/pull/1),
 com os primeiros runs de [push](https://github.com/BRUN0R2/ExtendedPrecache/actions/runs/40441784269)
 e [PR](https://github.com/BRUN0R2/ExtendedPrecache/actions/runs/40441852829) aprovados
-para `5a96f33`. O PR preserva o registro de revisão e integração desse marco.
-A entrega da extensão funcional continua pendente nas etapas 3 a 5.
+para `5a96f33`. O PR foi integrado em `main` no commit Verified `a664f14`, com
+[CI de main aprovado](https://github.com/BRUN0R2/ExtendedPrecache/actions/runs/40442390881).
+A entrega da extensão funcional continua pendente nas etapas 4 e 5.

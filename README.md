@@ -9,9 +9,11 @@ declaradas como suportadas nesta etapa.
 
 O objetivo é substituir limites fixos por capacidades configuráveis e verificadas,
 respeitando memória, índices e protocolo. Não existe capacidade literalmente infinita.
-Sprites compartilham o domínio de modelos; sons, arquivos genéricos, eventos e
-decals também precisam de auditoria. Texturas, entidades e lightstyles possuem
-restrições relacionadas, mas não são automaticamente resolvidos pelo precache.
+Sprites de rede compartilham o domínio de modelos; sprites do HUD têm um cache
+local separado. Sons, arquivos genéricos, eventos e decals também fazem parte da
+auditoria estática concluída para os dois hashes selecionados. Texturas,
+entidades e lightstyles possuem restrições relacionadas, mas não são
+automaticamente resolvidos pelo precache.
 
 ## Documentação
 
@@ -20,6 +22,9 @@ restrições relacionadas, mas não são automaticamente resolvidos pelo precach
 - [Escopo e critérios de aceitação](docs/scope.md)
 - [Arquitetura e distribuição](docs/architecture.md)
 - [Evidências e questões abertas](docs/research.md)
+- [Auditoria dos consumidores e ciclos de vida](docs/engineAudit.md)
+- [Auditoria do protocolo e fronteiras de índices](docs/protocolAudit.md)
+- [Orçamento de memória das estruturas](docs/memoryBudget.md)
 - [Compilação e verificações](docs/build.md)
 - [Contrato público da DLL](docs/abi.md)
 - [Resultados e limites da verificação](docs/verification.md)
