@@ -71,10 +71,12 @@ implementa validador, codec e estados por interfaces de digest e preparo duráve
 O transporte nativo permanece pendente. Os alvos novos não são ligados à DLL
 nem alteram sua ABI de diagnóstico.
 
-O perfil de dados ampliado proposto usa índices/contagens u32, mas seu formato
-completo ainda depende de deltas, consistência, efeitos, áudio, eventos, decals,
-demos e consumidores do mod. O perfil fictício do corpus está indisponível;
-nenhum acordo pode habilitá-lo no motor apenas por possuir um ID ou digest.
+O [plano de dados 2.0](dataCodecs.md) especifica referências u32 por categoria,
+catálogo/consistência paginados por bytes, schemas aprovados e frames atômicos,
+áudio/eventos/efeitos, demos locais e contratos de módulos. Seu descritor é
+independente do exemplo fictício ID 1 do corpus. Ambos continuam indisponíveis:
+não há codecs de dados ou bindings nativos implementados. ID/digest não habilitam
+um perfil sem cobertura integral e reserva de todos os consumidores.
 
 Uma sessão sem extensão só poderá continuar se todos os recursos necessários
 couberem nas capacidades comprovadas do par. Não haverá truncamento, reutilização

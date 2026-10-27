@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 2,
+  "specificationOnly": true,
+  "availability": "unavailable",
+  "dataContractId": 2,
+  "version": {
+    "major": 2,
+    "minor": 0
+  },
+  "byteOrder": "littleEndian",
+  "identity": "sha256OfExactUtf8LfDescriptorBytesIncludingFinalNewline",
+  "negotiationVersion": {
+    "major": 1,
+    "minor": 0
+  },
+  "configurationSchemaVersion": 1,
+  "diagnosticAbiMajor": 1,
+  "plannedMetadataAbiMajor": 2,
+  "sizes": {
+    "envelopeBytes": 40,
+    "catalogHeaderBytes": 72,
+    "resourceHeaderBytes": 28,
+    "assetHeaderBytes": 44,
+    "maxChunkOverheadBytes": 48,
+    "schemaHeaderBytes": 8,
+    "fieldHeaderBytes": 12,
+    "frameBeginBytes": 24,
+    "frameObjectHeaderBytes": 16,
+    "frameEndBytes": 40,
+    "fullObjectHeaderBytes": 12,
+    "consistencyPageHeaderBytes": 8,
+    "consistencyDigestEntryBytes": 40,
+    "consistencyBoundsEntryBytes": 64,
+    "soundBytes": 20,
+    "eventHeaderBytes": 16,
+    "effectHeaderBytes": 8,
+    "modMessageHeaderBytes": 8,
+    "fatalBytes": 16,
+    "demoHeaderBytes": 256,
+    "demoBlockHeaderBytes": 56,
+    "demoPacketHeaderBytes": 12,
+    "demoLocalHeaderBytes": 12,
+    "demoEndBytes": 48
+  },
+  "representation": {
+    "resourceIdBytes": 4,
+    "maxSequence": 4294967294,
+    "maxReliableMessageBytes": 65536,
+    "maxFileBytes": 16777215,
+    "maxNativeUserMessageBytes": 192,
+    "maxEffectId": 255,
+    "entityIdBits": 11,
+    "packedEntityIdBits": 12,
+    "attachmentBits": 4
+  },
+  "normativeArtifacts": [
+    {
+      "path": "docs/dataCodecs.md",
+      "sha256": "46e2d6c7fc1407ae66da0799267bb9e335b7ad523f44f1e774a891cda19de157"
+    },
+    {
+      "path": "docs/catalogCodec.md",
+      "sha256": "6d776f52b6821249d866a1da28a4082bdb0d9ff56895349441de98d2063d2e1b"
+    },
+    {
+      "path": "docs/deltaCodec.md",
+      "sha256": "c6b1e206bf26516097e36b7d581fd2f13bf5731194492391ecd8fda7134ada57"
+    },
+    {
+      "path": "docs/effectCodecs.md",
+      "sha256": "3b920f1fa171fa0d9f50a81254657817e3bd32c13b11c888c001cfdfafaf2c40"
+    },
+    {
+      "path": "docs/moduleContracts.md",
+      "sha256": "b0cfdaabd93e42e5f73a6955deec3956a261a3693f9558a237f19a98f959c53a"
+    },
+    {
+      "path": "docs/demoCodec.md",
+      "sha256": "fa080a8f6ebbef5b2e145b5786d4dd71a4a21c6ea71848c286a6b5012a43406b"
+    },
+    {
+      "path": "docs/data/effectSchemasV2.json",
+      "sha256": "64cee64ef82c6e4a33ca9f980c6d9a6e161979376b0286004020dda021039994"
+    },
+    {
+      "path": "docs/data/applicationContractV2.schema.json",
+      "sha256": "ae356c223f0b205151a447875a556669038569611dc78aae470c16737c9acadf"
+    }
+  ]
+}

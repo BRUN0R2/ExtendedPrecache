@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 2,
+  "specificationOnly": true,
+  "availability": "unavailable",
+  "dataContractId": 2,
+  "dataContractSha256": "c1616d7c86a731123793aa92ade9ccd2952a71035c54966007784c4ec0c32355",
+  "schemaSetSha256": "e45b93e3c606989f4ae2465fc239fd8694b21bac907d322084bac8efaceaf975",
+  "limits": {
+    "schemaSetBytes": 65536,
+    "contractArtifactBytes": 1048576,
+    "stateFrameBytes": 1048576,
+    "snapshotWindowFrames": 8,
+    "unreliableMessageBytes": 1200,
+    "loadTimeoutMs": 120000,
+    "consistencyTimeoutMs": 60000,
+    "demoFileBytes": 4294967296,
+    "demoBlockBytes": 131072,
+    "demoBootstrapBytes": 8388608,
+    "demoDurationMicros": 86400000000
+  },
+  "objectLimits": {
+    "entityEntries": 2048,
+    "clientEntries": 32,
+    "weaponEntries": 64,
+    "staticEntries": 0
+  },
+  "schemaDefinitions": [
+    {
+      "schemaId": 1,
+      "role": 1,
+      "name": "entityState",
+      "fields": [
+        {
+          "fieldId": 0,
+          "valueKind": 9,
+          "resourceKind": 1,
+          "flags": 1,
+          "maxElements": 1,
+          "maxAtomBytes": 4,
+          "name": "modelIndex"
+        },
+        {
+          "fieldId": 1,
+          "valueKind": 13,
+          "resourceKind": 0,
+          "flags": 0,
+          "maxElements": 1,
+          "maxAtomBytes": 6,
+          "name": "origin"
+        }
+      ]
+    }
+  ],
+  "moduleProfiles": [],
+  "effectPolicies": [],
+  "servicePolicies": []
+}

@@ -39,7 +39,8 @@ devem acompanhar o item correspondente. As regras estão em [RULES.md](RULES.md)
 - [x] Projetar negociação 1.0 em `negotiation.md`: barreira anterior ao sign-on, transportes de controle existentes, identidades, mínimo do par, confirmação mútua, deadline e recusa; corpus de 26 frames fixos, sem ativação do motor.
 - [x] Implementar leitor/validador de configuração e codec/state machine de negociação isolados em C++26, usando o corpus versionado antes dos adaptadores; API, providers e ciclo de vida em `sessionCore.md`, checks em `verification.md`.
 - [x] Especificar conversão zero/um, ownership estável, ciclo de mapa e ABI versionada, resolvendo as restrições de `engineAudit.md` antes dos adaptadores; contratos em `indexMapping.md`, `storageOwnership.md`, `mapLifecycle.md` e `integrationAbi.md`, matriz e verificações em `integrationVerification.md`.
-- [ ] Projetar deltas, consistência, efeitos, limites por bytes e representação em demos; definir contratos para mensagens de mods e módulos externos do perfil final.
+- [x] Projetar catálogo/consistência, deltas, áudio/eventos/efeitos, limites por bytes e demos em `dataCodecs.md` e contratos vinculados; definir schema fechado para mensagens de mods e módulos externos, sem aprovar um perfil final ou implementar codecs/adaptadores.
+- [ ] Implementar os codecs de dados 2.0 e os preflights semânticos de aplicação isoladamente, após estabilizar o desenho; manter verificadores e resultados locais fora do GitHub.
 - [ ] Comprovar a barreira anterior a `SV_SendServerinfo`, o bootstrap de user messages, o despacho de `clc_stringcmd`, drain/reset e reconexão nos hashes selecionados antes de habilitar o transporte.
 - [ ] Implementar as entradas e o ciclo de vida do plugin Metamod do servidor.
 - [ ] Implementar adaptador HLDS com detecção exata de versão e falha segura.
@@ -73,7 +74,8 @@ C++26 testado contra o corpus independente. Há leitor/validador, codec e máqui
 de estados para os dois papéis, com preparo durável, confirmação de fila e gate
 de sign-on. A DLL continua diagnóstica: não liga esse núcleo, lê esses arquivos
 ou envia frames. O perfil de dados ampliado dos exemplos continua fictício e
-indisponível, até a definição/validação completa de seus codecs.
+indisponível. Ele permanece byte a byte como referência do controle; o novo
+desenho usa ID 2 e não ativa codecs em produção.
 
 A conversão zero/um, aliases, ordinais, ownership de arenas/leases, ciclo de mapa
 e ABI de integração 2.0 foram especificados. O header C e os vetores dessa ABI
@@ -82,9 +84,15 @@ implementado. A ABI diagnóstica 1 permanece inalterada. As 21 provas nativas
 inventariadas continuam pendentes e condicionam a aprovação de um perfil.
 
 A ampliação funcional e os adaptadores Metamod/cliente continuam pendentes.
-Nenhum arquivo da instalação do jogo ou servidor foi alterado. Próximo trabalho:
-projetar codecs de dados (deltas, consistência, efeitos, bytes, demos e mensagens
-de módulos), depois provar o bootstrap antes de implementar os adaptadores.
+Nenhum arquivo da instalação do jogo ou servidor foi alterado. O plano de dados
+2.0 está especificado em [dataCodecs.md](dataCodecs.md): formatos binários,
+reservas por bytes, estado transacional, gate de assets/gameplay, demos e contrato
+fechado de aplicação. Os descritores de `docs/data` são artefatos normativos
+indisponíveis, sem perfil final de módulos aprovado. Verificadores/vetores e
+resultados novos permanecem locais em área ignorada.
+
+Próximo trabalho: implementar os codecs isolados e comprovar o bootstrap,
+dispatch, drain/reset e reconexão nos hashes selecionados antes dos adaptadores.
 
 Publicação: repositório público
 [`BRUN0R2/ExtendedPrecache`](https://github.com/BRUN0R2/ExtendedPrecache) criado.

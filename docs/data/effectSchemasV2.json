@@ -1,0 +1,1202 @@
+{
+  "schemaVersion": 2,
+  "specificationOnly": true,
+  "availability": "unavailable",
+  "dataContractId": 2,
+  "byteOrder": "littleEndian",
+  "resourceIdBytes": 4,
+  "effectHeaderBytes": 8,
+  "atoms": {
+    "u8": {
+      "bytes": 1
+    },
+    "i8": {
+      "bytes": 1
+    },
+    "u16": {
+      "bytes": 2
+    },
+    "i16": {
+      "bytes": 2
+    },
+    "u32": {
+      "bytes": 4
+    },
+    "i32": {
+      "bytes": 4
+    },
+    "f32": {
+      "bytes": 4
+    },
+    "coord16": {
+      "bytes": 2
+    },
+    "coords3": {
+      "bytes": 6,
+      "components": [
+        "x:coord16",
+        "y:coord16",
+        "z:coord16"
+      ]
+    },
+    "packedEntity16": {
+      "bytes": 2
+    },
+    "entity16": {
+      "bytes": 2
+    },
+    "resource": {
+      "bytes": 4
+    },
+    "rgb8": {
+      "bytes": 3,
+      "components": [
+        "red:u8",
+        "green:u8",
+        "blue:u8"
+      ]
+    },
+    "beamStyle": {
+      "bytes": 10,
+      "components": [
+        "startFrame:u8",
+        "frameRate:u8",
+        "life:u8",
+        "width:u8",
+        "noise:u8",
+        "red:u8",
+        "green:u8",
+        "blue:u8",
+        "brightness:u8",
+        "scroll:u8"
+      ]
+    }
+  },
+  "effects": [
+    {
+      "effectId": 0,
+      "name": "beamPoints",
+      "valuesBytes": 26,
+      "fields": [
+        {
+          "name": "start",
+          "atom": "coords3"
+        },
+        {
+          "name": "end",
+          "atom": "coords3"
+        },
+        {
+          "name": "sprite",
+          "atom": "resource",
+          "resourceKind": 1,
+          "allowedTypes": [
+            2
+          ],
+          "nullable": false
+        },
+        {
+          "name": "style",
+          "atom": "beamStyle"
+        }
+      ]
+    },
+    {
+      "effectId": 1,
+      "name": "beamEntityPoint",
+      "valuesBytes": 22,
+      "fields": [
+        {
+          "name": "startEntity",
+          "atom": "packedEntity16"
+        },
+        {
+          "name": "end",
+          "atom": "coords3"
+        },
+        {
+          "name": "sprite",
+          "atom": "resource",
+          "resourceKind": 1,
+          "allowedTypes": [
+            2
+          ],
+          "nullable": false
+        },
+        {
+          "name": "style",
+          "atom": "beamStyle"
+        }
+      ]
+    },
+    {
+      "effectId": 3,
+      "name": "explosion",
+      "valuesBytes": 13,
+      "fields": [
+        {
+          "name": "origin",
+          "atom": "coords3"
+        },
+        {
+          "name": "sprite",
+          "atom": "resource",
+          "resourceKind": 1,
+          "allowedTypes": [
+            2
+          ],
+          "nullable": false
+        },
+        {
+          "name": "scale",
+          "atom": "u8"
+        },
+        {
+          "name": "frameRate",
+          "atom": "u8"
+        },
+        {
+          "name": "flags",
+          "atom": "u8",
+          "allowedMask": 15
+        }
+      ]
+    },
+    {
+      "effectId": 5,
+      "name": "smoke",
+      "valuesBytes": 12,
+      "fields": [
+        {
+          "name": "origin",
+          "atom": "coords3"
+        },
+        {
+          "name": "sprite",
+          "atom": "resource",
+          "resourceKind": 1,
+          "allowedTypes": [
+            2
+          ],
+          "nullable": false
+        },
+        {
+          "name": "scale",
+          "atom": "u8"
+        },
+        {
+          "name": "frameRate",
+          "atom": "u8"
+        }
+      ]
+    },
+    {
+      "effectId": 7,
+      "name": "lightning",
+      "valuesBytes": 19,
+      "fields": [
+        {
+          "name": "start",
+          "atom": "coords3"
+        },
+        {
+          "name": "end",
+          "atom": "coords3"
+        },
+        {
+          "name": "life",
+          "atom": "u8"
+        },
+        {
+          "name": "width",
+          "atom": "u8"
+        },
+        {
+          "name": "noise",
+          "atom": "u8"
+        },
+        {
+          "name": "sprite",
+          "atom": "resource",
+          "resourceKind": 1,
+          "allowedTypes": [
+            2
+          ],
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "effectId": 8,
+      "name": "beamEntities",
+      "valuesBytes": 18,
+      "fields": [
+        {
+          "name": "startEntity",
+          "atom": "packedEntity16"
+        },
+        {
+          "name": "endEntity",
+          "atom": "packedEntity16"
+        },
+        {
+          "name": "sprite",
+          "atom": "resource",
+          "resourceKind": 1,
+          "allowedTypes": [
+            2
+          ],
+          "nullable": false
+        },
+        {
+          "name": "style",
+          "atom": "beamStyle"
+        }
+      ]
+    },
+    {
+      "effectId": 13,
+      "name": "bspDecal",
+      "valuesBytes": 16,
+      "fields": [
+        {
+          "name": "origin",
+          "atom": "coords3"
+        },
+        {
+          "name": "decal",
+          "atom": "resource",
+          "resourceKind": 5,
+          "allowedTypes": [
+            8
+          ],
+          "nullable": false
+        },
+        {
+          "name": "entity",
+          "atom": "entity16"
+        },
+        {
+          "name": "model",
+          "atom": "resource",
+          "resourceKind": 1,
+          "allowedTypes": [
+            3,
+            4
+          ],
+          "nullable": true
+        }
+      ],
+      "constraints": [
+        "entityZeroRequiresModelZero",
+        "nonzeroEntityRequiresItsBspModel"
+      ]
+    },
+    {
+      "effectId": 15,
+      "name": "spriteTrail",
+      "valuesBytes": 21,
+      "fields": [
+        {
+          "name": "start",
+          "atom": "coords3"
+        },
+        {
+          "name": "end",
+          "atom": "coords3"
+        },
+        {
+          "name": "sprite",
+          "atom": "resource",
+          "resourceKind": 1,
+          "allowedTypes": [
+            2
+          ],
+          "nullable": false
+        },
+        {
+          "name": "count",
+          "atom": "u8"
+        },
+        {
+          "name": "life",
+          "atom": "u8"
+        },
+        {
+          "name": "scale",
+          "atom": "u8"
+        },
+        {
+          "name": "velocity",
+          "atom": "u8"
+        },
+        {
+          "name": "randomness",
+          "atom": "u8"
+        }
+      ]
+    },
+    {
+      "effectId": 17,
+      "name": "sprite",
+      "valuesBytes": 12,
+      "fields": [
+        {
+          "name": "origin",
+          "atom": "coords3"
+        },
+        {
+          "name": "sprite",
+          "atom": "resource",
+          "resourceKind": 1,
+          "allowedTypes": [
+            2
+          ],
+          "nullable": false
+        },
+        {
+          "name": "scale",
+          "atom": "u8"
+        },
+        {
+          "name": "brightness",
+          "atom": "u8"
+        }
+      ]
+    },
+    {
+      "effectId": 18,
+      "name": "beamSprite",
+      "valuesBytes": 20,
+      "fields": [
+        {
+          "name": "start",
+          "atom": "coords3"
+        },
+        {
+          "name": "end",
+          "atom": "coords3"
+        },
+        {
+          "name": "beamSprite",
+          "atom": "resource",
+          "resourceKind": 1,
+          "allowedTypes": [
+            2
+          ],
+          "nullable": false
+        },
+        {
+          "name": "endSprite",
+          "atom": "resource",
+          "resourceKind": 1,
+          "allowedTypes": [
+            2
+          ],
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "effectId": 19,
+      "name": "beamTorus",
+      "valuesBytes": 26,
+      "fields": [
+        {
+          "name": "center",
+          "atom": "coords3"
+        },
+        {
+          "name": "axis",
+          "atom": "coords3"
+        },
+        {
+          "name": "sprite",
+          "atom": "resource",
+          "resourceKind": 1,
+          "allowedTypes": [
+            2
+          ],
+          "nullable": false
+        },
+        {
+          "name": "style",
+          "atom": "beamStyle"
+        }
+      ]
+    },
+    {
+      "effectId": 20,
+      "name": "beamDisk",
+      "valuesBytes": 26,
+      "fields": [
+        {
+          "name": "center",
+          "atom": "coords3"
+        },
+        {
+          "name": "axis",
+          "atom": "coords3"
+        },
+        {
+          "name": "sprite",
+          "atom": "resource",
+          "resourceKind": 1,
+          "allowedTypes": [
+            2
+          ],
+          "nullable": false
+        },
+        {
+          "name": "style",
+          "atom": "beamStyle"
+        }
+      ]
+    },
+    {
+      "effectId": 21,
+      "name": "beamCylinder",
+      "valuesBytes": 26,
+      "fields": [
+        {
+          "name": "center",
+          "atom": "coords3"
+        },
+        {
+          "name": "axis",
+          "atom": "coords3"
+        },
+        {
+          "name": "sprite",
+          "atom": "resource",
+          "resourceKind": 1,
+          "allowedTypes": [
+            2
+          ],
+          "nullable": false
+        },
+        {
+          "name": "style",
+          "atom": "beamStyle"
+        }
+      ]
+    },
+    {
+      "effectId": 22,
+      "name": "beamFollow",
+      "valuesBytes": 12,
+      "fields": [
+        {
+          "name": "entity",
+          "atom": "packedEntity16"
+        },
+        {
+          "name": "sprite",
+          "atom": "resource",
+          "resourceKind": 1,
+          "allowedTypes": [
+            2
+          ],
+          "nullable": false
+        },
+        {
+          "name": "life",
+          "atom": "u8"
+        },
+        {
+          "name": "width",
+          "atom": "u8"
+        },
+        {
+          "name": "color",
+          "atom": "rgb8"
+        },
+        {
+          "name": "brightness",
+          "atom": "u8"
+        }
+      ]
+    },
+    {
+      "effectId": 23,
+      "name": "glowSprite",
+      "valuesBytes": 13,
+      "fields": [
+        {
+          "name": "origin",
+          "atom": "coords3"
+        },
+        {
+          "name": "sprite",
+          "atom": "resource",
+          "resourceKind": 1,
+          "allowedTypes": [
+            2
+          ],
+          "nullable": false
+        },
+        {
+          "name": "life",
+          "atom": "u8"
+        },
+        {
+          "name": "scale",
+          "atom": "u8"
+        },
+        {
+          "name": "brightness",
+          "atom": "u8"
+        }
+      ]
+    },
+    {
+      "effectId": 24,
+      "name": "beamRing",
+      "valuesBytes": 18,
+      "fields": [
+        {
+          "name": "startEntity",
+          "atom": "packedEntity16"
+        },
+        {
+          "name": "endEntity",
+          "atom": "packedEntity16"
+        },
+        {
+          "name": "sprite",
+          "atom": "resource",
+          "resourceKind": 1,
+          "allowedTypes": [
+            2
+          ],
+          "nullable": false
+        },
+        {
+          "name": "style",
+          "atom": "beamStyle"
+        }
+      ]
+    },
+    {
+      "effectId": 100,
+      "name": "largeFunnel",
+      "valuesBytes": 12,
+      "fields": [
+        {
+          "name": "origin",
+          "atom": "coords3"
+        },
+        {
+          "name": "sprite",
+          "atom": "resource",
+          "resourceKind": 1,
+          "allowedTypes": [
+            2
+          ],
+          "nullable": false
+        },
+        {
+          "name": "flags",
+          "atom": "i16"
+        }
+      ]
+    },
+    {
+      "effectId": 104,
+      "name": "decal",
+      "valuesBytes": 12,
+      "fields": [
+        {
+          "name": "origin",
+          "atom": "coords3"
+        },
+        {
+          "name": "decal",
+          "atom": "resource",
+          "resourceKind": 5,
+          "allowedTypes": [
+            8
+          ],
+          "nullable": false
+        },
+        {
+          "name": "entity",
+          "atom": "entity16"
+        }
+      ]
+    },
+    {
+      "effectId": 105,
+      "name": "fizz",
+      "valuesBytes": 7,
+      "fields": [
+        {
+          "name": "entity",
+          "atom": "entity16"
+        },
+        {
+          "name": "sprite",
+          "atom": "resource",
+          "resourceKind": 1,
+          "allowedTypes": [
+            2
+          ],
+          "nullable": false
+        },
+        {
+          "name": "density",
+          "atom": "u8"
+        }
+      ]
+    },
+    {
+      "effectId": 106,
+      "name": "model",
+      "valuesBytes": 19,
+      "fields": [
+        {
+          "name": "origin",
+          "atom": "coords3"
+        },
+        {
+          "name": "velocity",
+          "atom": "coords3"
+        },
+        {
+          "name": "yaw",
+          "atom": "u8"
+        },
+        {
+          "name": "model",
+          "atom": "resource",
+          "resourceKind": 1,
+          "allowedTypes": [
+            1
+          ],
+          "nullable": false
+        },
+        {
+          "name": "bounce",
+          "atom": "u8"
+        },
+        {
+          "name": "life",
+          "atom": "u8"
+        }
+      ]
+    },
+    {
+      "effectId": 107,
+      "name": "explodeModel",
+      "valuesBytes": 15,
+      "fields": [
+        {
+          "name": "origin",
+          "atom": "coords3"
+        },
+        {
+          "name": "velocity",
+          "atom": "coord16"
+        },
+        {
+          "name": "model",
+          "atom": "resource",
+          "resourceKind": 1,
+          "allowedTypes": [
+            1
+          ],
+          "nullable": false
+        },
+        {
+          "name": "count",
+          "atom": "u16"
+        },
+        {
+          "name": "life",
+          "atom": "u8"
+        }
+      ]
+    },
+    {
+      "effectId": 108,
+      "name": "breakModel",
+      "valuesBytes": 26,
+      "fields": [
+        {
+          "name": "origin",
+          "atom": "coords3"
+        },
+        {
+          "name": "size",
+          "atom": "coords3"
+        },
+        {
+          "name": "velocity",
+          "atom": "coords3"
+        },
+        {
+          "name": "randomVelocity",
+          "atom": "u8"
+        },
+        {
+          "name": "modelSprite",
+          "atom": "resource",
+          "resourceKind": 1,
+          "allowedTypes": [
+            1,
+            2
+          ],
+          "nullable": false
+        },
+        {
+          "name": "count",
+          "atom": "u8"
+        },
+        {
+          "name": "life",
+          "atom": "u8"
+        },
+        {
+          "name": "flags",
+          "atom": "u8"
+        }
+      ]
+    },
+    {
+      "effectId": 109,
+      "name": "gunshotDecal",
+      "valuesBytes": 12,
+      "fields": [
+        {
+          "name": "origin",
+          "atom": "coords3"
+        },
+        {
+          "name": "entity",
+          "atom": "entity16"
+        },
+        {
+          "name": "decal",
+          "atom": "resource",
+          "resourceKind": 5,
+          "allowedTypes": [
+            8
+          ],
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "effectId": 110,
+      "name": "spriteSpray",
+      "valuesBytes": 19,
+      "fields": [
+        {
+          "name": "origin",
+          "atom": "coords3"
+        },
+        {
+          "name": "velocity",
+          "atom": "coords3"
+        },
+        {
+          "name": "sprite",
+          "atom": "resource",
+          "resourceKind": 1,
+          "allowedTypes": [
+            2
+          ],
+          "nullable": false
+        },
+        {
+          "name": "count",
+          "atom": "u8"
+        },
+        {
+          "name": "speed",
+          "atom": "u8"
+        },
+        {
+          "name": "noise",
+          "atom": "u8"
+        }
+      ]
+    },
+    {
+      "effectId": 112,
+      "name": "playerDecal",
+      "valuesBytes": 10,
+      "fields": [
+        {
+          "name": "player",
+          "atom": "u8"
+        },
+        {
+          "name": "origin",
+          "atom": "coords3"
+        },
+        {
+          "name": "entity",
+          "atom": "entity16"
+        },
+        {
+          "name": "spray",
+          "atom": "u8"
+        }
+      ],
+      "constraints": [
+        "customSprayNamespace",
+        "noOptionalModelField"
+      ]
+    },
+    {
+      "effectId": 113,
+      "name": "bubbles",
+      "valuesBytes": 21,
+      "fields": [
+        {
+          "name": "mins",
+          "atom": "coords3"
+        },
+        {
+          "name": "maxs",
+          "atom": "coords3"
+        },
+        {
+          "name": "height",
+          "atom": "coord16"
+        },
+        {
+          "name": "sprite",
+          "atom": "resource",
+          "resourceKind": 1,
+          "allowedTypes": [
+            2
+          ],
+          "nullable": false
+        },
+        {
+          "name": "count",
+          "atom": "u8"
+        },
+        {
+          "name": "speed",
+          "atom": "coord16"
+        }
+      ]
+    },
+    {
+      "effectId": 114,
+      "name": "bubbleTrail",
+      "valuesBytes": 21,
+      "fields": [
+        {
+          "name": "mins",
+          "atom": "coords3"
+        },
+        {
+          "name": "maxs",
+          "atom": "coords3"
+        },
+        {
+          "name": "height",
+          "atom": "coord16"
+        },
+        {
+          "name": "sprite",
+          "atom": "resource",
+          "resourceKind": 1,
+          "allowedTypes": [
+            2
+          ],
+          "nullable": false
+        },
+        {
+          "name": "count",
+          "atom": "u8"
+        },
+        {
+          "name": "speed",
+          "atom": "coord16"
+        }
+      ]
+    },
+    {
+      "effectId": 115,
+      "name": "bloodSprite",
+      "valuesBytes": 16,
+      "fields": [
+        {
+          "name": "origin",
+          "atom": "coords3"
+        },
+        {
+          "name": "spraySprite",
+          "atom": "resource",
+          "resourceKind": 1,
+          "allowedTypes": [
+            2
+          ],
+          "nullable": false
+        },
+        {
+          "name": "dropSprite",
+          "atom": "resource",
+          "resourceKind": 1,
+          "allowedTypes": [
+            2
+          ],
+          "nullable": false
+        },
+        {
+          "name": "color",
+          "atom": "u8"
+        },
+        {
+          "name": "scale",
+          "atom": "u8"
+        }
+      ]
+    },
+    {
+      "effectId": 116,
+      "name": "worldDecal",
+      "valuesBytes": 10,
+      "fields": [
+        {
+          "name": "origin",
+          "atom": "coords3"
+        },
+        {
+          "name": "decal",
+          "atom": "resource",
+          "resourceKind": 5,
+          "allowedTypes": [
+            8
+          ],
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "effectId": 119,
+      "name": "projectile",
+      "valuesBytes": 18,
+      "fields": [
+        {
+          "name": "origin",
+          "atom": "coords3"
+        },
+        {
+          "name": "velocity",
+          "atom": "coords3"
+        },
+        {
+          "name": "model",
+          "atom": "resource",
+          "resourceKind": 1,
+          "allowedTypes": [
+            1
+          ],
+          "nullable": false
+        },
+        {
+          "name": "life",
+          "atom": "u8"
+        },
+        {
+          "name": "owner",
+          "atom": "u8"
+        }
+      ]
+    },
+    {
+      "effectId": 120,
+      "name": "spray",
+      "valuesBytes": 20,
+      "fields": [
+        {
+          "name": "origin",
+          "atom": "coords3"
+        },
+        {
+          "name": "direction",
+          "atom": "coords3"
+        },
+        {
+          "name": "modelSprite",
+          "atom": "resource",
+          "resourceKind": 1,
+          "allowedTypes": [
+            1,
+            2
+          ],
+          "nullable": false
+        },
+        {
+          "name": "count",
+          "atom": "u8"
+        },
+        {
+          "name": "speed",
+          "atom": "u8"
+        },
+        {
+          "name": "noise",
+          "atom": "u8"
+        },
+        {
+          "name": "renderMode",
+          "atom": "u8"
+        }
+      ]
+    },
+    {
+      "effectId": 121,
+      "name": "playerSprites",
+      "valuesBytes": 7,
+      "fields": [
+        {
+          "name": "player",
+          "atom": "u8"
+        },
+        {
+          "name": "sprite",
+          "atom": "resource",
+          "resourceKind": 1,
+          "allowedTypes": [
+            2
+          ],
+          "nullable": false
+        },
+        {
+          "name": "count",
+          "atom": "u8"
+        },
+        {
+          "name": "variance",
+          "atom": "u8"
+        }
+      ]
+    },
+    {
+      "effectId": 123,
+      "name": "fireField",
+      "valuesBytes": 15,
+      "fields": [
+        {
+          "name": "origin",
+          "atom": "coords3"
+        },
+        {
+          "name": "radius",
+          "atom": "i16"
+        },
+        {
+          "name": "modelSprite",
+          "atom": "resource",
+          "resourceKind": 1,
+          "allowedTypes": [
+            1,
+            2
+          ],
+          "nullable": false
+        },
+        {
+          "name": "count",
+          "atom": "u8"
+        },
+        {
+          "name": "flags",
+          "atom": "u8",
+          "allowedMask": 63
+        },
+        {
+          "name": "duration",
+          "atom": "u8"
+        }
+      ]
+    },
+    {
+      "effectId": 124,
+      "name": "playerAttachment",
+      "valuesBytes": 9,
+      "fields": [
+        {
+          "name": "player",
+          "atom": "u8"
+        },
+        {
+          "name": "verticalOffset",
+          "atom": "coord16"
+        },
+        {
+          "name": "model",
+          "atom": "resource",
+          "resourceKind": 1,
+          "allowedTypes": [
+            1
+          ],
+          "nullable": false
+        },
+        {
+          "name": "life",
+          "atom": "u16"
+        }
+      ]
+    },
+    {
+      "effectId": 126,
+      "name": "multiGunshot",
+      "valuesBytes": 21,
+      "fields": [
+        {
+          "name": "origin",
+          "atom": "coords3"
+        },
+        {
+          "name": "direction",
+          "atom": "coords3"
+        },
+        {
+          "name": "noiseX",
+          "atom": "coord16"
+        },
+        {
+          "name": "noiseY",
+          "atom": "coord16"
+        },
+        {
+          "name": "count",
+          "atom": "u8"
+        },
+        {
+          "name": "decal",
+          "atom": "resource",
+          "resourceKind": 5,
+          "allowedTypes": [
+            8
+          ],
+          "nullable": false
+        }
+      ]
+    }
+  ],
+  "nativeInputAliases": [
+    {
+      "effectId": 117,
+      "canonicalEffectId": 116,
+      "nativeDecalBias": 256
+    },
+    {
+      "effectId": 118,
+      "canonicalEffectId": 104,
+      "nativeDecalBias": 256
+    }
+  ],
+  "obsoleteEffectIds": [
+    16,
+    26
+  ],
+  "unknownEffectPolicy": "approvedApplicationResourceFreeSchemaOnly"
+}

@@ -1,0 +1,1167 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/BRUN0R2/ExtendedPrecache/blob/main/docs/data/applicationContractV2.schema.json",
+  "title": "ExtendedPrecache application contract 2 (specification only)",
+  "$comment": "Closed shape only; module coverage, dense IDs, digests and byte reservations also require semantic preflight.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "specificationOnly",
+    "availability",
+    "dataContractId",
+    "dataContractSha256",
+    "schemaSetSha256",
+    "limits",
+    "objectLimits",
+    "schemaDefinitions",
+    "moduleProfiles",
+    "effectPolicies",
+    "servicePolicies"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 2
+    },
+    "specificationOnly": {
+      "const": true
+    },
+    "availability": {
+      "const": "unavailable"
+    },
+    "dataContractId": {
+      "const": 2
+    },
+    "dataContractSha256": {
+      "$ref": "#/$defs/digest"
+    },
+    "schemaSetSha256": {
+      "$ref": "#/$defs/digest"
+    },
+    "limits": {
+      "$ref": "#/$defs/limits"
+    },
+    "objectLimits": {
+      "$ref": "#/$defs/objectLimits"
+    },
+    "schemaDefinitions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/valueSchema"
+      },
+      "minItems": 1,
+      "maxItems": 65535
+    },
+    "moduleProfiles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/module"
+      },
+      "minItems": 0,
+      "maxItems": 65535
+    },
+    "effectPolicies": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/effectPolicy"
+      },
+      "minItems": 0,
+      "maxItems": 256
+    },
+    "servicePolicies": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/servicePolicy"
+      },
+      "minItems": 0,
+      "maxItems": 512
+    }
+  },
+  "$defs": {
+    "digest": {
+      "type": "string",
+      "pattern": "^(?!0{64}$)[0-9a-f]{64}$"
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^[a-zA-Z][a-zA-Z0-9]{0,62}$"
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaSetBytes",
+        "contractArtifactBytes",
+        "stateFrameBytes",
+        "snapshotWindowFrames",
+        "unreliableMessageBytes",
+        "loadTimeoutMs",
+        "consistencyTimeoutMs",
+        "demoFileBytes",
+        "demoBlockBytes",
+        "demoBootstrapBytes",
+        "demoDurationMicros"
+      ],
+      "properties": {
+        "schemaSetBytes": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 2147483647
+        },
+        "contractArtifactBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "stateFrameBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "snapshotWindowFrames": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "unreliableMessageBytes": {
+          "type": "integer",
+          "minimum": 40,
+          "maximum": 65536
+        },
+        "loadTimeoutMs": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 2147483647
+        },
+        "consistencyTimeoutMs": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 2147483647
+        },
+        "demoFileBytes": {
+          "type": "integer",
+          "minimum": 360,
+          "maximum": 9223372036854775807
+        },
+        "demoBlockBytes": {
+          "type": "integer",
+          "minimum": 68,
+          "maximum": 2147483647
+        },
+        "demoBootstrapBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "demoDurationMicros": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        }
+      }
+    },
+    "objectLimits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entityEntries",
+        "clientEntries",
+        "weaponEntries",
+        "staticEntries"
+      ],
+      "properties": {
+        "entityEntries": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2048
+        },
+        "clientEntries": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32
+        },
+        "weaponEntries": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "staticEntries": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        }
+      }
+    },
+    "field": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fieldId",
+        "valueKind",
+        "resourceKind",
+        "flags",
+        "maxElements",
+        "maxAtomBytes",
+        "name"
+      ],
+      "properties": {
+        "fieldId": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65534
+        },
+        "valueKind": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 14
+        },
+        "resourceKind": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "flags": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 7
+        },
+        "maxElements": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "maxAtomBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "name": {
+          "$ref": "#/$defs/name"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "valueKind": {
+                "const": 9
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "resourceKind": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 5
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "resourceKind": {
+                "const": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "flags": {
+                "enum": [
+                  1,
+                  3,
+                  5,
+                  7
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "valueKind": {
+                "const": 9
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "flags": {
+                "enum": [
+                  4,
+                  5,
+                  6,
+                  7
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "valueKind": {
+                "const": 8
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "flags": {
+                "enum": [
+                  0,
+                  1,
+                  4,
+                  5
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "maxElements": {
+                "const": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "valueKind": {
+                "const": 1
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "maxAtomBytes": {
+                "const": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "valueKind": {
+                "const": 2
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "maxAtomBytes": {
+                "const": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "valueKind": {
+                "const": 3
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "maxAtomBytes": {
+                "const": 2
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "valueKind": {
+                "const": 4
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "maxAtomBytes": {
+                "const": 2
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "valueKind": {
+                "const": 5
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "maxAtomBytes": {
+                "const": 4
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "valueKind": {
+                "const": 6
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "maxAtomBytes": {
+                "const": 4
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "valueKind": {
+                "const": 7
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "maxAtomBytes": {
+                "const": 4
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "valueKind": {
+                "const": 9
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "maxAtomBytes": {
+                "const": 4
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "valueKind": {
+                "const": 10
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "maxAtomBytes": {
+                "const": 2
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "valueKind": {
+                "const": 11
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "maxAtomBytes": {
+                "const": 2
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "valueKind": {
+                "const": 12
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "maxAtomBytes": {
+                "const": 2
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "valueKind": {
+                "const": 13
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "maxAtomBytes": {
+                "const": 6
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "valueKind": {
+                "const": 14
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "maxAtomBytes": {
+                "const": 12
+              }
+            }
+          }
+        }
+      ]
+    },
+    "valueSchema": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaId",
+        "role",
+        "name",
+        "fields"
+      ],
+      "properties": {
+        "schemaId": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "role": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        },
+        "name": {
+          "$ref": "#/$defs/name"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/field"
+          },
+          "minItems": 0,
+          "maxItems": 65535
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "role": {
+                "enum": [
+                  1,
+                  2,
+                  3,
+                  7
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "fields": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "binarySha256",
+        "bindingSha256"
+      ],
+      "properties": {
+        "binarySha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "bindingSha256": {
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "legacyField": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fieldId",
+        "bits",
+        "signed"
+      ],
+      "properties": {
+        "fieldId": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65534
+        },
+        "bits": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32
+        },
+        "signed": {
+          "type": "boolean"
+        }
+      }
+    },
+    "message": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "messageId",
+        "name",
+        "direction",
+        "delivery",
+        "schemaId",
+        "wireMode",
+        "nativeSize",
+        "resourcePolicy",
+        "legacyFields"
+      ],
+      "properties": {
+        "messageId": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "name": {
+          "type": "string",
+          "pattern": "^[a-zA-Z][a-zA-Z0-9]{0,14}$"
+        },
+        "direction": {
+          "enum": [
+            "S2C",
+            "C2S"
+          ]
+        },
+        "delivery": {
+          "enum": [
+            "reliable",
+            "unreliable"
+          ]
+        },
+        "schemaId": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "wireMode": {
+          "enum": [
+            "typed2",
+            "nativeExact"
+          ]
+        },
+        "nativeSize": {
+          "type": "integer",
+          "minimum": -1,
+          "maximum": 192
+        },
+        "resourcePolicy": {
+          "enum": [
+            "typedReferences",
+            "resourceFree",
+            "boundedLegacy"
+          ]
+        },
+        "legacyFields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/legacyField"
+          },
+          "minItems": 0,
+          "maxItems": 65535
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "wireMode": {
+                "const": "typed2"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "nativeSize": {
+                "const": -1
+              },
+              "resourcePolicy": {
+                "const": "typedReferences"
+              },
+              "legacyFields": {
+                "maxItems": 0
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "resourcePolicy": {
+                "enum": [
+                  "resourceFree",
+                  "boundedLegacy"
+                ]
+              },
+              "direction": {
+                "const": "S2C"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "resourcePolicy": {
+                "const": "resourceFree"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "legacyFields": {
+                "maxItems": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "resourcePolicy": {
+                "const": "boundedLegacy"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "legacyFields": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "direction": {
+                "const": "C2S"
+              },
+              "wireMode": {
+                "const": "typed2"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "delivery": {
+                "const": "reliable"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "localBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recordKind",
+        "schemaId",
+        "originPolicy"
+      ],
+      "properties": {
+        "recordKind": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 6
+        },
+        "schemaId": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "originPolicy": {
+          "const": "localOnly"
+        }
+      }
+    },
+    "module": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "moduleId",
+        "name",
+        "server",
+        "client",
+        "replayPolicy",
+        "messages",
+        "localReplayBindings"
+      ],
+      "properties": {
+        "moduleId": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "name": {
+          "$ref": "#/$defs/name"
+        },
+        "server": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/binding"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "client": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/binding"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "replayPolicy": {
+          "enum": [
+            "wireStateOnly",
+            "typedLocalState"
+          ]
+        },
+        "messages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/message"
+          },
+          "minItems": 0,
+          "maxItems": 65535
+        },
+        "localReplayBindings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/localBinding"
+          },
+          "minItems": 0,
+          "maxItems": 65535
+        }
+      },
+      "allOf": [
+        {
+          "not": {
+            "properties": {
+              "server": {
+                "type": "null"
+              },
+              "client": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "messages": {
+                "minItems": 1
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "server": {
+                "$ref": "#/$defs/binding"
+              },
+              "client": {
+                "$ref": "#/$defs/binding"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "replayPolicy": {
+                "const": "wireStateOnly"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "localReplayBindings": {
+                "maxItems": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "replayPolicy": {
+                "const": "typedLocalState"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "client": {
+                "$ref": "#/$defs/binding"
+              },
+              "localReplayBindings": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "effectPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "effectId",
+        "ownerModuleId",
+        "delivery",
+        "wireSchema",
+        "schemaId",
+        "resourcePolicy"
+      ],
+      "properties": {
+        "effectId": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "ownerModuleId": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "delivery": {
+          "enum": [
+            "reliable",
+            "unreliable"
+          ]
+        },
+        "wireSchema": {
+          "enum": [
+            "builtin",
+            "application"
+          ]
+        },
+        "schemaId": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "resourcePolicy": {
+          "enum": [
+            "typedReferences",
+            "resourceFree"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "wireSchema": {
+                "const": "builtin"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "schemaId": {
+                "const": 0
+              },
+              "resourcePolicy": {
+                "const": "typedReferences"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "schemaId": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 65535
+              },
+              "resourcePolicy": {
+                "const": "resourceFree"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "servicePolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "direction",
+        "opcode",
+        "mode",
+        "phases",
+        "grammarSha256",
+        "maxBytes",
+        "ownerModuleId"
+      ],
+      "properties": {
+        "direction": {
+          "enum": [
+            "S2C",
+            "C2S"
+          ]
+        },
+        "opcode": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "mode": {
+          "enum": [
+            "data2",
+            "nativeExact",
+            "forbidden"
+          ]
+        },
+        "phases": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "negotiation",
+              "bootstrap",
+              "loading",
+              "gameplay"
+            ]
+          },
+          "minItems": 0,
+          "maxItems": 4,
+          "uniqueItems": true
+        },
+        "grammarSha256": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/digest"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "maxBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65536
+        },
+        "ownerModuleId": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "forbidden"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "maxBytes": {
+                "const": 0
+              },
+              "grammarSha256": {
+                "type": "null"
+              },
+              "phases": {
+                "maxItems": 0
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "maxBytes": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 65536
+              },
+              "phases": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "nativeExact"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "grammarSha256": {
+                "$ref": "#/$defs/digest"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "data2"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "grammarSha256": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
