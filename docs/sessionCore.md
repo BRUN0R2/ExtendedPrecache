@@ -116,7 +116,9 @@ outras exceções de implementação do provider não são mascaradas.
 explicitamente `drained` e reserva ainda válida. É uma autorização tipada; não
 envia serverinfo nem deve ser interpretada como uma solicitação de duplicar o
 sign-on. O cliente deve chamar `confirmServerInfo(48, spawn, context)` antes de
-aceitar o primeiro serverinfo. Isso também não carrega assets nem ativa gameplay.
+aceitar o primeiro serverinfo. Uma segunda confirmação invalida a sessão e libera
+a reserva, mesmo quando protocolo e spawn count coincidem. Isso também não
+carrega assets nem ativa gameplay.
 O decoder de dados ainda precisará conferir o manifesto contra o digest acordado.
 
 O deadline continua desde a entrada original, inclusive enquanto se espera drain

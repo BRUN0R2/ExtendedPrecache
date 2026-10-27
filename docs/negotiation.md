@@ -40,6 +40,8 @@ Fontes da decisão: [ordem do sign-on](https://github.com/rehlds/ReHLDS/blob/196
 [limpeza do netchan](https://github.com/rehlds/ReHLDS/blob/196300131858d1e087267fb2fb60cb935f8f8873/rehlds/engine/net_chan.cpp#L156).
 Essas são evidências em fonte. Viabilidade e ordenação nos binários ainda devem
 ser demonstradas na integração; não há hook nativo aprovado por esta definição.
+As observações estáticas e os caminhos adicionais que a barreira deve cobrir
+estão em [transportBootstrap.md](transportBootstrap.md).
 
 ## Transportes de controle
 
@@ -197,8 +199,9 @@ catálogo segue o formato canônico definido pelo próprio contrato de dados.
 
 O ID 1 no corpus é apenas um exemplo **indisponível**, preservado sem alterações.
 O [plano de dados 2.0](dataCodecs.md) especifica esses formatos sob ID 2 e digest
-próprio. Também está indisponível: implementação, módulos aprovados e provas de
-transporte continuam pendentes. Nenhum slot SVC novo foi reservado aqui.
+próprio. Seu núcleo isolado está implementado, mas o perfil continua indisponível:
+faltam bindings nativos, módulos aprovados e provas de transporte. Nenhum slot
+SVC novo foi reservado aqui.
 
 ## Repetição, falha e deadline
 

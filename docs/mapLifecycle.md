@@ -94,7 +94,8 @@ seus IDs em uma nova conexão/mapa.
 
 O deadline atual do núcleo termina no handoff validado; não é um timeout de
 download/carga. Prazos e confirmações de catálogo/assets/gameplay têm
-[contrato de dados próprio](dataCodecs.md), ainda sem implementação.
+[contrato de dados próprio](dataCodecs.md); seus bindings no motor permanecem
+pendentes.
 Não inventar frames de controle para preencher essa etapa nem aprovar o perfil
 exemplo indisponível.
 
@@ -132,6 +133,8 @@ Provar nos hashes selecionados a barreira anterior ao serverinfo, o reset inicia
 autorizado, invalidação de jobs/handles, quiescência de cada consumidor indireto,
 drain/reset de netchan e a ordem dos deallocators. Demonstrar mapas sucessivos,
 reconnect ao mesmo mapa, falha em cada fase e unload recusado com pins vivos.
+As observações estáticas de bootstrap e caminhos adicionais de entrada estão em
+[transportBootstrap.md](transportBootstrap.md).
 Os cenários em [integrationVectors.json](contracts/integrationVectors.json) são
 requisitos de integração; sua validação estrutural não é execução desses eventos
 nos motores. O teste do núcleo continua cobrindo seus próprios gates existentes.

@@ -41,7 +41,7 @@ devem acompanhar o item correspondente. As regras estão em [RULES.md](RULES.md)
 - [x] Especificar conversão zero/um, ownership estável, ciclo de mapa e ABI versionada, resolvendo as restrições de `engineAudit.md` antes dos adaptadores; contratos em `indexMapping.md`, `storageOwnership.md`, `mapLifecycle.md` e `integrationAbi.md`, matriz e verificações em `integrationVerification.md`.
 - [x] Projetar catálogo/consistência, deltas, áudio/eventos/efeitos, limites por bytes e demos em `dataCodecs.md` e contratos vinculados; definir schema fechado para mensagens de mods e módulos externos, sem aprovar um perfil final ou implementar codecs/adaptadores.
 - [x] Implementar os codecs de dados 2.0 e os preflights semânticos de aplicação isoladamente; API, ownership, orçamentos e fronteiras em `dataCore.md`. Verificadores, vetores e resultados permanecem locais fora do GitHub.
-- [ ] Comprovar a barreira anterior a `SV_SendServerinfo`, o bootstrap de user messages, o despacho de `clc_stringcmd`, drain/reset e reconexão nos hashes selecionados antes de habilitar o transporte.
+- [ ] Comprovar a barreira anterior a `SV_SendServerinfo`, o bootstrap de user messages, o despacho de `clc_stringcmd`, drain/reset e reconexão nos hashes selecionados antes de habilitar o transporte. Investigação estática parcial em `transportBootstrap.md`; faltam binding e evidência em execução.
 - [ ] Implementar as entradas e o ciclo de vida do plugin Metamod do servidor.
 - [ ] Implementar adaptador HLDS com detecção exata de versão e falha segura.
 - [ ] Implementar adaptador CS 1.6 com o mesmo contrato e ciclo de vida.
@@ -93,8 +93,11 @@ local; não reservam armazenamento nativo nem habilitam um perfil. Os descritore
 de `docs/data` permanecem indisponíveis, sem módulos finais aprovados.
 Verificadores, vetores e resultados novos permanecem locais em área ignorada.
 
-Próximo trabalho: comprovar o bootstrap, dispatch, drain/reset e reconexão nos
-hashes selecionados antes de habilitar transporte ou implementar adaptadores.
+Próximo trabalho: demonstrar em ambiente isolado e instrumentado a barreira e
+sua retomada em todas as entradas, bootstrap, dispatch com rate limit, drain/reset
+e reconexão nos hashes selecionados antes de habilitar transporte ou implementar
+adaptadores. Os achados estáticos e seus limites estão em
+[transportBootstrap.md](transportBootstrap.md).
 
 Publicação: repositório público
 [`BRUN0R2/ExtendedPrecache`](https://github.com/BRUN0R2/ExtendedPrecache) criado.
