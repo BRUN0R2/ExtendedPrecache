@@ -386,6 +386,9 @@ auto NegotiationSession::releaseSignon(SessionContext context)
     if (const auto valid = checkContext(context); !valid) {
         return std::unexpected{valid.error()};
     }
+    if (nativeHandoff) {
+        return reject({RejectCode::unexpectedMessage});
+    }
     if (state() != SessionState::committed || context.channel != ChannelState::drained) {
         return std::unexpected{Rejection{RejectCode::unexpectedMessage}};
     }

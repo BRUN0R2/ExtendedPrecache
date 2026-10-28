@@ -29,6 +29,11 @@ essa observação de fonte não comprova a execução desse ramo no perfil selec
 O futuro binding deve cobrir todas as entradas relevantes para o perfil ou
 recusá-lo, invalidar a geração anterior e liberar a continuação no máximo uma vez.
 
+O núcleo de sessão concede `releaseSignon` no máximo uma vez por binding;
+repetições invalidam a sessão. Essa garantia não suspende nem retoma uma chamada
+nativa: o futuro binding ainda precisa demonstrar que associa essa autorização
+à continuação correta, sem duplicação ou reentrada.
+
 ## Registro e despacho no cliente
 
 A tabela do cliente associa SVC 39 ao wrapper `0x101aa090`; a inspeção do corpo
