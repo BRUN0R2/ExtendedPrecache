@@ -224,8 +224,11 @@ SVC novo foi reservado aqui.
   serverinfo validado no cliente. Depois disso, não é um prazo de carga de assets.
   Expirou quando `elapsed >= effectiveTimeout`; progresso/duplicatas não o renovam.
 - Rejeição é terminal. Enviar no máximo um `reject` se houver canal e orçamento;
-  caso contrário fechar com motivo local. Nunca emitir estado ampliado, fazer
-  clamp ou passar mensagens incompletas ao parser nativo.
+  caso contrário fechar com motivo local. Preparar e confirmar o envio exigem o
+  binding e a geração originais; uma geração diferente observada encerra qualquer
+  envio pendente, mesmo que o motivo inicial tenha sido outro. O transporte deve
+  verificar o binding antes de entregar bytes ao canal. Nunca emitir estado
+  ampliado, fazer clamp ou passar mensagens incompletas ao parser nativo.
 
 | Código | Nome | Uso |
 | --- | --- | --- |
