@@ -93,6 +93,12 @@ frame. O servidor aloca frameId em 1…0xfffffffe, estritamente crescente; não 
 wrap. Isso não exige chegada em ordem entre os dois fluxos. Uma transação de ID
 já aplicado/superado é consumida e descartada após framing/contexto válidos,
 sem restaurar estado, relógio, base ou emitir um novo pedido de recuperação.
+Em entrega não confiável, isso também se aplica a object/end atrasados cujo
+begin se perdeu; eles não substituem nem encerram o staging de outro frame.
+Um registro de ID mais novo sem begin continua indicando perda e exige
+recuperação, mesmo quando o staging anterior já foi superado pelo outro fluxo.
+Rotas, corpos e limites ainda são validados antes do descarte. No fluxo confiável,
+object/end sem begin continuam sendo violação de fase.
 baseFrameId=0 significa completo; delta exige uma base completa, confirmada e
 retida da mesma geração/schema set. changeBytes é a soma dos corpos frameObject,
 limitada por `limits.stateFrameBytes`; changeCount também é validado contra os
@@ -166,9 +172,10 @@ já liberada. A janela/cotação limita também o ledger de frames retidos.
 
 Em não confiável, frameBegin novo pode substituir staging incompleto antigo;
 frameEnd sem todos os registros, base já expulsa ou gaps não produz estado novo.
-Object/end sem begin em não confiável também é perda incompleta: descartar e
-solicitar recuperação; em confiável é violação de fase. Não declarar um pacote
-malformado como perdido para ignorar campos/tamanhos inválidos.
+Object/end mais novos que o estado aplicado sem begin em não confiável também
+indicam perda incompleta: descartar e solicitar recuperação; em confiável é
+violação de fase. Não declarar um pacote malformado como perdido para ignorar
+campos/tamanhos inválidos.
 O cliente solicita um snapshot completo confiável via resyncRequest
 (`lastAppliedFrameId:u32`); no máximo uma solicitação pendente por conexão.
 Completar e confirmar esse snapshot encerra a recuperação. É recuperação de
