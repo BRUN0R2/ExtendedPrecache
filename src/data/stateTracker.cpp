@@ -7,23 +7,38 @@ auto flow(Route route) -> std::size_t {
     require(route.direction == Direction::serverToClient && validRoute(route));
     return route.delivery == Delivery::reliable ? 1U : 0U;
 }
-void frameRoute(Route route, FrameKind kind, const FrameBegin &begin) {
+void frameMessageRoute(Route route, FrameKind kind) {
     require(route.kind == static_cast<std::uint8_t>(kind));
-    const auto initial = route.opcode == static_cast<std::uint8_t>(Service::initialFrame);
-    require(initial || route.opcode == static_cast<std::uint8_t>(Service::fullFrame) ||
+    require(route.opcode == static_cast<std::uint8_t>(Service::initialFrame) ||
+            route.opcode == static_cast<std::uint8_t>(Service::fullFrame) ||
             route.opcode == static_cast<std::uint8_t>(Service::deltaFrame));
+}
+void frameRoute(Route route, FrameKind kind, const FrameBegin &begin) {
+    frameMessageRoute(route, kind);
     require((begin.base.value != 0) ==
             (route.opcode == static_cast<std::uint8_t>(Service::deltaFrame)));
 }
+void objectMessageRoute(Route route, ObjectKind kind) {
+    if (kind == ObjectKind::client || kind == ObjectKind::weapon) {
+        require(route.opcode == static_cast<std::uint8_t>(Service::clientData) &&
+                route.kind == static_cast<std::uint8_t>(FrameKind::object));
+    } else if (kind == ObjectKind::module) {
+        require(route.opcode == static_cast<std::uint8_t>(Service::resource) &&
+                route.kind == static_cast<std::uint8_t>(ResourceMessageKind::moduleState));
+    } else {
+        frameMessageRoute(route, FrameKind::object);
+    }
+}
 void objectRoute(Route route, Route begin, ObjectKind kind) {
     require(route.delivery == begin.delivery);
-    if (kind == ObjectKind::client || kind == ObjectKind::weapon) {
-        require(route.opcode == static_cast<std::uint8_t>(Service::clientData) && route.kind == 2);
-    } else if (kind == ObjectKind::module) {
-        require(route.opcode == static_cast<std::uint8_t>(Service::resource) && route.kind == 6);
-    } else {
-        require(route.opcode == begin.opcode && route.kind == 2);
+    if (kind == ObjectKind::entity || kind == ObjectKind::staticObject) {
+        require(route.opcode == begin.opcode);
     }
+}
+auto maxFrameObjects(ObjectLimits limits) -> std::uint64_t {
+    return add(add(limits.entityEntries, limits.clientEntries),
+               add(add(limits.weaponEntries, limits.staticEntries),
+                   std::numeric_limits<std::uint16_t>::max()));
 }
 } // namespace
 auto FrameReceiver::failure(Failure error) noexcept -> std::unexpected<Failure> {
@@ -52,15 +67,14 @@ auto FrameReceiver::begin(Route route, FrameBegin frame) noexcept -> Result<Fram
         require(!prior || route.opcode != static_cast<std::uint8_t>(Service::initialFrame),
                 ErrorCode::wrongPhase);
         within(frame.changeBytes.value, contextValue.frameBytes.value);
-        const auto maxObjects =
-            add(add(contextValue.objects.entityEntries, contextValue.objects.clientEntries),
-                add(add(contextValue.objects.weaponEntries, contextValue.objects.staticEntries),
-                    std::numeric_limits<std::uint16_t>::max()));
-        within(frame.changeCount, maxObjects);
+        within(frame.changeCount, maxFrameObjects(contextValue.objects));
         require(multiply(frame.changeCount, frameObjectHeaderBytes) <= frame.changeBytes.value);
         Pending next{frame, route, {}, 0, prior && frame.id.value <= prior->begin.id.value, false};
         next.ownedBytes = multiply(frame.changeCount, sizeof(FrameObject));
         within(next.ownedBytes, contextValue.records.ownedBytes.value);
+        if (index == 0 && next.discard) {
+            return FrameDisposition::obsolete;
+        }
         if (!next.discard) {
             next.changes.reserve(frame.changeCount);
         }
@@ -74,7 +88,8 @@ auto FrameReceiver::begin(Route route, FrameBegin frame) noexcept -> Result<Fram
                 fail(ErrorCode::sequence);
             }
         }
-        if (pending[index] && !pending[index]->discard) {
+        if (pending[index] && !pending[index]->discard &&
+            (!prior || pending[index]->begin.id.value > prior->begin.id.value)) {
             recoveryNeeded = true;
         }
         pending[index] = std::move(next);
@@ -91,15 +106,20 @@ auto FrameReceiver::object(Route route, const FrameObject &value) noexcept
         require(!failed, ErrorCode::wrongPhase);
         const auto index = flow(route);
         const auto encoded = get(encodeFrameObject(value, contextValue));
+        objectMessageRoute(route, value.key.kind);
+        const auto prior = current();
+        if (index == 0 && prior && value.frame.value <= prior->begin.id.value) {
+            if (pending[index] && pending[index]->begin.id == value.frame) {
+                objectRoute(route, pending[index]->route, value.key.kind);
+            }
+            return FrameDisposition::obsolete;
+        }
         if (!pending[index]) {
             require(index == 0, ErrorCode::wrongPhase);
             recoveryNeeded = true;
             return FrameDisposition::needsRecovery;
         }
         auto &stage = *pending[index];
-        if (stage.discard || (current() && stage.begin.id.value <= current()->begin.id.value)) {
-            return FrameDisposition::obsolete;
-        }
         if (index == 0 && value.frame.value > stage.begin.id.value) {
             pending[index].reset();
             recoveryNeeded = true;
@@ -107,6 +127,9 @@ auto FrameReceiver::object(Route route, const FrameObject &value) noexcept
         }
         require(value.frame == stage.begin.id);
         objectRoute(route, stage.route, value.key.kind);
+        if (stage.discard || (prior && stage.begin.id.value <= prior->begin.id.value)) {
+            return FrameDisposition::obsolete;
+        }
         require(stage.changes.empty() || stage.changes.back().key < value.key);
         require(stage.changes.size() < stage.begin.changeCount);
         within(add(stage.bytes, encoded.size()), stage.begin.changeBytes.value);
@@ -132,6 +155,19 @@ auto FrameReceiver::end(Route route, FrameEnd frame) noexcept -> Result<FrameDis
         require(!failed, ErrorCode::wrongPhase);
         const auto index = flow(route);
         get(encodeFrameEnd(frame));
+        frameMessageRoute(route, FrameKind::end);
+        within(frame.changeCount, maxFrameObjects(contextValue.objects));
+        const auto prior = current();
+        if (index == 0 && prior && frame.id.value <= prior->begin.id.value) {
+            if (pending[index] && pending[index]->begin.id == frame.id) {
+                const auto &stage = *pending[index];
+                frameRoute(route, FrameKind::end, stage.begin);
+                require(route.opcode == stage.route.opcode &&
+                        frame.changeCount == stage.begin.changeCount);
+                pending[index].reset();
+            }
+            return FrameDisposition::obsolete;
+        }
         if (!pending[index]) {
             require(index == 0, ErrorCode::wrongPhase);
             recoveryNeeded = true;
@@ -146,7 +182,7 @@ auto FrameReceiver::end(Route route, FrameEnd frame) noexcept -> Result<FrameDis
         frameRoute(route, FrameKind::end, stage.begin);
         require(route.opcode == stage.route.opcode && frame.id == stage.begin.id &&
                 frame.changeCount == stage.begin.changeCount);
-        if (stage.discard || (current() && frame.id.value <= current()->begin.id.value)) {
+        if (stage.discard || (prior && frame.id.value <= prior->begin.id.value)) {
             pending[index].reset();
             return FrameDisposition::obsolete;
         }

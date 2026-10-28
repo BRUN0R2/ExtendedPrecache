@@ -117,10 +117,12 @@ externos e liberação com quiescência continuam sob os contratos de integraç�
 `FrameReceiver` mantém staging separado por entrega e só publica após reconstruir
 o estado completo, validar objetos obrigatórios e conferir o hash de frameEnd.
 O merge de objetos é linear e o custo é verificado antes da cópia. Valores f32
-finitos são canônicos, incluindo +0. Perda de partes/base não confiáveis produz
-um pedido de recuperação; dados inválidos continuam fatais. `FrameLedger` aceita
-base retida e confirmada, ignora ACK de prefixo retirado e exige o hash de bases
-retidas. Uma recuperação confiável bloqueia novos frames até seu ACK exato.
+finitos são canônicos, incluindo +0. Perda de partes/base não confiáveis de frames
+mais novos produz um pedido de recuperação; registros obsoletos não interferem
+no staging mais novo nem geram pedido. Rotas e corpos inválidos continuam fatais.
+`FrameLedger` aceita base retida e confirmada, ignora ACK de prefixo retirado e
+exige o hash de bases retidas. Uma recuperação confiável bloqueia novos frames
+até seu ACK exato.
 O controlador deve tratar falhas como encerramento e aplicar prazos; não há
 timer, fila de rede, retransmissão ou mudança do relógio nativo neste núcleo.
 
