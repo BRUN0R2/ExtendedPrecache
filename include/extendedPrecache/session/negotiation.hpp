@@ -117,6 +117,7 @@ class NegotiationSession final {
   private:
     NegotiationSession(Configuration configuration, ContractProfile profile, SessionContext context,
                        const DigestProvider &digestProvider, SessionPreparer &preparer);
+    [[nodiscard]] auto observeGeneration(const ConnectionBinding &binding) noexcept -> bool;
     [[nodiscard]] auto checkContext(SessionContext context) -> std::expected<void, Rejection>;
     [[nodiscard]] auto makePayload() const -> std::expected<FramePayload, Rejection>;
     [[nodiscard]] auto accept(Direction direction, const Frame &frame, const EncodedFrame &encoded)
@@ -161,6 +162,7 @@ class NegotiationSession final {
     bool rejectionReceived{};
     bool closed{};
     bool nativeHandoff{};
+    bool generationInvalidated{};
 };
 
 [[nodiscard]] auto minimumSessionMetadataBytes(const Configuration &configuration) noexcept

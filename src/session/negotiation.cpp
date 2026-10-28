@@ -6,13 +6,17 @@
 
 namespace extendedPrecache::session {
 namespace {
+auto channelAvailable(ChannelState channel) noexcept -> bool {
+    return channel == ChannelState::pending || channel == ChannelState::drained;
+}
+
 auto validateLocal(const Configuration &configuration, const ContractProfile &profile,
                    EndpointRole role, const SessionContext &context)
     -> std::expected<void, Rejection> {
     if (configuration.values().role != role ||
         configuration.values().policy == ConnectionPolicy::legacyOnly ||
         context.binding.connection.isZero() || context.binding.peer.isZero() ||
-        context.binding.generation.value == 0 || context.channel == ChannelState::unavailable) {
+        context.binding.generation.value == 0 || !channelAvailable(context.channel)) {
         return std::unexpected{Rejection{RejectCode::invalidConfiguration}};
     }
     if (profile.availability != ProfileAvailability::available || profile.id.value == 0 ||
@@ -128,10 +132,21 @@ void NegotiationSession::close() noexcept {
     prepared.reset();
 }
 
+auto NegotiationSession::observeGeneration(const ConnectionBinding &binding) noexcept -> bool {
+    if (binding.generation != initial.binding.generation) {
+        generationInvalidated = true;
+        pending.reset();
+    }
+    return !generationInvalidated;
+}
+
 auto NegotiationSession::checkContext(SessionContext context) -> std::expected<void, Rejection> {
     if (context.binding.connection != initial.binding.connection ||
         context.binding.peer != initial.binding.peer) {
         return std::unexpected{Rejection{RejectCode::transportUnavailable}};
+    }
+    if (!closed && !observeGeneration(context.binding)) {
+        return reject({RejectCode::mapChanged});
     }
     if (terminalFailure) {
         return std::unexpected{
@@ -140,10 +155,7 @@ auto NegotiationSession::checkContext(SessionContext context) -> std::expected<v
     if (closed) {
         return std::unexpected{Rejection{RejectCode::transportUnavailable}};
     }
-    if (context.binding.generation != initial.binding.generation) {
-        return reject({RejectCode::mapChanged});
-    }
-    if (context.channel == ChannelState::unavailable || context.now < lastTime) {
+    if (!channelAvailable(context.channel) || context.now < lastTime) {
         return reject({RejectCode::transportUnavailable});
     }
     lastTime = context.now;
@@ -159,16 +171,18 @@ auto NegotiationSession::poll(SessionContext context) -> std::expected<void, Rej
 auto NegotiationSession::prepareOutbound(SessionContext context)
     -> std::expected<std::optional<EncodedFrame>, Rejection> {
     if (terminalFailure) {
+        const auto reason = *terminalFailure;
         if (closed || rejectionSent || rejectionReceived || serverNonce.isZero() ||
             context.binding.connection != initial.binding.connection ||
-            context.binding.peer != initial.binding.peer ||
-            context.channel == ChannelState::unavailable) {
+            context.binding.peer != initial.binding.peer) {
+            return std::optional<EncodedFrame>{};
+        }
+        if (!observeGeneration(context.binding) || !channelAvailable(context.channel)) {
             return std::optional<EncodedFrame>{};
         }
         if (!pending) {
             const auto index = detail::directionIndex(ownDirection());
-            const auto encoded =
-                encodeFrame({serverNonce, {counts[index]}, RejectBody{*terminalFailure}});
+            const auto encoded = encodeFrame({serverNonce, {counts[index]}, RejectBody{reason}});
             if (!encoded || logicalBytes + encoded->bytes().size() >
                                 config.values().negotiation.maxBytes.value) {
                 return std::optional<EncodedFrame>{};
@@ -215,6 +229,9 @@ auto NegotiationSession::commitOutbound(const EncodedFrame &queued, SessionConte
         context.binding.peer != initial.binding.peer) {
         return std::unexpected{Rejection{RejectCode::transportUnavailable}};
     }
+    if (!closed && !observeGeneration(context.binding)) {
+        return reject({RejectCode::mapChanged});
+    }
     if (closed || !pending || queued != *pending) {
         if (terminalFailure) {
             return std::unexpected{
@@ -223,7 +240,7 @@ auto NegotiationSession::commitOutbound(const EncodedFrame &queued, SessionConte
         return reject({RejectCode::transportUnavailable});
     }
     if (terminalFailure) {
-        if (context.channel == ChannelState::unavailable) {
+        if (!channelAvailable(context.channel)) {
             pending.reset();
             return std::unexpected{
                 terminalFailure.value_or(Rejection{RejectCode::transportUnavailable})};

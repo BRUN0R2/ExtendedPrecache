@@ -129,8 +129,15 @@ explicitamente. O chamador precisa fornecer relógio/contexto atuais após qualq
 operação externa, inclusive preparação e enfileiramento.
 
 Rejeição preserva a primeira causa, solta a reserva e permite no máximo um frame
-terminal, se houver nonce, canal, sequência e orçamento. Não responde a rejeição
-recebida. `close` encerra também o envio terminal. `checkLegacyAdmission` só aceita
+terminal, se houver nonce, canal, sequência e orçamento. Valores de estado do canal
+desconhecidos são recusados, assim como um canal indisponível. A preparação e a
+confirmação desse frame exigem a mesma geração local da conexão original. Depois de
+observar uma geração diferente no mesmo binding de conexão e peer, a sessão descarta o frame
+pendente e não volta a emitir mesmo que receba um contexto antigo; uma consulta de
+outra conexão ou peer não invalida a sessão original. O transporte deve conferir o
+binding atual antes de enfileirar: a confirmação posterior não desfaz bytes já
+entregues ao canal. Não responde a rejeição recebida. `close` encerra também o envio
+terminal. `checkLegacyAdmission` só aceita
 antes da negociação, com política permissiva, mapa inteiro dentro dos limites e
 `LegacyProof::complete` fornecido por validação externa dos consumidores e bytes.
 O núcleo não fabrica essa prova nem faz downgrade após erro ou timeout.
