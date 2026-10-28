@@ -114,8 +114,11 @@ outras exceções de implementação do provider não são mascaradas.
 
 `releaseSignon` retorna o acordo somente no servidor comprometido, com canal
 explicitamente `drained` e reserva ainda válida. É uma autorização tipada; não
-envia serverinfo nem deve ser interpretada como uma solicitação de duplicar o
-sign-on. O cliente deve chamar `confirmServerInfo(48, spawn, context)` antes de
+envia serverinfo e pode ser concedida uma única vez. Uma segunda solicitação
+do mesmo binding invalida a sessão e libera a reserva; uma consulta de outra
+conexão ou peer não invalida a sessão original. Uma solicitação enquanto o
+canal ainda não está drenado não consome a autorização. O cliente deve chamar
+`confirmServerInfo(48, spawn, context)` antes de
 aceitar o primeiro serverinfo. Uma segunda confirmação invalida a sessão e libera
 a reserva, mesmo quando protocolo e spawn count coincidem. Isso também não
 carrega assets nem ativa gameplay.
