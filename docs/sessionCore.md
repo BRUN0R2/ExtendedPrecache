@@ -77,7 +77,8 @@ O ciclo de envio é:
 `receive` aceita somente a direção remota e o próximo tipo/sequência previstos.
 Repetição idêntica não avança nem aumenta quota; repetição alterada e gap são
 terminais. Nonce antigo não zero e binding de outra conexão/peer são descartados.
-Esses descartes não dispensam rate limit no transporte. `poll` deve ser chamado
+Esses descartes não dispensam rate limit no transporte, e o limitador nativo não atua antes
+do sign-on ([requisito](transportBootstrap.md#comandos-e-rate-limit)). `poll` deve ser chamado
 também em conexões silenciosas. Não há temporizadores, threads ou retries internos.
 O acesso à instância é serializado por um único proprietário; providers devem
 permanecer vivos e não reentrar na sessão. Não usar uma instância após movê-la.

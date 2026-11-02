@@ -41,7 +41,7 @@ devem acompanhar o item correspondente. As regras estão em [RULES.md](RULES.md)
 - [x] Especificar conversão zero/um, ownership estável, ciclo de mapa e ABI versionada, resolvendo as restrições de `engineAudit.md` antes dos adaptadores; contratos em `indexMapping.md`, `storageOwnership.md`, `mapLifecycle.md` e `integrationAbi.md`, matriz e verificações em `integrationVerification.md`.
 - [x] Projetar catálogo/consistência, deltas, áudio/eventos/efeitos, limites por bytes e demos em `dataCodecs.md` e contratos vinculados; definir schema fechado para mensagens de mods e módulos externos, sem aprovar um perfil final ou implementar codecs/adaptadores.
 - [x] Implementar os codecs de dados 2.0 e os preflights semânticos de aplicação isoladamente; API, ownership, orçamentos e fronteiras em `dataCore.md`. Verificadores, vetores e resultados permanecem locais fora do GitHub.
-- [ ] Comprovar a barreira anterior a `SV_SendServerinfo`, o bootstrap de user messages, o despacho de `clc_stringcmd`, drain/reset e reconexão nos hashes selecionados antes de habilitar o transporte. Entradas diretas do servidor fechadas estaticamente em `transportBootstrap.md`; faltam binding e evidência em execução com o núcleo de sessão real, nos seis pontos listados ali.
+- [ ] Comprovar a barreira anterior a `SV_SendServerinfo`, o bootstrap de user messages, o despacho de `clc_stringcmd`, drain/reset e reconexão nos hashes selecionados antes de habilitar o transporte. Entradas diretas do servidor fechadas estaticamente, e o lado do servidor observado localmente em execução com o núcleo de sessão real e um cliente de laboratório; situação ponto a ponto em `transportBootstrap.md`. Faltam o `hw.dll` real, o limite próprio de `epc1` e o binding de produção.
 - [x] Implementar as entradas e o ciclo de vida do plugin Metamod do servidor: plugin inerte, sem hooks ou ampliação, contrato em `metamodPlugin.md`. Verificado localmente em host real; resultados permanecem fora do GitHub.
 - [ ] Implementar adaptador HLDS com detecção exata de versão e falha segura.
 - [ ] Implementar adaptador CS 1.6 com o mesmo contrato e ciclo de vida.
@@ -95,11 +95,11 @@ local; não reservam armazenamento nativo nem habilitam um perfil. Os descritore
 de `docs/data` permanecem indisponíveis, sem módulos finais aprovados.
 Verificadores, vetores e resultados novos permanecem locais em área ignorada.
 
-Próximo trabalho: conduzir o acordo real do núcleo de sessão pelo motor, em ambiente
-instrumentado, para demonstrar nos hashes selecionados a continuação única da barreira,
-bootstrap, dispatch com rate limit, drain/reset e reconexão, antes de habilitar transporte
-ou implementar adaptadores. O plano e os limites estão em
-[transportBootstrap.md](transportBootstrap.md).
+Próximo trabalho: repetir com o `hw.dll` real, em ambiente instrumentado, o registro privado,
+o reset e a reconexão que faltam, e só então levar a barreira para o plugin. O lado do
+servidor já foi observado em execução; a situação e os limites estão em
+[transportBootstrap.md](transportBootstrap.md). Nada disso amplia limites nem habilita
+transporte.
 
 Publicação: repositório público
 [`BRUN0R2/ExtendedPrecache`](https://github.com/BRUN0R2/ExtendedPrecache) criado.
