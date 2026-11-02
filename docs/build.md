@@ -62,9 +62,15 @@ cmake --preset windowsX86 -DextendedPrecacheEnableAnalysis=ON
 cmake --build --preset windowsX86
 ```
 
-Use `clang-format --dry-run --Werror` nos arquivos `.hpp` e `.cpp` de `include`,
-`src` e `tests`. A configuração de análise usa warnings como erros. Os testes
-continuam ativos em builds Release, sem depender de `assert`.
+Use `clang-format --dry-run --Werror` nos arquivos `.hpp`, `.cpp` e `.inc` de
+`include`, `src` e `tests`. A configuração de análise usa warnings como erros. Os testes
+continuam ativos em builds Release, sem depender de `assert`. Em Clang para MSVC,
+`-Wconversion` e `-Wsign-conversion` também valem, pois é o alvo x86 que tem `size_t` de
+32 bits; a CI usa a imagem fixada `windows-2025-vs2026`.
+
+A CI confere o fecho do [contrato de dados](dataCodecs.md): os hashes de
+`docs/data/dataContractV2.json` e o digest desse descritor no exemplo de aplicação.
+Editar um texto normativo sem atualizar o fecho e esse digest reprova o check.
 No modo MSVC, `clang-tidy` recebe `/EHsc` também em seus argumentos de tooling,
 para analisar o mesmo modo de exceções da compilação. Isso permite verificar as
 fronteiras que convertem falhas de alocação em erros tipados. Não há checks desativados.

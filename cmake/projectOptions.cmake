@@ -7,6 +7,10 @@ function(extendedPrecacheApplyOptions targetName)
 
     if(MSVC)
         target_compile_options(${targetName} PRIVATE /W4 /WX /permissive- /EHsc /utf-8)
+        if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+            # The x86 target is where a 32-bit size_t can truncate, so it needs these checks most.
+            target_compile_options(${targetName} PRIVATE -Wconversion -Wsign-conversion)
+        endif()
     else()
         target_compile_options(${targetName} PRIVATE
             -Wall -Wextra -Wpedantic -Werror -Wconversion -Wsign-conversion

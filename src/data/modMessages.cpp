@@ -20,7 +20,7 @@ auto typedSchema(const ModMessage &message, ModContext context) -> const Schema 
     require(schema && schema->role == SchemaRole::modMessage, ErrorCode::invalidSchema);
     return *schema;
 }
-void byteLimit(std::size_t bytes, ModContext context) {
+void byteLimit(std::uint64_t bytes, ModContext context) {
     within(add(envelopeBytes, bytes), context.budget.messageBytes.value);
     if (context.delivery == Delivery::unreliable) {
         within(add(envelopeBytes, bytes),

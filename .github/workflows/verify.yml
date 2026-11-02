@@ -10,9 +10,24 @@ permissions:
 jobs:
   windowsX86:
     name: C++26 Windows x86
-    runs-on: windows-latest
+    runs-on: windows-2025-vs2026
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Verify data contract closure
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $descriptor = 'docs/data/dataContractV2.json'
+          $contract = Get-Content -Raw -LiteralPath $descriptor | ConvertFrom-Json
+          foreach ($artifact in $contract.normativeArtifacts) {
+            $digest = (Get-FileHash -Algorithm SHA256 -LiteralPath $artifact.path).Hash
+            if ($digest -ne $artifact.sha256) { throw "Stale data contract closure: $($artifact.path)" }
+          }
+          $application = Get-Content -Raw -LiteralPath 'docs/data/applicationContractV2.example.json' |
+            ConvertFrom-Json
+          if ((Get-FileHash -Algorithm SHA256 -LiteralPath $descriptor).Hash -ne $application.dataContractSha256) {
+            throw 'The application example does not identify the current data contract'
+          }
       - name: Prepare stable Clang and verify
         shell: pwsh
         run: |
@@ -50,7 +65,7 @@ jobs:
             tests/integrationAbiCProbe.c /Foout/windowsX86/integrationAbiCProbe.obj
           ctest --preset windowsX86
           $sourceFiles = Get-ChildItem -Path include,src,tests,docs/contracts -Recurse -File `
-            -Include *.hpp,*.cpp,*.h,*.c | ForEach-Object FullName
+            -Include *.hpp,*.cpp,*.h,*.c,*.inc | ForEach-Object FullName
           clang-format --dry-run --Werror $sourceFiles
       - name: Preserve diagnostic build
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
