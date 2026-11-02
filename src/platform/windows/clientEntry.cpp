@@ -1,7 +1,9 @@
 #include "buildIdentity.hpp"
+#include "clientBuild.hpp"
 #include "clientEngine.hpp"
 #include "clientLoadStatus.hpp"
 #include "clientModelDescriptors.hpp"
+#include "clientModelTables.hpp"
 #include "clientTransport.hpp"
 #include "modelRelocation.hpp"
 
@@ -44,6 +46,7 @@ template <typename Function> auto ntdllEntry(const char *name) noexcept -> Funct
 
 // Never destroyed: the engine's code keeps pointing at the descriptors until the process ends.
 struct EngineWatch final {
+    const client::ClientBuild *build;
     std::unique_ptr<client::ClientProfile> profile;
     std::unique_ptr<client::ClientModelDescriptors> descriptors;
     HANDLE loaded{};
@@ -75,16 +78,19 @@ auto attach(EngineWatch &watch) -> client::AttachResult {
     if (engine == nullptr) {
         return AttachResult::engineUnreadable;
     }
-    if (const auto verified = verifyModuleBuild(engine, client::selectedEngineSha256); !verified) {
+    const auto &build = *watch.build;
+    if (const auto verified = verifyModuleBuild(engine, build.engineSha256); !verified) {
         return verified.error() == BuildRefusal::unknownBuild ? AttachResult::engineUnknownBuild
                                                               : AttachResult::engineUnreadable;
     }
     if (watch.descriptors && !watch.descriptorsMoved) {
         return AttachResult::unexpectedTables;
     }
-    const auto slotLimit = watch.descriptors ? wireModelSlots : slotsWithNativeDescriptors;
-    const auto installed = client::installClientTransport(client::ClientEngine{engine},
-                                                          std::move(watch.profile), slotLimit);
+    const auto slotLimit = watch.descriptors ? wireModelSlots : build.slotsWithNativeDescriptors;
+    const auto clientEngine = client::ClientEngine{engine, build.engine};
+    const auto installed = client::installClientTransport(
+        clientEngine, std::move(watch.profile),
+        client::ClientModelTables{clientEngine.image(), build.modelTable, slotLimit});
     if (!installed) {
         return installed.error() == client::TransportRefusal::noBinding
                    ? AttachResult::noBinding
@@ -123,10 +129,10 @@ auto watchEngine() -> client::AttachResult {
     if (!profile) {
         return AttachResult::noApprovedProfile;
     }
-    if (const auto verified = verifyFileBuild(engineFile(), client::selectedEngineSha256);
-        !verified) {
-        return verified.error() == BuildRefusal::unknownBuild ? AttachResult::engineUnknownBuild
-                                                              : AttachResult::engineUnreadable;
+    const auto build = client::identifyClientBuild(engineFile());
+    if (!build) {
+        return build.error() == BuildRefusal::unknownBuild ? AttachResult::engineUnknownBuild
+                                                           : AttachResult::engineUnreadable;
     }
     const auto registerEvents = ntdllEntry<RegisterDllEvents>("LdrRegisterDllNotification");
     const auto unregisterEvents = ntdllEntry<UnregisterDllEvents>("LdrUnregisterDllNotification");
@@ -134,8 +140,9 @@ auto watchEngine() -> client::AttachResult {
     if (registerEvents == nullptr || unregisterEvents == nullptr || loaded == nullptr) {
         return AttachResult::engineUnreadable;
     }
-    auto descriptors = client::ClientModelDescriptors::reserve(profile->knownModelEntries());
-    auto *const watch = new EngineWatch{std::move(profile), std::move(descriptors), loaded};
+    auto descriptors = client::ClientModelDescriptors::reserve(profile->knownModelEntries(),
+                                                               (*build)->modelDescriptors);
+    auto *const watch = new EngineWatch{*build, std::move(profile), std::move(descriptors), loaded};
     if (registerEvents(0, onDllEvent, watch, &watch->cookie) != 0) {
         return AttachResult::engineUnreadable;
     }

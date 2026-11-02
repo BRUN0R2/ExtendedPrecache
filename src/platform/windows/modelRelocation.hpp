@@ -18,9 +18,6 @@ namespace extendedPrecache::platform::windows {
 inline constexpr std::uint32_t nativeModelSlots = 512;
 // The game's delta.lst writes a model index in 10 bits, so no table can use more than this.
 inline constexpr std::uint32_t wireModelSlots = 1024;
-// The most a client can take while its 1,024 descriptors of known models stay in place. They also
-// hold what the client loads by itself, 49 in the verified game.
-inline constexpr std::uint32_t slotsWithNativeDescriptors = 900;
 
 class ModelSlots final {
   public:

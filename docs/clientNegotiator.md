@@ -89,6 +89,14 @@ use o inicializador para abrir servidores com VAC, como diz o
 em [`CSteam3Server::Activate`](https://github.com/rehlds/ReHLDS/blob/196300131858d1e087267fb2fb60cb935f8f8873/rehlds/engine/sv_steam3.cpp#L260).
 Ele afeta um servidor hospedado pelo próprio jogo, não o cliente que entra em outro.
 
+## Builds conhecidos
+
+O que o adaptador sabe de cada build do jogo fica em uma entrada de dados, em
+[`clientBuild.cpp`](../src/platform/windows/clientBuild.cpp): o executável, os hashes, os endereços
+do `hw.dll` e as referências às tabelas de modelos. O build é escolhido pelo SHA-256 exato do
+`hw.dll`. Hash desconhecido é recusado, e nenhum endereço é tentado em um build parecido. Hoje há uma
+entrada: o jogo da Steam depois da atualização de 25 anos.
+
 ## Inicializador
 
 ```text
@@ -96,8 +104,9 @@ extendedPrecacheLauncher --game-dir <pasta> [-- <argumentos do jogo>]
 ```
 
 `--game-dir` é obrigatório e deve apontar para uma cópia separada do jogo, fora da pasta da Steam:
-o inicializador nunca escolhe a pasta da Steam por conta própria. Ele confere o SHA-256 de `hl.exe`
-e `hw.dll` e abre o jogo suspenso, com a pasta dele como diretório atual e `-game cstrike`. A carga
+o inicializador nunca escolhe a pasta da Steam por conta própria. Ele identifica o build pelo SHA-256
+do `hw.dll`, confere o do executável desse build e abre o jogo suspenso, com a pasta dele como
+diretório atual e `-game cstrike`. A carga
 de `extendedPrecacheClient.dll`, que precisa estar ao lado dele, é a primeira coisa que a thread
 principal faz, antes do ponto de entrada do jogo. Nenhum arquivo da instalação é alterado, e fechar
 o jogo desfaz tudo.

@@ -168,6 +168,7 @@ if(extendedPrecacheBuildDll)
         src/platform/windows/clientEntry.cpp
         src/platform/windows/approvedClientProfile.cpp
         src/platform/windows/buildIdentity.cpp
+        src/platform/windows/clientBuild.cpp
         src/platform/windows/clientEngine.cpp
         src/platform/windows/clientLoadStatus.cpp
         src/platform/windows/clientModelDescriptors.cpp
@@ -185,6 +186,7 @@ if(extendedPrecacheBuildDll)
         src/platform/windows/launcherMain.cpp
         src/platform/windows/approvedClientProfile.cpp
         src/platform/windows/buildIdentity.cpp
+        src/platform/windows/clientBuild.cpp
         src/platform/windows/clientLoadStatus.cpp
     )
     target_compile_definitions(extendedPrecacheLauncher PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX _WIN32_WINNT=0x0A00)
@@ -198,5 +200,15 @@ if(extendedPrecacheBuildDll)
         extendedPrecacheApplyOptions(extensionApiTests)
         add_dependencies(extensionApiTests extendedPrecache)
         add_test(NAME extensionApi COMMAND extensionApiTests $<TARGET_FILE:extendedPrecache>)
+
+        add_executable(clientBuildTests tests/clientBuildTests.cpp
+            src/platform/windows/buildIdentity.cpp
+            src/platform/windows/clientBuild.cpp
+        )
+        target_include_directories(clientBuildTests PRIVATE src/platform/windows)
+        target_compile_definitions(clientBuildTests PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX _WIN32_WINNT=0x0A00)
+        target_link_libraries(clientBuildTests PRIVATE extendedPrecacheSession extendedPrecacheCrypto)
+        extendedPrecacheApplyOptions(clientBuildTests)
+        add_test(NAME clientBuild COMMAND clientBuildTests)
     endif()
 endif()

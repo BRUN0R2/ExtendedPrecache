@@ -1,6 +1,7 @@
 #pragma once
 
 #include "clientEngine.hpp"
+#include "clientModelTables.hpp"
 
 #include <extendedPrecache/session/negotiation.hpp>
 
@@ -30,7 +31,7 @@ enum class TransportRefusal : std::uint8_t { noBinding, unexpectedTables };
 // once, before the engine starts its client library.
 [[nodiscard]] auto installClientTransport(ClientEngine engine,
                                           std::unique_ptr<ClientProfile> profile,
-                                          std::uint32_t modelSlotLimit)
+                                          ClientModelTables models)
     -> std::expected<void, TransportRefusal>;
 
 } // namespace extendedPrecache::platform::windows::client

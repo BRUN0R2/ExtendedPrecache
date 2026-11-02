@@ -1,5 +1,5 @@
 #include "buildIdentity.hpp"
-#include "clientEngine.hpp"
+#include "clientBuild.hpp"
 #include "clientLoadStatus.hpp"
 #include "clientTransport.hpp"
 
@@ -21,9 +21,6 @@ using namespace extendedPrecache::platform::windows;
 using client::AttachResult;
 using client::AttachStatusReader;
 
-constexpr auto selectedLauncherSha256 =
-    std::string_view{"be7c061a2d36a3517c98412a06642f98985ab746e3d65c8d105d25b6ac77369c"};
-constexpr auto gameExecutable = L"hl.exe";
 constexpr auto engineModule = L"hw.dll";
 constexpr auto clientModule = L"extendedPrecacheClient.dll";
 constexpr auto gameDirectoryOption = std::wstring_view{L"--game-dir"};
@@ -52,6 +49,12 @@ enum class ExitCode : std::uint8_t {
 auto fail(ExitCode code, const char *text) noexcept -> ExitCode {
     std::fprintf(stderr, "ExtendedPrecache: %s\n", text);
     return code;
+}
+
+auto refuseBuild(BuildRefusal refusal) noexcept -> ExitCode {
+    return refusal == BuildRefusal::unreadable
+               ? fail(ExitCode::gameNotFound, "the game files were not found in that directory")
+               : fail(ExitCode::unknownGameBuild, "this game build has not been verified");
 }
 
 struct Options final {
@@ -167,18 +170,19 @@ auto waitForReport(HANDLE process, const AttachStatusReader &status) noexcept ->
 
 struct GameStart final {
     std::filesystem::path directory;
+    std::filesystem::path executable;
     std::filesystem::path module;
     std::span<const std::wstring_view> arguments;
 };
 
 auto startGame(const GameStart &start) -> ExitCode {
-    const auto executable = start.directory / gameExecutable;
-    auto line = commandLine(executable, start.arguments);
+    auto line = commandLine(start.executable, start.arguments);
     auto startup = STARTUPINFOW{};
     startup.cb = sizeof(startup);
     auto created = PROCESS_INFORMATION{};
-    if (CreateProcessW(executable.c_str(), line.data(), nullptr, nullptr, FALSE, CREATE_SUSPENDED,
-                       nullptr, start.directory.c_str(), &startup, &created) == FALSE) {
+    if (CreateProcessW(start.executable.c_str(), line.data(), nullptr, nullptr, FALSE,
+                       CREATE_SUSPENDED, nullptr, start.directory.c_str(), &startup,
+                       &created) == FALSE) {
         return fail(ExitCode::cannotStart, "the game could not be started");
     }
     const auto process = UniqueHandle{created.hProcess};
@@ -206,14 +210,13 @@ auto run(std::span<wchar_t *const> arguments) -> ExitCode {
         return fail(ExitCode::noApprovedProfile,
                     "no contract profile has been approved, so there is nothing to negotiate");
     }
-    const auto launcher = verifyFileBuild(*directory / gameExecutable, selectedLauncherSha256);
-    const auto engine = verifyFileBuild(*directory / engineModule, client::selectedEngineSha256);
-    if ((!launcher && launcher.error() == BuildRefusal::unreadable) ||
-        (!engine && engine.error() == BuildRefusal::unreadable)) {
-        return fail(ExitCode::gameNotFound, "the game files were not found in that directory");
+    const auto build = client::identifyClientBuild(*directory / engineModule);
+    if (!build) {
+        return refuseBuild(build.error());
     }
-    if (!launcher || !engine) {
-        return fail(ExitCode::unknownGameBuild, "this game build has not been verified");
+    const auto executable = *directory / (*build)->executable;
+    if (const auto verified = verifyFileBuild(executable, (*build)->executableSha256); !verified) {
+        return refuseBuild(verified.error());
     }
     const auto own = launcherDirectory();
     if (!own || !std::filesystem::exists(*own / clientModule)) {
@@ -221,6 +224,7 @@ auto run(std::span<wchar_t *const> arguments) -> ExitCode {
                     "extendedPrecacheClient.dll must be next to this program");
     }
     return startGame({.directory = *directory,
+                      .executable = executable,
                       .module = *own / clientModule,
                       .arguments = options->gameArguments});
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "clientBuild.hpp"
 #include "modelRelocation.hpp"
 
 #include <cstddef>
@@ -10,13 +11,14 @@
 
 namespace extendedPrecache::platform::windows::client {
 
-// Moves the selected hw.dll's model table, and only while a negotiated map needs it: the engine's
+// Moves a verified hw.dll's model table, and only while a negotiated map needs it: the engine's
 // code stays original on any other server, secure ones above all.
 class ClientModelTables final {
   public:
     // The limit says how many slots the descriptors of known models can back.
-    ClientModelTables(std::byte *image, std::uint32_t slotLimit) noexcept
-        : image{image}, slotLimit{slotLimit} {}
+    ClientModelTables(std::byte *image, const ModelTableLayout &layout,
+                      std::uint32_t slotLimit) noexcept
+        : image{image}, layout{&layout}, slotLimit{slotLimit} {}
 
     // Prepares what the next map asks for; a map within the native limit needs nothing.
     [[nodiscard]] auto reserve(std::uint32_t entries) -> std::expected<void, session::Rejection>;
@@ -38,6 +40,7 @@ class ClientModelTables final {
     };
 
     std::byte *image;
+    const ModelTableLayout *layout;
     std::uint32_t slotLimit;
     std::optional<Reservation> reserved;
     std::optional<Active> active;
