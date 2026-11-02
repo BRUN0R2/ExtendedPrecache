@@ -87,13 +87,13 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $PSNativeCommandUseErrorActionPreference = $true
           $gccVersion = '16.2.0'
-          $releaseTag = "${gccVersion}posix-23.1.3-14.0.0-ucrt-r3"
-          $archiveName = "winlibs-x86_64-posix-seh-gcc-$gccVersion-mingw-w64ucrt-14.0.0-r3.7z"
-          $archiveHash = 'DB014A73B71907C6C778FD1C938056CDDCAE9023F89F8DFFF7783D9E45BAF975'
+          $releaseTag = "$gccVersion-rt_v14-rev1"
+          $archiveName = "x86_64-$gccVersion-release-posix-seh-ucrt-rt_v14-rev1.7z"
+          $archiveHash = '26788998D615856A915E1EEACB0854FCE87BC608FA9A0C16F96BCBFDCF3415C0'
           $toolsDirectory = Join-Path $PWD '.local/toolchain'
           New-Item -ItemType Directory -Path $toolsDirectory -Force | Out-Null
           $archivePath = Join-Path $toolsDirectory $archiveName
-          $archiveUrl = "https://github.com/brechtsanders/winlibs_mingw/releases/download/$releaseTag/$archiveName"
+          $archiveUrl = "https://github.com/niXman/mingw-builds-binaries/releases/download/$releaseTag/$archiveName"
           Invoke-WebRequest -Uri $archiveUrl -OutFile $archivePath
           if ((Get-FileHash -Algorithm SHA256 -LiteralPath $archivePath).Hash -ne $archiveHash) {
             throw 'GCC archive digest mismatch'
@@ -101,14 +101,15 @@ jobs:
           & "$env:ProgramFiles/7-Zip/7z.exe" x $archivePath "-o$toolsDirectory" -y -bso0 -bsp0
           $toolchainBin = (Resolve-Path (Join-Path $toolsDirectory 'mingw64/bin')).Path
           $env:PATH = $toolchainBin + ';' + $env:PATH
-          # The image ships an older GCC plus its own CMake and Ninja, so a tool missing
-          # from the archive would otherwise fall back to them without failing the job.
-          foreach ($tool in 'g++', 'cmake', 'ctest', 'ninja') {
-            if ((Split-Path (Get-Command $tool).Source) -ne $toolchainBin) {
-              throw "$tool does not come from the pinned toolchain"
-            }
+          # The image ships an older GCC, which must not stand in for the hashed archive.
+          if ((Split-Path (Get-Command g++).Source) -ne $toolchainBin) {
+            throw 'g++ does not come from the pinned toolchain'
           }
           if ((g++ -dumpfullversion) -ne $gccVersion) { throw 'Unexpected GCC version' }
+          # CMake and Ninja are the image's and move with it, so record which ones ran.
+          Get-Command cmake, ctest, ninja | ForEach-Object Source
+          cmake --version
+          ninja --version
           cmake -S . -B out/core -G Ninja -DCMAKE_CXX_COMPILER=g++ -DextendedPrecacheBuildDll=OFF
           cmake --build out/core
           ctest --test-dir out/core --output-on-failure --no-tests=error
