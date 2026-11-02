@@ -1,5 +1,25 @@
 # ExtendedPrecache
 
+> [!WARNING]
+> **Risco de banimento VAC.** O adaptador do cliente altera a memória do jogo em execução, e o VAC
+> pode tratar isso como trapaça. [Não há apelação](https://help.steampowered.com/faqs/view/571A-97DA-70E9-FF74):
+> o Suporte Steam não remove banimentos VAC. O uso é por sua conta e risco.
+>
+> - Nunca use em servidores protegidos por VAC.
+> - Nunca use na sua conta principal, nem em uma conta que jogue com a biblioteca compartilhada dela.
+> - Use uma cópia separada do jogo, fora da pasta da Steam, e não coloque arquivos deste projeto
+>   na pasta da Steam.
+>
+> O projeto ainda não foi testado contra o VAC real. Mesmo depois de testado, não ser banido não
+> prova segurança: um banimento pode vir muito depois, e a detecção muda com o tempo.
+>
+> **VAC ban risk.** The client adapter changes the memory of the running game, and VAC may treat
+> that as cheating. [There is no appeal](https://help.steampowered.com/faqs/view/571A-97DA-70E9-FF74):
+> Steam Support does not remove VAC bans. Use it at your own risk. Never use it on VAC-secured
+> servers, on your main account, or on an account that borrows its library. Use a separate copy of
+> the game outside the Steam folder, and keep this project's files out of that folder. This project
+> has not been tested against real VAC yet, and not being banned would not prove it safe.
+
 Extensão em C++26 para ampliar o precache do Counter-Strike 1.6 e do HLDS/ReHLDS,
 com cliente e servidor trabalhando de forma coordenada.
 
