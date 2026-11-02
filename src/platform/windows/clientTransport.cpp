@@ -151,8 +151,9 @@ class ClientTransport final : public transport::SessionSource,
     bool secureRefused{};
 };
 
-// The engine's tables carry no context, so their contract forces this single module-wide owner.
-constinit std::unique_ptr<ClientTransport> activeTransport;
+// The engine's tables carry no context, so their contract forces this single module-wide owner. It
+// is never destroyed: the engine can be unmapped before this module, with its code still rewritten.
+constinit ClientTransport *activeTransport{};
 
 void frameEntry(double time) {
     activeTransport->onFrame(time);
@@ -326,12 +327,15 @@ auto installClientTransport(ClientEngine engine, std::unique_ptr<ClientProfile> 
     if (!connection || !peer) {
         return std::unexpected{TransportRefusal::noBinding};
     }
-    activeTransport = std::make_unique<ClientTransport>(engine, std::move(profile),
-                                                        ConnectionBinding{*connection, *peer, {1}});
-    if (!activeTransport->hookEngine()) {
-        activeTransport.reset();
+    auto transport = std::make_unique<ClientTransport>(engine, std::move(profile),
+                                                       ConnectionBinding{*connection, *peer, {1}});
+    // The hooks can fire as soon as they are in the tables.
+    activeTransport = transport.get();
+    if (!transport->hookEngine()) {
+        activeTransport = nullptr;
         return std::unexpected{TransportRefusal::unexpectedTables};
     }
+    activeTransport = transport.release();
     return {};
 }
 
