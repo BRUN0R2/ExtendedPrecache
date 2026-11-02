@@ -73,6 +73,11 @@ aborta, pois continuar deixaria ponteiros para um módulo liberado.
   Pausar interromperia callbacks futuros com bindings ainda vivos.
 - **Mensagens:** o [log em arquivo](https://github.com/rehlds/Metamod-R/blob/56590c5c70fa95775051888b7fe0a4e285856ebb/metamod/src/mutil.cpp#L92)
   fica mudo sem `log on`. Estado e recusas vão ao console; recusas também ao log.
+- **`GetEntityAPI`:** nada aqui pode chamá-la no `mp.dll`; quem pede essas entradas é o host, ao
+  carregar. Com um mapa já carregado, a função zera uma tabela global do jogo, que deixa de achar
+  câmeras de introdução e pontos de nascimento até o próximo mapa, e os jogadores entram em
+  (0, 0, 1), dentro do chão em `de_dust2`. Isso foi observado no `mp.dll` usado nos testes locais;
+  que a tabela seja o índice de entidades por nome é inferência.
 
 ## Instalação de diagnóstico
 

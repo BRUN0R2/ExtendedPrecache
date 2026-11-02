@@ -48,16 +48,21 @@ class ModelLease final : public session::PreparedSession {
 };
 } // namespace
 
-auto planModelRelocation(const std::byte *image, const ModelRelocation &relocation)
-    -> std::vector<OperandRewrite> {
-    auto rewrites = std::vector<OperandRewrite>{};
-    for (const auto &[table, storage] : relocation.placements) {
+void appendTableMoves(const std::byte *image, std::span<const TablePlacement> placements,
+                      std::vector<OperandRewrite> &rewrites) {
+    for (const auto &[table, storage] : placements) {
         const auto from = addressOf(image + table.rva);
         const auto to = addressOf(storage);
         for (const auto &[operandRva, offset] : table.references) {
             rewrites.push_back({operandRva, from + offset, to + offset});
         }
     }
+}
+
+auto planModelRelocation(const std::byte *image, const ModelRelocation &relocation)
+    -> std::vector<OperandRewrite> {
+    auto rewrites = std::vector<OperandRewrite>{};
+    appendTableMoves(image, relocation.placements, rewrites);
     for (const auto &[operandRva, kind] : relocation.bounds) {
         rewrites.push_back({operandRva, boundValue(kind, ModelSlots::native()),
                             boundValue(kind, relocation.slots)});

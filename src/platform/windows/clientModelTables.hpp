@@ -14,7 +14,9 @@ namespace extendedPrecache::platform::windows::client {
 // code stays original on any other server, secure ones above all.
 class ClientModelTables final {
   public:
-    explicit ClientModelTables(std::byte *image) noexcept : image{image} {}
+    // The limit says how many slots the descriptors of known models can back.
+    ClientModelTables(std::byte *image, std::uint32_t slotLimit) noexcept
+        : image{image}, slotLimit{slotLimit} {}
 
     // Prepares what the next map asks for; a map within the native limit needs nothing.
     [[nodiscard]] auto reserve(std::uint32_t entries) -> std::expected<void, session::Rejection>;
@@ -36,6 +38,7 @@ class ClientModelTables final {
     };
 
     std::byte *image;
+    std::uint32_t slotLimit;
     std::optional<Reservation> reserved;
     std::optional<Active> active;
 };

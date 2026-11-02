@@ -20,6 +20,7 @@ das referências, sem depender do alcance de um desmontador. Os modelos têm pou
 | Motor | Tabelas | Referências | Limites | Outros |
 | --- | --- | --- | --- | --- |
 | `hw.dll` | `cl.model_precache` | 16 | 5 | |
+| `hw.dll` | Descritores de modelos conhecidos e registros CRC | 19 | 1 | |
 | `swds.dll` | Nomes, objetos e flags | 47 | 22 | 3 chamadas de limpeza |
 
 `ImageRewrite` troca esses operandos de 32 bits: confere todos antes da primeira escrita e aplica
@@ -33,17 +34,18 @@ O contrato conta entradas sem a célula zero, que é reservada: 512 células nat
 
 | Limite | Valor |
 | --- | --- |
-| Verificado de ponta a ponta | 899 entradas, ou 900 células |
-| Descritores de modelos conhecidos | 1.024, nos dois motores; este módulo não os move |
+| Máximo do protocolo, com os descritores do cliente movidos | 1.023 entradas, ou 1.024 células: os 10 bits de `modelindex` |
+| Máximo com os descritores nativos no cliente | 899 entradas, ou 900 células |
+| Descritores de modelos conhecidos | 1.024 nativos nos dois motores; até 2.048 movidos no cliente |
 | Descritores usados por outras coisas no cliente verificado | 49, inclusive sprites do HUD |
 
-O teto real é o dos descritores. No cliente verificado, 949 entradas funcionam e 999 terminam em
+Com os descritores nativos, o cliente verificado aguenta 949 entradas, e 999 terminam em
 `mod_numknown >= MAX_KNOWN_MODELS`, erro fatal do motor. A margem de 899 cobre mais sprites do que o
 jogo verificado carrega, mas não é uma garantia: a ClientDLL pode carregar até 256 sprites no HUD.
 
 A configuração pode pedir menos que o verificado, nunca mais. O servidor recusa com o erro nativo
 uma precache além da capacidade, sem escrever fora da tabela. O cliente recusa com
-`capacityInsufficient` um mapa que exige mais.
+`capacityInsufficient` um mapa que exige mais do que seus descritores comportam.
 
 ## Servidor
 
@@ -59,9 +61,13 @@ primeiras precaches do mapa.
 A contagem do mapa vem da própria tabela. Ela entra nos requisitos da negociação e decide a
 [admissão legada](signonBarrier.md#decisões-por-fase).
 
+Os descritores do servidor não precisam mudar de lugar: ele só guarda neles o que entra na tabela,
+então 1.023 entradas cabem nos 1.024 nativos. Quando estão todos em uso, o motor reaproveita os que
+o mapa atual não referencia.
+
 ## Cliente
 
-A alteração existe só enquanto é necessária, para reduzir o risco com anti-cheat:
+A alteração da tabela existe só enquanto é necessária, para reduzir o risco com anti-cheat:
 
 | Momento | O que acontece |
 | --- | --- |
@@ -81,6 +87,19 @@ A tabela do cliente tem 4.096 células, mesmo em mapas menores. O parser nativo 
 grava o índice de 12 bits sem conferir, então nenhum índice do fio consegue sair dessa tabela. Os
 limites no código continuam ajustados para o mapa negociado.
 
+## Descritores no cliente
+
+Passar de 899 entradas exige mover os descritores de modelos conhecidos, e isso só acontece com
+`knownModelEntries` acima de 1.024 na configuração. Ponteiros para um descritor se espalham pelo
+motor e pela ClientDLL, e o cache do motor guarda ponteiros de volta para ele, então ele não pode
+mudar de lugar depois de criado. A mudança acontece enquanto o `hw.dll` é mapeado, na notificação do
+loader, antes de qualquer código dele rodar, e vale até o processo terminar.
+
+**Essa é a diferença em relação à tabela, e ela aumenta o risco com anti-cheat.** Com essa
+configuração, o código fica alterado em qualquer servidor, inclusive sem negociação e no intervalo
+até a guarda recusar um servidor com VAC. Sem ela, o código segue original fora dos mapas negociados,
+com o limite de 899 entradas.
+
 ## Clientes legados
 
 Um cliente sem o adaptador corromperia a própria memória com um índice acima de 511. Por isso, a
@@ -93,17 +112,22 @@ normalmente, a menos que a política seja `requireExtended`.
 Verificado localmente com `hw.dll` e `swds.dll` reais, plugin e adaptador de produção e um perfil
 sintético, em Counter-Strike 1.6 com `de_dust2`:
 
-- 899 entradas, com nomes idênticos nos dois lados, troca de mapa e volta do código ao original
-  depois de desconectar.
-- Entidades nos índices 512 e 899 chegam a `HUD_AddEntity` e ao renderizador de modelos.
+- 1.023 entradas com os descritores movidos e 899 com os nativos, com nomes idênticos nos dois lados.
+- Troca de mapa, inclusive com outros modelos no segundo mapa, e volta da tabela ao original depois
+  de desconectar.
+- Entidades nos índices 512 e 1.023 chegam a `HUD_AddEntity` e ao renderizador de modelos.
 - Mapa pequeno com adaptador, cliente legado em mapa pequeno e recusa de cliente legado em mapa
   grande.
+- Recusa de um mapa além dos descritores nativos e saída limpa dos dois lados ao fechar durante a
+  sessão.
 
 O que ainda não foi verificado ou não existe:
 
 - **Nunca foi testado contra um servidor com VAC real.** Alterar código do motor em memória é o tipo
   de coisa que um anti-cheat pode punir.
 - Demos, sessões longas, outros mapas e outros mods não foram exercitados.
+- O reaproveitamento de descritores com todos em uso só foi exercitado no cliente até 1.883 dos 2.048
+  e, com todos em uso, no servidor.
 - Módulos do servidor que guardem índices em tabelas de 512 posições não foram auditados.
 - Um `delta.lst` com menos de 10 bits em `modelindex` truncaria os índices.
 - O hash do catálogo ainda não é calculado do mapa real, e os requisitos dos outros recursos ainda
