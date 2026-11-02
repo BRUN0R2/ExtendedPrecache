@@ -106,8 +106,7 @@ auto Configuration::create(ConfigurationValues input)
         return dependency("limits.consistencyEntries");
     }
     if (const auto chunk = validateChunkBudget(input.limits, ByteCount{0}); !chunk) {
-        return dependency(chunk.error().fieldId ==
-                                  static_cast<std::uint8_t>(CapabilityField::inFlightBytes)
+        return dependency(chunk.error().fieldId == CapabilityField::inFlightBytes
                               ? "limits.inFlightBytes"
                               : "limits.reliableMessageBytes");
     }
@@ -200,8 +199,7 @@ auto validateConfiguration(const Configuration &configuration,
     const auto overhead =
         config.policy == ConnectionPolicy::legacyOnly ? ByteCount{0} : requirements.chunkOverhead;
     if (const auto chunk = validateChunkBudget(config.limits, overhead); !chunk) {
-        return dependency(chunk.error().fieldId ==
-                                  static_cast<std::uint8_t>(CapabilityField::inFlightBytes)
+        return dependency(chunk.error().fieldId == CapabilityField::inFlightBytes
                               ? "limits.inFlightBytes"
                               : "limits.reliableMessageBytes");
     }

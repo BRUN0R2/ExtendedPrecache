@@ -380,10 +380,10 @@ void testPeerValidation(TestSuite &suite, const std::filesystem::path &docs) {
             f.server.receive(Direction::client, f.golden(17).bytes(), f.serverContext);
         expectFailure(suite, result, RejectCode::capacityInsufficient,
                       "full map refused without resource dropping");
-        static_cast<void>(suite.check(!result && result.error().fieldId == 1 &&
-                                          result.error().offered == 599 &&
-                                          result.error().required == 600,
-                                      "capacity error identifies exact field and values"));
+        static_cast<void>(
+            suite.check(!result && result.error().fieldId == CapabilityField::modelEntries &&
+                            result.error().offered == 599 && result.error().required == 600,
+                        "capacity error identifies exact field and values"));
     }
 }
 
