@@ -183,4 +183,4 @@ conseguiu verificar o certificado ao baixar `nlohmann/json`. A verificação TLS
 foi desativada; o toolchain foi trocado para que o CMake da imagem faça o download.
 
 O job não roda clang-tidy, clang-format ou a probe C17, não produz DLL e não comprova
-suporte ao motor. `C++26 Windows x86` continua sendo o único check exigido em `main`.
+suporte ao motor. A proteção de `main` exige este job e `C++26 Windows x86`.
