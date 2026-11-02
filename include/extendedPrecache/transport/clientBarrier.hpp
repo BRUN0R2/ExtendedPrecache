@@ -2,6 +2,7 @@
 
 #include <extendedPrecache/session/negotiation.hpp>
 #include <extendedPrecache/transport/controlChannel.hpp>
+#include <extendedPrecache/transport/ports.hpp>
 
 namespace extendedPrecache::transport {
 
@@ -20,22 +21,6 @@ enum class BarrierPhase : std::uint8_t { idle, negotiating, released, refused };
 // A reliable channel delivers each command once, so a conversation cannot need more commands than
 // it has frames; the engine's own limiter ignores connections that are not active yet.
 inline constexpr std::uint32_t maxControlCommands = session::maxFramesPerDirection;
-
-class ReliableChannel {
-  public:
-    virtual ~ReliableChannel() = default;
-    [[nodiscard]] virtual auto state() const noexcept -> session::ChannelState = 0;
-    // Queues the whole message or nothing; false means there is no room yet.
-    [[nodiscard]] virtual auto queue(std::span<const std::byte> message) noexcept -> bool = 0;
-};
-
-// Provides the local contract and map snapshot, which this module does not know.
-class SessionSource {
-  public:
-    virtual ~SessionSource() = default;
-    [[nodiscard]] virtual auto open(session::SessionContext context)
-        -> std::expected<session::NegotiationSession, session::Rejection> = 0;
-};
 
 // Decides for one connection what its sign-on may do. An unexpected result means the connection
 // must be closed: the session is gone, and any terminal frame that fitted has been queued.
