@@ -24,12 +24,11 @@ gameplay antes da validação do catálogo e do carregamento previstos nesse con
    frame, usando o ID alocado, nunca um ID fixo. Colisão de nome/size/ownership ou falta
    de slot recusa o transporte; `RegUserMsg` pode devolver um registro existente,
    portanto resultado não zero sozinho não prova ownership.
-4. Cliente intercepta o registro e os frames antes da entrega à ClientDLL,
-   inclusive antes de serverinfo. Esse estado fica fora da região zerada por
-   `CL_ClearState`. Não depender de callback de HUD ou de ClientDLL já inicializada.
-   O registro de bootstrap é consumido em uma tabela privada, sem chamar o
-   handler nativo prematuramente. Repetir o mesmo registro não abre sessão; sessão
-   nova é uma oferta com outro nonce. O registro normal posterior ao serverinfo
+4. Cliente associa `ExtPrecache` a um handler próprio antes de o parser nativo tratar
+   o primeiro registro, e recebe os frames por ele, inclusive antes de serverinfo e
+   sem passar pela ClientDLL. O acordo fica fora da região zerada por `CL_ClearState`,
+   e nenhum estado da ClientDLL é usado. Repetir o mesmo registro não abre sessão;
+   sessão nova é uma oferta com outro nonce. O registro normal posterior ao serverinfo
    precisa manter o mesmo ID/nome/size; mudança nessa associação é erro.
 5. Servidor só libera o fluxo nativo depois de `clientCommitAck` válido, com
    mesmo snapshot, canal ainda válido e filas de controle confirmadas/drenadas.

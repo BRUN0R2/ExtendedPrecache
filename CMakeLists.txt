@@ -159,6 +159,20 @@ if(extendedPrecacheBuildDll)
     extendedPrecacheApplyOptions(extendedPrecacheServer)
     set_target_properties(extendedPrecacheServer PROPERTIES PREFIX "")
 
+    add_library(extendedPrecacheClient SHARED
+        src/platform/windows/clientEntry.cpp
+        src/platform/windows/approvedClientProfile.cpp
+        src/platform/windows/clientEngine.cpp
+        src/platform/windows/clientTransport.cpp
+        src/platform/windows/engineIdentity.cpp
+        src/platform/windows/rehldsApi.cpp
+        src/platform/windows/extendedPrecacheClient.def
+    )
+    target_compile_definitions(extendedPrecacheClient PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX _WIN32_WINNT=0x0A00)
+    target_link_libraries(extendedPrecacheClient PRIVATE extendedPrecacheTransport extendedPrecacheCrypto)
+    extendedPrecacheApplyOptions(extendedPrecacheClient)
+    set_target_properties(extendedPrecacheClient PROPERTIES PREFIX "")
+
     if(BUILD_TESTING)
         add_executable(extensionApiTests tests/extensionApiTests.cpp)
         target_include_directories(extensionApiTests PRIVATE include)

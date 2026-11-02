@@ -45,23 +45,31 @@ auto readFile(const std::filesystem::path &path) -> std::optional<std::vector<st
 }
 } // namespace
 
-auto openSelectedEngine() -> std::expected<rehlds::Api, EngineRefusal> {
-    auto *const module = GetModuleHandleW(engineModuleName);
-    if (module == nullptr) {
-        return std::unexpected{EngineRefusal::notDedicated};
-    }
-    const auto path = modulePath(module);
+auto verifyEngineBuild(void *module, std::string_view sha256)
+    -> std::expected<void, EngineRefusal> {
+    const auto path = modulePath(static_cast<HMODULE>(module));
     const auto contents = path ? readFile(*path) : std::nullopt;
     if (!contents) {
         return std::unexpected{EngineRefusal::unreadable};
     }
     const auto digest = CngDigest{}.sha256(*contents);
-    const auto selected = session::parseDigest(selectedEngineSha256);
+    const auto selected = session::parseDigest(sha256);
     if (!digest || !selected) {
         return std::unexpected{EngineRefusal::unreadable};
     }
     if (*digest != *selected) {
         return std::unexpected{EngineRefusal::unknownBuild};
+    }
+    return {};
+}
+
+auto openSelectedEngine() -> std::expected<rehlds::Api, EngineRefusal> {
+    auto *const module = GetModuleHandleW(engineModuleName);
+    if (module == nullptr) {
+        return std::unexpected{EngineRefusal::notDedicated};
+    }
+    if (const auto verified = verifyEngineBuild(module, selectedEngineSha256); !verified) {
+        return std::unexpected{verified.error()};
     }
     using InterfaceFactory = void *(*)(const char *name, int *status);
     const auto factory = reinterpret_cast<InterfaceFactory>(GetProcAddress(module, apiFactoryName));
