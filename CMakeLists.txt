@@ -145,11 +145,16 @@ if(extendedPrecacheBuildDll)
 
     add_library(extendedPrecacheServer SHARED
         src/platform/windows/metamodEntry.cpp
+        src/platform/windows/approvedProfile.cpp
+        src/platform/windows/engineIdentity.cpp
+        src/platform/windows/rehldsApi.cpp
+        src/platform/windows/serverTransport.cpp
         src/platform/windows/extendedPrecacheServer.def
     )
     target_include_directories(extendedPrecacheServer PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
     target_compile_definitions(extendedPrecacheServer PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX _WIN32_WINNT=0x0A00)
-    target_link_libraries(extendedPrecacheServer PRIVATE extendedPrecacheMetamod)
+    target_link_libraries(extendedPrecacheServer PRIVATE extendedPrecacheMetamod
+        extendedPrecacheTransport extendedPrecacheCrypto)
     extendedPrecacheApplyOptions(extendedPrecacheServer)
     set_target_properties(extendedPrecacheServer PROPERTIES PREFIX "")
 

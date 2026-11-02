@@ -55,10 +55,12 @@ repetições invalidam a sessão. Essa garantia não suspende nem retoma uma cha
 nativa: o binding ainda precisa associar essa autorização à continuação correta, sem
 duplicação ou reentrada.
 
-A continuação executa `SV_New_f` fora do parser de comandos, portanto não basta chamá-lo.
-O binding precisa selecionar o cliente em `host_client` e restaurar `cmd_source`: com
-`src_command`, o corpo [retorna em silêncio](https://github.com/rehlds/ReHLDS/blob/196300131858d1e087267fb2fb60cb935f8f8873/rehlds/engine/sv_main.cpp#L1528),
-sem erro e sem sign-on. Ambos voltam ao valor anterior depois da chamada.
+A continuação executa `SV_New_f` fora do comando `new`, portanto não basta chamá-lo.
+Com `src_command`, o corpo [retorna em silêncio](https://github.com/rehlds/ReHLDS/blob/196300131858d1e087267fb2fb60cb935f8f8873/rehlds/engine/sv_main.cpp#L1528),
+sem erro e sem sign-on, e fora do pacote do cliente `host_client` não aponta para ele. O
+[binding](signonBarrier.md#binding-no-servidor) resolve os dois rodando dentro do pacote do
+cliente, onde o motor [já selecionou a conexão](https://github.com/rehlds/ReHLDS/blob/196300131858d1e087267fb2fb60cb935f8f8873/rehlds/engine/sv_user.cpp#L1864),
+e ajustando apenas `cmd_source`, que volta ao valor anterior depois da chamada.
 
 ## Registro e despacho no cliente
 
@@ -79,7 +81,8 @@ interceptação específica seja segura em execução.
 `RegUserMsg` não é privado: toda entrada nova
 [segue aos clientes conectados](https://github.com/rehlds/ReHLDS/blob/196300131858d1e087267fb2fb60cb935f8f8873/rehlds/engine/sv_main.cpp#L5112)
 no frame seguinte, e um cliente na barreira recebe essa cópia além da enviada pelo bootstrap.
-**Requisito:** registrar antes de haver cliente conectado, e não ao tratar `new`. O registro
+**Requisito:** registrar antes de haver cliente conectado, e não ao tratar `new`. Com o registro
+feito depois da primeira ativação, a cópia extra deixou de ser observada. O registro
 privado do cliente precisa aceitar a repetição do mesmo ID, nome e tamanho sem abrir outra
 sessão; sessão nova é uma oferta com outro nonce. A lista nativa sobrevive à troca de mapa e à
 reconexão, logo uma sessão nova pode encontrar a associação já presente e deve validá-la, como
@@ -99,12 +102,12 @@ não reconhecidos segue para a GameDLL. A [fonte fixada](https://github.com/rehl
 lista os comandos nativos e não inclui `epc1`. Os hooks de execução de comandos
 do motor, por si só, não demonstram interceptação de `epc1` antes da GameDLL.
 
-`HandleNetCommand` é um candidato anterior ao parser na API ReHLDS, mas seu
-callback recebe o opcode após a leitura deste. Se o parser nativo for omitido,
-a contabilização de rate, o cursor, os erros de leitura e os demais comandos
-devem continuar corretos. A disponibilidade, ordem e segurança desse caminho
-precisam ser demonstradas no binário e em execução; a API não está aprovada
-como binding apenas por estar presente na fonte.
+`HandleNetCommand` roda antes do parser na API ReHLDS, e seu callback recebe o opcode após
+a leitura deste. O [binding](signonBarrier.md#binding-no-servidor) o usa para consumir `epc1`:
+só esse texto deixa de passar pelo parser, então o cursor e os demais comandos seguem iguais,
+mas a contabilização nativa não o vê e o limite próprio a substitui. A disponibilidade e a
+ordem foram observadas em execução no hash selecionado; isso não aprova esse caminho para
+outros binários.
 
 O [limitador nativo](https://github.com/rehlds/ReHLDS/blob/196300131858d1e087267fb2fb60cb935f8f8873/rehlds/rehlds/rehlds_security.cpp#L147)
 conta os comandos, mas só age sobre clientes `active`. Durante a barreira o cliente ainda não
@@ -153,15 +156,17 @@ A tabela de evidências acima não inclui observação de execução.
 Em laboratório local, o [núcleo de sessão](sessionCore.md) real rodou sob instrumentação
 dentro do servidor selecionado, primeiro com um cliente sintético que fala o protocolo 48 e
 depois dentro do `hw.dll` selecionado, nos dois papéis do mesmo núcleo. Os frames são reais,
-trafegados pelo netchan do motor. Isso é observação em execução, não um binding de produção.
-Os resultados permanecem locais.
+trafegados pelo netchan do motor. No lado do servidor, os mesmos pontos foram repetidos depois
+com o [binding do plugin](signonBarrier.md#binding-no-servidor), sem instrumentação no caminho
+da barreira e com um perfil sintético. O cliente segue instrumentado. Isso é observação em
+execução, não um transporte habilitado. Os resultados permanecem locais.
 
 | Ponto a provar | Servidor real | Cliente real (`hw.dll`) |
 | --- | --- | --- |
 | **Continuação:** corpo de `SV_New_f` executado uma única vez a partir do acordo, sem outro `new` do cliente | Observado | Não se aplica |
 | **Bloqueio:** `sendres`, `spawn` e `new` repetido retidos até a liberação | Observado | Não se aplica |
 | **Bootstrap:** os 26 frames pelos transportes de controle | Observado na emissão | Observado: registro privado anterior ao serverinfo, sem callback nativo, e registro normal com o mesmo ID |
-| **Despacho:** `epc1` tratado antes da GameDLL | Observado, inclusive sob flood; falta o limite próprio acima | Observado na emissão |
+| **Despacho:** `epc1` tratado antes da GameDLL | Observado, inclusive sob flood, com o limite próprio recusando o excesso | Observado na emissão |
 | **Drain:** predicado sobre mensagem, fragmentos e filas | Observado com dado pendente no commit e com perda | Não se aplica |
 | **Invalidação:** desconexão, conexão substituída e troca de mapa encerram a sessão | Observado | Observado: `retry` e troca de mapa abrem um acordo novo |
 | **Reset:** o acordo sobrevive a `CL_ClearState` | Não se aplica | Observado; falta a reserva concreta |
@@ -173,6 +178,6 @@ endereço de `client_t` se repete entre conexões, logo não identifica a geraç
 `hw.dll`, a perda de pacotes não foi exercitada. O `retry` dele desconecta antes de conectar de
 novo, então a conexão substituída sem queda só foi exercitada pelo cliente sintético.
 
-Próximo passo: ligar o [núcleo da barreira](signonBarrier.md) ao [plugin Metamod](metamodPlugin.md),
-que hoje é somente o ponto de carga. Registrar as evidências localmente, sem alterar os
-originais ou publicar fixtures, traces e resultados.
+Próximo passo: o adaptador de produção do cliente e a reserva concreta, que ainda são
+laboratório. Registrar as evidências localmente, sem alterar os originais ou publicar fixtures,
+traces e resultados.

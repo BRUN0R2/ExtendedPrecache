@@ -60,9 +60,9 @@ O frame máximo ocupa 127 bytes contando opcode e NUL; fica abaixo do truncament
 de strings maiores que 127 caracteres no caminho auditado.
 
 O parser dedicado reconhece o token reservado antes de `SV_ParseStringCommand`
-despachar para GameDLL, console ou command buffer. Preservar a contabilização
-de rate limit e aplicar um [limite próprio](transportBootstrap.md#comandos-e-rate-limit), pois o
-nativo não atua antes do sign-on; não executar `Cmd_ExecuteString`, `Cbuf_InsertText`, avaliação de
+despachar para GameDLL, console ou command buffer. Esse texto não passa pela contabilização
+nativa de rate limit, que também não atua antes do sign-on, e sim por um
+[limite próprio](transportBootstrap.md#comandos-e-rate-limit); não executar `Cmd_ExecuteString`, `Cbuf_InsertText`, avaliação de
 texto ou comandos arbitrários. Texto malformado com esse token é erro, não deve
 ser encaminhado ao mod. O contrato de aplicação precisa reservar esse nome.
 Fonte: [despacho de string commands](https://github.com/rehlds/ReHLDS/blob/196300131858d1e087267fb2fb60cb935f8f8873/rehlds/engine/sv_user.cpp#L1492).

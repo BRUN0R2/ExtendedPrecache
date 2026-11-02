@@ -1,9 +1,10 @@
 # Barreira do sign-on
 
-Estado: **núcleo implementado, sem binding**. O alvo `extendedPrecacheTransport` decide, para
-uma conexão, o que o sign-on nativo pode fazer. É independente do motor e nada o liga ao
-plugin ainda: o [plugin Metamod](metamodPlugin.md) continua inerte. As observações que
-motivam estas regras estão em [transportBootstrap.md](transportBootstrap.md).
+Estado: **núcleo e binding do servidor implementados, inativos sem perfil aprovado**. O alvo
+`extendedPrecacheTransport` decide, para uma conexão, o que o sign-on nativo pode fazer, e é
+independente do motor. O [plugin Metamod](metamodPlugin.md) o liga ao motor, mas só instala
+algo com um perfil aprovado, e não há nenhum: o build publicado continua inerte. As observações
+que motivam estas regras estão em [transportBootstrap.md](transportBootstrap.md).
 
 ## Portas
 
@@ -59,9 +60,49 @@ janela abre com a conexão e reinicia a cada sessão. O 33º recusa com `budgetE
 qualquer fase, inclusive sem sessão. Assim, a repetição idêntica, que a sessão não cobra, e o
 limitador nativo, que não atua antes do sign-on, deixam de ser lacunas.
 
+## Binding no servidor
+
+`approvedTransportProfile` devolve o perfil e, por enquanto, nada. Só com um perfil o plugin
+confere o SHA-256 do `swds.dll` contra o hash selecionado, abre a API do ReHLDS (`major` 3,
+`minor` 15 ou maior) e registra os hooks, sempre à frente dos outros plugins. Qualquer recusa
+deixa o plugin carregado e sem hooks, com o motivo no console. Os hooks ficam até o fim do
+processo, presos por um `RetainedUse`.
+
+| Hook da API | Papel |
+| --- | --- |
+| `HandleNetCommand` | Tenta a liberação e consome `epc1` antes do parser nativo |
+| `ExecuteServerStringCmd` | Aplica as decisões a `new`, `sendres` e `spawn`, já tokenizados pelo motor |
+| `ClientConnected` | Lê o opt-in e cria a barreira da conexão, substituindo a anterior do slot |
+| `SV_DropClient` | Encerra a barreira da conexão |
+| `SV_ActivateServer` | Inicia a nova geração; depois do corpo, registra `ExtPrecache` na primeira vez |
+| `SV_Frame` | Chama `pump` em cada conexão, antes do corpo, para o que couber sair no mesmo frame |
+
+`epc1` não chega a `ExecuteServerStringCmd`, pois o motor só executa ali os comandos da lista
+nativa. Por isso, o texto é lido sem consumir no buffer da mensagem e, sendo do token reservado,
+o cursor avança e o parser nativo não roda. A contabilização nativa não vê esses comandos, e o
+limite acima a substitui, inclusive com o cliente ativo.
+
+A continuação roda dentro de `HandleNetCommand`, no pacote do cliente. Ali o motor já processou
+os ACKs e selecionou a conexão, como faria para o comando nativo, então nada escreve em
+`host_client`: só `cmd_source` é ajustado e restaurado. O corpo é o de `new`, achado na lista de
+comandos da API. Um pacote sem nenhuma mensagem não dispara o hook, e a liberação fica para o
+próximo, sempre limitada pelo prazo da sessão.
+
+`ExtPrecache` é registrado logo depois da primeira ativação: os registros do jogo mantêm os IDs
+e ainda não há cliente para receber a entrada nova. Se o host já conhece o nome, ou o ID não é
+válido, o transporte fica inativo no mapa, assim como com `maxclients` menor que 2.
+
+O estado drenado é a única leitura sem acessor na API: `reliable_length`, `waitlist` e `fragbufs`
+do netchan, a partir do buffer de mensagem que a API expõe. Esses deslocamentos só valem para o
+hash selecionado, que é o único aceito. Uma recusa vai ao console e ao cliente, com o texto de
+`refusalReason`, e encerra a conexão. Memória esgotada numa etapa da barreira tem o mesmo fim,
+com `storageUnavailable`.
+
 ## Limites
 
-Nada aqui foi exercitado no motor: os testes são locais e usam um canal sintético com o papel
-de cliente do mesmo núcleo. A admissão legada de `checkLegacyAdmission`, o registro de
-`ExtPrecache` no motor e a leitura do estado do canal pertencem ao binding, ainda pendente.
-Não amplia limites nem habilita transporte.
+O binding foi exercitado localmente com um perfil sintético injetado na hora de linkar, com o
+`hw.dll` real e com um cliente sintético; as observações estão em
+[transportBootstrap.md](transportBootstrap.md#situação-em-execução). A admissão legada de
+`checkLegacyAdmission` não é aplicada: sem opt-in, o sign-on nativo segue. A reserva é sintética,
+o cliente não tem adaptador de produção e não há perfil aprovado. Não amplia limites nem
+habilita transporte.

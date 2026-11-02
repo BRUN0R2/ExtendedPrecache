@@ -2,6 +2,8 @@
 
 #include <extendedPrecache/metamod/lifecycle.hpp>
 
+#include <array>
+#include <cstddef>
 #include <cstdint>
 #include <optional>
 #include <type_traits>
@@ -9,7 +11,7 @@
 
 namespace extendedPrecache::metamod {
 
-// Tables owned by the host; this plugin only checks their presence.
+// Tables owned by the host; apart from what is declared below, this plugin only checks them.
 struct EngineFunctions;
 struct GlobalVariables;
 struct HostFunctionTables;
@@ -36,17 +38,33 @@ struct PluginInfo final {
 };
 
 using LogFunction = void (*)(const PluginInfo *plugin, const char *format, ...);
+using UserMessageLookup = std::int32_t (*)(const PluginInfo *plugin, const char *name,
+                                           std::int32_t *size);
+inline constexpr std::size_t entriesBeforeUserMessageLookup = 5;
 
 // Declares the leading entries used here; the host owns the rest of its larger table.
 struct UtilityFunctions final {
     LogFunction logConsole;
     LogFunction logMessage;
     LogFunction logError;
+    std::array<const void *, entriesBeforeUserMessageLookup> unused;
+    UserMessageLookup findUserMessage;
 };
 
 static_assert(std::is_standard_layout_v<PluginInfo> && std::is_trivially_copyable_v<PluginInfo>);
 static_assert(std::is_standard_layout_v<UtilityFunctions>);
 static_assert(sizeof(void *) != 4 || sizeof(PluginInfo) == 36, "The host's x86 layout is fixed");
+
+// The engine table is a plain array of entries, of which this plugin uses a single one.
+using UserMessageRegistration = std::int32_t (*)(const char *name, std::int32_t size);
+inline constexpr std::size_t userMessageRegistrationEntry = 75;
+inline constexpr std::int32_t variableMessageSize = -1;
+
+[[nodiscard]] inline auto userMessageRegistration(const EngineFunctions &engine) noexcept
+    -> UserMessageRegistration {
+    const auto *const entries = reinterpret_cast<void *const *>(&engine);
+    return reinterpret_cast<UserMessageRegistration>(entries[userMessageRegistrationEntry]);
+}
 
 [[nodiscard]] constexpr auto encodeLoadPhase(LoadPhase phase) noexcept -> HostLoadPhase {
     return std::to_underlying(phase);

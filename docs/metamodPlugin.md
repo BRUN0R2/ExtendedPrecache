@@ -1,10 +1,11 @@
 # Plugin Metamod do servidor
 
-Estado: **entradas e ciclo de vida implementados; plugin inerte**. O alvo
-`extendedPrecacheServer` carrega no host, identifica-se como fundação e não instala
-callbacks, hooks, comandos ou cvars. Não lê configuração, não negocia e não altera
-o motor: não amplia o precache e não torna nenhuma versão suportada. O adaptador,
-a barreira e o transporte continuam pendentes em [TODO.md](TODO.md).
+Estado: **entradas e ciclo de vida implementados; build publicado inerte**. O alvo
+`extendedPrecacheServer` carrega no host e identifica-se como fundação. Contém o
+[binding da barreira](signonBarrier.md#binding-no-servidor), que só é instalado com um perfil
+aprovado, e não há nenhum. Sem perfil, não instala callbacks, hooks, comandos ou cvars, não lê
+configuração, não negocia e não altera o motor. Não amplia o precache e não torna nenhuma versão
+suportada. O adaptador e o transporte completos continuam pendentes em [TODO.md](TODO.md).
 
 O contrato alvo é a interface `5:13`, como em Metamod-r 1.3.0.149. A referência é a
 [fonte fixada](https://github.com/rehlds/Metamod-R/tree/56590c5c70fa95775051888b7fe0a4e285856ebb),
@@ -20,9 +21,9 @@ então o contrato impõe um único proprietário por módulo em `metamodEntry.cp
 
 | Entrada | Efeito |
 | --- | --- |
-| `GiveFnptrsToDll` (`stdcall`) | Avança para `engineBound` se tabela e globais vierem presentes. Não guarda ponteiros que nada usa |
+| `GiveFnptrsToDll` (`stdcall`) | Avança para `engineBound` se tabela e globais vierem presentes. Guarda só a tabela do motor, para registrar a mensagem de controle |
 | `Meta_Query` | Confere interface major igual e minor não menor; devolve as informações ou recusa com `*info` nulo |
-| `Meta_Attach` | Exige as tabelas do host e a carga em `startup`; mantém a tabela de callbacks zerada |
+| `Meta_Attach` | Exige as tabelas do host e a carga em `startup`; mantém a tabela de callbacks zerada e instala o binding se houver perfil aprovado |
 | `Meta_Detach` | Decide conforme a tabela da próxima seção; nunca libera recursos que outro módulo possa estar usando |
 
 `Meta_Init` é opcional e permanece ausente, pois a DLL não funciona como GameDLL.
@@ -42,8 +43,9 @@ o host pode fechar e reabrir um plugin que falhou sem chamar `Meta_Detach`.
 | Usos retidos | Forçado por comando/plugin, reload ou desconhecido | `pinRequired`: fixa o módulo, recusa e passa a `abandoned` |
 
 `RetainedUse` é o lease RAII desse contrato ([ciclo de mapa](mapLifecycle.md)): cada
-binding, callback ou lease que sobreviva à chamada corrente deve prender um. Nada o
-adquire nesta fase, então todo unload é aceito. `abandoned` não volta atrás, mesmo com
+binding, callback ou lease que sobreviva à chamada corrente deve prender um. Sem perfil
+aprovado, nada o adquire, então todo unload é aceito. Com o binding instalado, ele fica preso
+até o fim do processo, porque os hooks não são removidos. `abandoned` não volta atrás, mesmo com
 os usos encerrados: a imagem fixada conserva o estado até o fim do processo, e novos
 `Meta_Query` são recusados até o servidor reiniciar. Se a fixação falhar, o processo
 aborta, pois continuar deixaria ponteiros para um módulo liberado.
@@ -87,7 +89,8 @@ de depuração; ainda não há pacote de distribuição.
 
 ## Limites
 
-Verificadores, cópias do motor e resultados permanecem em área local ignorada. Só
-os estados acima foram exercitados: sem clientes conectados, com a instalação local do
-host e do motor selecionados. Isso não prova barreira, transporte, ampliação de índices
-ou coexistência com outros plugins, e não dispensa os itens seguintes de `TODO.md`.
+Verificadores, cópias do motor e resultados permanecem em área local ignorada. O build
+publicado foi exercitado nos estados acima, sem clientes conectados, com a instalação local do
+host e do motor selecionados. O binding foi exercitado localmente, em outro build, com perfil
+sintético. Isso não prova transporte habilitado, ampliação de índices ou coexistência com outros
+plugins, e não dispensa os itens seguintes de `TODO.md`.

@@ -10,6 +10,9 @@ enum class SignonCommand : std::uint8_t { connection, resources, spawn };
 [[nodiscard]] auto classifySignonCommand(std::string_view name) noexcept
     -> std::optional<SignonCommand>;
 
+// Readable text derived locally, since the control channel never carries strings.
+[[nodiscard]] auto refusalReason(session::RejectCode code) noexcept -> const char *;
+
 enum class CommandVerdict : std::uint8_t { forward, hold };
 enum class ReleaseDecision : std::uint8_t { wait, continueSignon };
 enum class BarrierPhase : std::uint8_t { idle, negotiating, released, refused };

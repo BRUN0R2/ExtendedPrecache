@@ -4,8 +4,9 @@ Extensão em C++26 para ampliar o precache do Counter-Strike 1.6 e do HLDS/ReHLD
 com cliente e servidor trabalhando de forma coordenada.
 
 **Estado: fundação em desenvolvimento. Nenhum artefato amplia o precache do motor.**
-O [plugin Metamod](docs/metamodPlugin.md) já carrega no host, mas é inerte: não instala
-callbacks nem hooks. Não há versões do motor declaradas como suportadas nesta etapa.
+O [plugin Metamod](docs/metamodPlugin.md) já carrega no host, mas é inerte: sem um perfil
+aprovado, e não há nenhum, não instala callbacks nem hooks. Não há versões do motor declaradas
+como suportadas nesta etapa.
 
 O validador de configuração, o codec de controle e a máquina de estados da
 negociação 1.0 estão implementados e testados em um núcleo C++26 isolado.

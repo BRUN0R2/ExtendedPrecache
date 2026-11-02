@@ -1,19 +1,35 @@
+#include "engineIdentity.hpp"
+#include "serverTransport.hpp"
+
 #include <extendedPrecache/metamod/lifecycle.hpp>
 #include <extendedPrecache/metamod/pluginAbi.hpp>
+#include <extendedPrecache/session/frameCodec.hpp>
+#include <extendedPrecache/transport/controlChannel.hpp>
 
 #include <extendedPrecache/projectVersion.hpp>
 
 #include <windows.h>
 
 #include <cstdlib>
+#include <new>
+#include <optional>
+#include <string_view>
 #include <type_traits>
+#include <utility>
 
 namespace {
 
 using namespace extendedPrecache::metamod;
+using extendedPrecache::transport::ControlMessageId;
 
 constexpr auto foundationNotice =
     "foundation build attached: precache extension inactive, no engine hooks installed";
+constexpr auto transportNotice =
+    "transport installed: sign-on barrier ready, precache extension inactive";
+// The engine takes a terminated string, which a view does not promise.
+constexpr auto controlMessageText = "ExtPrecache";
+static_assert(extendedPrecache::session::controlMessageName ==
+              std::string_view{controlMessageText});
 
 constexpr auto pluginInfo = PluginInfo{
     .interfaceVersion = requiredInterfaceText,
@@ -32,6 +48,7 @@ constexpr auto pluginInfo = PluginInfo{
 // The host's entries carry no context, so its contract forces this single module-wide owner.
 constinit PluginLifecycle lifecycle;
 constinit const UtilityFunctions *hostUtilities{};
+constinit const EngineFunctions *engineFunctions{};
 
 // The host's file logging is silent unless the server enabled it; state must stay visible.
 void report(const char *text) noexcept {
@@ -72,11 +89,56 @@ void pinModule() noexcept {
     }
 }
 
+// The host's list holds what every module registered, which the engine's answer does not tell.
+auto registerControlMessage() noexcept -> std::optional<ControlMessageId> {
+    auto existingSize = std::int32_t{};
+    if (hostUtilities->findUserMessage(&pluginInfo, controlMessageText, &existingSize) != 0) {
+        reportError("transport inactive: another module registered the control message");
+        return std::nullopt;
+    }
+    const auto id = ControlMessageId::create(
+        userMessageRegistration(*engineFunctions)(controlMessageText, variableMessageSize));
+    if (!id) {
+        reportError("transport inactive: the engine has no user message left");
+    }
+    return id;
+}
+
+void startTransport() noexcept {
+    using namespace extendedPrecache::platform::windows;
+    try {
+        auto profile = approvedTransportProfile();
+        if (!profile) {
+            report(foundationNotice);
+            return;
+        }
+        const auto engine = openSelectedEngine();
+        if (!engine) {
+            reportError(describe(engine.error()));
+            return;
+        }
+        auto use = lifecycle.retainUse();
+        if (!use) {
+            reportError(describe(use.error()));
+            return;
+        }
+        installServerTransport(*engine, std::move(profile),
+                               {.report = report,
+                                .reportError = reportError,
+                                .registerControlMessage = registerControlMessage},
+                               std::move(*use));
+        report(transportNotice);
+    } catch (const std::bad_alloc &) {
+        reportError("transport not installed: out of memory");
+    }
+}
+
 } // namespace
 
 extern "C" void __stdcall GiveFnptrsToDll(const EngineFunctions *engine,
                                           GlobalVariables *globals) noexcept {
     if (engine != nullptr && globals != nullptr) {
+        engineFunctions = engine;
         lifecycle.bindEngine();
     }
 }
@@ -118,7 +180,7 @@ extern "C" auto Meta_Attach(HostLoadPhase now, HostFunctionTables *tables, HostG
         reportError(describe(attached.error()));
         return hostRefused;
     }
-    report(foundationNotice);
+    startTransport();
     return hostAccepted;
 }
 
