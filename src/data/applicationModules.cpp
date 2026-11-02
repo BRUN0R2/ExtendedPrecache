@@ -59,7 +59,9 @@ auto parseModules(const Json &root) -> std::vector<ModuleProfile> {
             closed(item, {"recordKind", "schemaId", "originPolicy"});
             require(text(item, "originPolicy") == "localOnly", ErrorCode::invalidSchema);
             module.localReplay.push_back(
-                {static_cast<std::uint16_t>(number(item, "recordKind", 1, 6)),
+                {static_cast<LocalRecordKind>(
+                     number(item, "recordKind", std::to_underlying(LocalRecordKind::view),
+                            std::to_underlying(LocalRecordKind::moduleState))),
                  {static_cast<std::uint16_t>(number(item, "schemaId", 1, 65535))}});
         }
         std::ranges::sort(module.messages, {}, &MessageDefinition::id);

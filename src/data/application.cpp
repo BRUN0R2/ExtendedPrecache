@@ -83,12 +83,12 @@ void validateApplicationDefinition(const ApplicationDefinition &app,
         require(module.replay != ReplayPolicy::typedLocalState ||
                     (module.client && !module.localReplay.empty()),
                 ErrorCode::invalidSchema);
-        std::set<std::pair<std::uint16_t, SchemaId>> local;
+        std::set<std::pair<LocalRecordKind, SchemaId>> local;
         for (const auto &item : module.localReplay) {
             require(local.emplace(item.recordKind, item.schema).second, ErrorCode::invalidSchema);
             schemaFor(app, item.schema,
-                      item.recordKind == moduleStateRecordKind ? SchemaRole::moduleState
-                                                               : SchemaRole::localReplay);
+                      item.recordKind == LocalRecordKind::moduleState ? SchemaRole::moduleState
+                                                                      : SchemaRole::localReplay);
         }
     }
     std::set<EffectId> effectIds;

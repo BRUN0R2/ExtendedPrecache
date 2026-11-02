@@ -2,6 +2,15 @@
 #include <extendedPrecache/data/envelope.hpp>
 
 namespace extendedPrecache::data {
+namespace {
+auto sequenceFlow(Route route) noexcept -> SequenceFlow {
+    if (route.direction == Direction::clientToServer) {
+        return SequenceFlow::clientReliable;
+    }
+    return route.delivery == Delivery::reliable ? SequenceFlow::serverReliable
+                                                : SequenceFlow::serverUnreliable;
+}
+} // namespace
 auto validRoute(Route route) noexcept -> bool {
     if (route.delivery != Delivery::reliable && route.delivery != Delivery::unreliable) {
         return false;
@@ -112,17 +121,15 @@ auto SequenceTracker::accept(const Envelope &value) noexcept -> Result<ReceiveDi
             return ReceiveDisposition::staleNonce;
         }
         detail::require(value.epoch == epochValue, ErrorCode::staleContext);
-        const auto index =
-            value.route.direction == Direction::clientToServer
-                ? std::size_t{2}
-                : (value.route.delivery == Delivery::reliable ? std::size_t{0} : std::size_t{1});
-        auto &next = nextValues[index];
-        if (index == 1 && value.sequence.value < next) {
+        const auto flow = sequenceFlow(value.route);
+        auto &next = nextValues[std::to_underlying(flow)];
+        const auto unreliable = flow == SequenceFlow::serverUnreliable;
+        if (unreliable && value.sequence < next) {
             return ReceiveDisposition::oldUnreliable;
         }
-        detail::require(next <= maxSequence && (index == 1 || next == value.sequence.value),
+        detail::require(next.value <= maxSequence && (unreliable || next == value.sequence),
                         ErrorCode::sequence);
-        next = value.sequence.value + 1;
+        next.value = value.sequence.value + 1;
         return ReceiveDisposition::accept;
     });
 }
