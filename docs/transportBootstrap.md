@@ -47,8 +47,8 @@ continuam fora desse inventário: a tabela não prova ausência de ponteiros cal
 O serverinfo não é a única emissão da ativação. Em todos os modos, ela
 [escreve e fragmenta o registro de user messages](https://github.com/rehlds/ReHLDS/blob/196300131858d1e087267fb2fb60cb935f8f8873/rehlds/engine/sv_main.cpp#L6229)
 para os clientes já conectados, sem passar por `SV_New_f`. Na troca de mapa, esse bloco
-alcança um cliente parado na barreira. O registro privado do cliente precisa aceitá-lo sem
-tratá-lo como colisão, e o predicado de drain precisa esperar seus fragmentos.
+alcança um cliente parado na barreira. O cliente precisa aceitá-lo sem tratá-lo como colisão,
+e o predicado de drain precisa esperar seus fragmentos.
 
 O núcleo de sessão concede `releaseSignon` no máximo uma vez por binding;
 repetições invalidam a sessão. Essa garantia não suspende nem retoma uma chamada
@@ -73,17 +73,21 @@ ownership nem torna uma colisão segura.
 No dispatcher `0x101a7cb0`, mensagens de usuário são procuradas nessa lista;
 para uma mensagem de tamanho variável, o tamanho precede o payload. O corpo é
 consumido mesmo quando não existe callback registrado para aquele nome. O
-bootstrap precisa, portanto, de registro e despacho privados anteriores à
-ClientDLL, com validação explícita de ID, nome, tamanho e limite, conforme
-[negotiation.md](negotiation.md). Essas observações não demonstram que uma
-interceptação específica seja segura em execução.
+bootstrap precisa, portanto, de um handler anterior à ClientDLL, com validação
+explícita de ID, nome, tamanho e limite, conforme [negotiation.md](negotiation.md).
+
+O [adaptador](clientNegotiator.md#adaptador-no-hwdll) não precisa de um despacho próprio: associa
+um handler ao nome pela API do motor, antes de o parser nativo tratar o primeiro registro. Em
+execução, o despacho nativo entrega os frames a esse handler antes do serverinfo, e a associação
+sobrevive a `CL_ClearState`, à troca de mapa e à reconexão. Isso substituiu a tabela privada
+prevista antes da observação.
 
 `RegUserMsg` não é privado: toda entrada nova
 [segue aos clientes conectados](https://github.com/rehlds/ReHLDS/blob/196300131858d1e087267fb2fb60cb935f8f8873/rehlds/engine/sv_main.cpp#L5112)
 no frame seguinte, e um cliente na barreira recebe essa cópia além da enviada pelo bootstrap.
 **Requisito:** registrar antes de haver cliente conectado, e não ao tratar `new`. Com o registro
-feito depois da primeira ativação, a cópia extra deixou de ser observada. O registro
-privado do cliente precisa aceitar a repetição do mesmo ID, nome e tamanho sem abrir outra
+feito depois da primeira ativação, a cópia extra deixou de ser observada. O cliente precisa
+aceitar a repetição do mesmo ID, nome e tamanho sem abrir outra
 sessão; sessão nova é uma oferta com outro nonce. A lista nativa sobrevive à troca de mapa e à
 reconexão, logo uma sessão nova pode encontrar a associação já presente e deve validá-la, como
 qualquer outra.
@@ -156,16 +160,17 @@ A tabela de evidências acima não inclui observação de execução.
 Em laboratório local, o [núcleo de sessão](sessionCore.md) real rodou sob instrumentação
 dentro do servidor selecionado, primeiro com um cliente sintético que fala o protocolo 48 e
 depois dentro do `hw.dll` selecionado, nos dois papéis do mesmo núcleo. Os frames são reais,
-trafegados pelo netchan do motor. No lado do servidor, os mesmos pontos foram repetidos depois
-com o [binding do plugin](signonBarrier.md#binding-no-servidor), sem instrumentação no caminho
-da barreira e com um perfil sintético. O cliente segue instrumentado. Isso é observação em
-execução, não um transporte habilitado. Os resultados permanecem locais.
+trafegados pelo netchan do motor. Depois, os mesmos pontos foram repetidos com o código de
+produção nas duas pontas, com o [binding do plugin](signonBarrier.md#binding-no-servidor) e o
+[adaptador do cliente](clientNegotiator.md#adaptador-no-hwdll), sem instrumentação no caminho da
+negociação e com perfis sintéticos. O laboratório ainda faz o papel do carregador do cliente. Isso
+é observação em execução, não um transporte habilitado. Os resultados permanecem locais.
 
 | Ponto a provar | Servidor real | Cliente real (`hw.dll`) |
 | --- | --- | --- |
 | **Continuação:** corpo de `SV_New_f` executado uma única vez a partir do acordo, sem outro `new` do cliente | Observado | Não se aplica |
 | **Bloqueio:** `sendres`, `spawn` e `new` repetido retidos até a liberação | Observado | Não se aplica |
-| **Bootstrap:** os 26 frames pelos transportes de controle | Observado na emissão | Observado: registro privado anterior ao serverinfo, sem callback nativo, e registro normal com o mesmo ID |
+| **Bootstrap:** os 26 frames pelos transportes de controle | Observado na emissão | Observado: registro e frames anteriores ao serverinfo, sem passar pela ClientDLL, e registro normal com o mesmo ID |
 | **Despacho:** `epc1` tratado antes da GameDLL | Observado, inclusive sob flood, com o limite próprio recusando o excesso | Observado na emissão |
 | **Drain:** predicado sobre mensagem, fragmentos e filas | Observado com dado pendente no commit e com perda | Não se aplica |
 | **Invalidação:** desconexão, conexão substituída e troca de mapa encerram a sessão | Observado | Observado: `retry` e troca de mapa abrem um acordo novo |
@@ -178,6 +183,5 @@ endereço de `client_t` se repete entre conexões, logo não identifica a geraç
 `hw.dll`, a perda de pacotes não foi exercitada. O `retry` dele desconecta antes de conectar de
 novo, então a conexão substituída sem queda só foi exercitada pelo cliente sintético.
 
-Próximo passo: o adaptador de produção do cliente e a reserva concreta, que ainda são
-laboratório. Registrar as evidências localmente, sem alterar os originais ou publicar fixtures,
-traces e resultados.
+Próximo passo: o carregador do cliente e a reserva concreta, que ainda são laboratório. Registrar
+as evidências localmente, sem alterar os originais ou publicar fixtures, traces e resultados.
