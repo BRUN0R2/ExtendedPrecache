@@ -8,7 +8,8 @@ gameplay antes da validação do catálogo e do carregamento previstos nesse con
 ## Bootstrap e barreira
 
 1. Cliente em `preferExtended` / `requireExtended` inclui exatamente `epc=1`
-   no `userinfo` antes de conectar. O acréscimo `\epc\1` custa seis bytes.
+   no `userinfo` antes de conectar, por uma variável que o motor não grava no
+   `config.cfg`, para o opt-in não sobreviver à sessão. O acréscimo `\epc\1` custa seis bytes.
    Não remover/truncar dados para caber no buffer de 256 bytes; se não couber,
    recusar localmente. A chave é indicação, não prova de capacidade. O servidor
    captura seu valor na aceitação; mudanças posteriores não renegociam a sessão.

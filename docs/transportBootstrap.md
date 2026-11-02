@@ -162,9 +162,9 @@ dentro do servidor selecionado, primeiro com um cliente sintético que fala o pr
 depois dentro do `hw.dll` selecionado, nos dois papéis do mesmo núcleo. Os frames são reais,
 trafegados pelo netchan do motor. Depois, os mesmos pontos foram repetidos com o código de
 produção nas duas pontas, com o [binding do plugin](signonBarrier.md#binding-no-servidor) e o
-[adaptador do cliente](clientNegotiator.md#adaptador-no-hwdll), sem instrumentação no caminho da
-negociação e com perfis sintéticos. O laboratório ainda faz o papel do carregador do cliente. Isso
-é observação em execução, não um transporte habilitado. Os resultados permanecem locais.
+[adaptador do cliente](clientNegotiator.md#adaptador-no-hwdll), com perfis sintéticos. Com o
+[inicializador](clientNegotiator.md#inicializador), não há instrumentação no cliente. Isso é
+observação em execução, não um transporte habilitado. Os resultados permanecem locais.
 
 | Ponto a provar | Servidor real | Cliente real (`hw.dll`) |
 | --- | --- | --- |
@@ -183,5 +183,5 @@ endereço de `client_t` se repete entre conexões, logo não identifica a geraç
 `hw.dll`, a perda de pacotes não foi exercitada. O `retry` dele desconecta antes de conectar de
 novo, então a conexão substituída sem queda só foi exercitada pelo cliente sintético.
 
-Próximo passo: o carregador do cliente e a reserva concreta, que ainda são laboratório. Registrar
-as evidências localmente, sem alterar os originais ou publicar fixtures, traces e resultados.
+Próximo passo: a reserva concreta, que ainda é laboratório. Registrar as evidências localmente, sem
+alterar os originais ou publicar fixtures, traces e resultados.

@@ -35,8 +35,8 @@ existirem consumidores e evidências suficientes.
   [plugin Metamod](metamodPlugin.md), sem Windows ou tabelas do motor.
 - `include/extendedPrecache/abi`: contrato POD com linkage C e versão explícita.
 - `src/platform/windows`: DLL diagnóstica sem hooks, plugin Metamod com o binding da barreira,
-  DLL do cliente com o adaptador, ambos inativos sem perfil aprovado, e provider CNG em alvo
-  estático separado.
+  DLL do cliente com o adaptador e o inicializador que a carrega, todos inativos sem perfil
+  aprovado, e provider CNG em alvo estático separado.
 - `tests`: domínio, configuração, corpus do protocolo, sessões e carregamento da DLL.
 - `cmake`: opções de compilação aplicadas por alvo.
 

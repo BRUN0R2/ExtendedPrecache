@@ -9,7 +9,6 @@ using session::Rejection;
 
 constexpr auto registerUserMessageService = std::byte{39};
 constexpr auto variableSizeMarker = std::byte{0xff};
-constexpr auto optInKey = std::string_view{"epc"};
 constexpr auto optInValue = std::string_view{"1"};
 constexpr auto infoSeparator = '\\';
 constexpr auto commandSeparator = ' ';
@@ -61,7 +60,7 @@ auto parseClientOptIn(std::string_view userinfo) noexcept -> std::expected<Clien
     while (!userinfo.empty()) {
         const auto key = nextInfoField(userinfo);
         const auto value = nextInfoField(userinfo);
-        if (key != optInKey) {
+        if (key != clientOptInKey) {
             continue;
         }
         if (found) {

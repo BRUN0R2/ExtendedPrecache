@@ -52,6 +52,7 @@ class ControlBytes final {
 // True for any text under the reserved token, valid or not: it never reaches the game.
 [[nodiscard]] auto isControlCommand(std::string_view text) noexcept -> bool;
 
+inline constexpr auto clientOptInKey = std::string_view{"epc"};
 enum class ClientOptIn : std::uint8_t { legacy, negotiation };
 [[nodiscard]] auto parseClientOptIn(std::string_view userinfo) noexcept
     -> std::expected<ClientOptIn, session::Rejection>;

@@ -24,12 +24,22 @@ using session::RejectCode;
 using session::Rejection;
 using transport::ClientNegotiator;
 
-// The engine takes a terminated string, which a view does not promise.
+// The engine takes terminated strings, which a view does not promise.
 constexpr auto controlMessageText = "ExtPrecache";
+constexpr auto optInName = "epc";
+constexpr auto optInValue = "1";
+constexpr auto optInCommand = "epc 1\n";
 constexpr auto disconnectCommand = "disconnect\n";
 constexpr auto logPrefix = "[EPC] ";
 constexpr auto lineEnd = "\n";
+constexpr auto secureServerRefusal = "ExtendedPrecache: refusing a server secured by VAC";
+constexpr auto optInFailure = "ExtendedPrecache: the opt-in does not fit in the userinfo";
 static_assert(session::controlMessageName == std::string_view{controlMessageText});
+static_assert(transport::clientOptInKey == std::string_view{optInName});
+
+// Writes the variable into the userinfo. The engine saves neither it, since it is not archived, nor
+// the key, since a variable has that name: no later session of the game inherits the opt-in.
+constexpr std::int32_t userInfoVariable = 2;
 
 constexpr std::size_t registrationBytes = 2 + transport::registrationNameBytes;
 constexpr std::size_t serverInfoHeadBytes = 8;
@@ -81,16 +91,20 @@ class ClientTransport final : public transport::SessionSource, public transport:
     }
     [[nodiscard]] auto queue(std::span<const std::byte> message) noexcept -> bool override;
 
-    [[nodiscard]] auto hookServices(ServiceParser registration, ServiceParser serverInfo) noexcept
-        -> bool;
-    void onRegistration(FrameFunction frame) noexcept;
-    void onServerInfo(FrameFunction frame) noexcept;
+    [[nodiscard]] auto hookEngine() noexcept -> bool;
+    [[nodiscard]] auto onRegisterVariable(VariableDeclaration variable) noexcept -> void *;
+    void onRegistration() noexcept;
+    void onServerInfo() noexcept;
     void onControlMessage(std::int32_t size, const void *data) noexcept;
     void onFrame(double time) noexcept;
 
   private:
     void refuse(Rejection reason) const noexcept;
-    void startPumping(FrameFunction frame) noexcept;
+    void say(const char *text) const noexcept;
+    void startPumping() noexcept;
+    void reportOptIn() noexcept;
+    // True while the connection belongs to a secure server, which this client must not stay on.
+    [[nodiscard]] auto leavingSecureServer() noexcept -> bool;
 
     // Runs one step of the negotiation; a refusal or exhausted memory closes the connection.
     template <typename Step>
@@ -113,9 +127,13 @@ class ClientTransport final : public transport::SessionSource, public transport:
     ClientNegotiator negotiator;
     ServiceParser nativeRegistration{};
     ServiceParser nativeServerInfo{};
+    VariableRegistration nativeVariable{};
     FrameFunction nativeFrame{};
     double lastConnectionTime{};
     bool messageHooked{};
+    bool optInRequested{};
+    bool optInReported{};
+    bool secureRefused{};
 };
 
 // The engine's tables carry no context, so their contract forces this single module-wide owner.
@@ -134,21 +152,64 @@ auto ClientTransport::queue(std::span<const std::byte> message) noexcept -> bool
     return true;
 }
 
-void ClientTransport::refuse(Rejection reason) const noexcept {
+void ClientTransport::say(const char *text) const noexcept {
     engine.consolePrint(logPrefix);
-    engine.consolePrint(transport::refusalReason(reason.code));
+    engine.consolePrint(text);
     engine.consolePrint(lineEnd);
+}
+
+void ClientTransport::refuse(Rejection reason) const noexcept {
+    say(transport::refusalReason(reason.code));
     engine.clientCommand(disconnectCommand);
 }
 
-void ClientTransport::startPumping(FrameFunction frame) noexcept {
+void ClientTransport::startPumping() noexcept {
     if (nativeFrame == nullptr) {
-        nativeFrame = engine.replaceFrame(frame);
+        nativeFrame = engine.replaceFrame(frameEntry);
     }
 }
 
-void ClientTransport::onRegistration(FrameFunction frame) noexcept {
-    startPumping(frame);
+auto ClientTransport::onRegisterVariable(VariableDeclaration variable) noexcept -> void * {
+    // The client library's first variable: the engine's variables and commands work, and no
+    // connection can have started, because the connect request reads the userinfo later.
+    if (!optInRequested) {
+        optInRequested = true;
+        nativeVariable({.name = optInName, .value = optInValue, .flags = userInfoVariable});
+        engine.clientCommand(optInCommand);
+        startPumping();
+    }
+    return nativeVariable(variable);
+}
+
+void ClientTransport::reportOptIn() noexcept {
+    if (optInReported) {
+        return;
+    }
+    optInReported = true;
+    if (std::string_view{engine.localInfo(optInName)} != optInValue) {
+        say(optInFailure);
+    }
+}
+
+auto ClientTransport::leavingSecureServer() noexcept -> bool {
+    if (!engine.serverIsSecure()) {
+        return false;
+    }
+    if (!secureRefused) {
+        secureRefused = true;
+        say(secureServerRefusal);
+        engine.clientCommand(disconnectCommand);
+        negotiator.connectionLost();
+    }
+    return true;
+}
+
+void ClientTransport::onRegistration() noexcept {
+    startPumping();
+    if (leavingSecureServer()) {
+        engine.skipMessage();
+        return;
+    }
     const auto bytes = engine.unreadMessage();
     if (isControlRegistration(bytes)) {
         if (!messageHooked) {
@@ -172,8 +233,13 @@ void ClientTransport::onRegistration(FrameFunction frame) noexcept {
     nativeRegistration();
 }
 
-void ClientTransport::onServerInfo(FrameFunction frame) noexcept {
-    startPumping(frame);
+void ClientTransport::onServerInfo() noexcept {
+    startPumping();
+    // The parser overwrites the flag with what the serverinfo says, so this is the last look at it.
+    if (leavingSecureServer()) {
+        engine.skipMessage();
+        return;
+    }
     const auto bytes = engine.unreadMessage();
     if (bytes.size() < serverInfoHeadBytes) {
         nativeServerInfo();
@@ -199,7 +265,13 @@ void ClientTransport::onControlMessage(std::int32_t size, const void *data) noex
 
 void ClientTransport::onFrame(double time) noexcept {
     nativeFrame(time);
+    reportOptIn();
     const auto current = engine.status();
+    if (!current.connected) {
+        secureRefused = false;
+    } else if (leavingSecureServer()) {
+        return;
+    }
     if (!current.connected || current.connectionTime < lastConnectionTime) {
         negotiator.connectionLost();
     }
@@ -207,28 +279,23 @@ void ClientTransport::onFrame(double time) noexcept {
     std::ignore = settle([&] { return negotiator.pump(monotonicNow()); });
 }
 
-auto ClientTransport::hookServices(ServiceParser registration, ServiceParser serverInfo) noexcept
-    -> bool {
-    nativeRegistration = engine.replaceService(Service::registerUserMessage, registration);
-    if (nativeRegistration == nullptr) {
+auto ClientTransport::hookEngine() noexcept -> bool {
+    if (!engine.holdsVerifiedTables()) {
         return false;
     }
-    nativeServerInfo = engine.replaceService(Service::serverInfo, serverInfo);
-    if (nativeServerInfo == nullptr) {
-        // Nothing is left half installed: the first replacement goes back.
-        std::ignore = engine.replaceService(Service::registerUserMessage, nativeRegistration);
-        return false;
-    }
+    nativeRegistration = engine.replaceService(Service::registerUserMessage,
+                                               [] { activeTransport->onRegistration(); });
+    nativeServerInfo =
+        engine.replaceService(Service::serverInfo, [] { activeTransport->onServerInfo(); });
+    nativeVariable = engine.replaceVariableRegistration([](VariableDeclaration variable) -> void * {
+        return activeTransport->onRegisterVariable(variable);
+    });
     return true;
 }
 } // namespace
 
 auto installClientTransport(ClientEngine engine, std::unique_ptr<ClientProfile> profile)
     -> std::expected<void, TransportRefusal> {
-    // The engine's tables already point at the first one, which must outlive any later call.
-    if (activeTransport) {
-        return {};
-    }
     const auto connection = randomIdentity<session::ConnectionToken>();
     const auto peer = randomIdentity<session::PeerToken>();
     if (!connection || !peer) {
@@ -236,10 +303,7 @@ auto installClientTransport(ClientEngine engine, std::unique_ptr<ClientProfile> 
     }
     activeTransport = std::make_unique<ClientTransport>(engine, std::move(profile),
                                                         ConnectionBinding{*connection, *peer, {1}});
-    const auto hooked =
-        activeTransport->hookServices([] { activeTransport->onRegistration(frameEntry); },
-                                      [] { activeTransport->onServerInfo(frameEntry); });
-    if (!hooked) {
+    if (!activeTransport->hookEngine()) {
         activeTransport.reset();
         return std::unexpected{TransportRefusal::unexpectedTables};
     }

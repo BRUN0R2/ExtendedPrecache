@@ -22,8 +22,8 @@ class ClientProfile {
 
 enum class TransportRefusal : std::uint8_t { noBinding, unexpectedTables };
 
-// The engine's tables keep pointing here, so the transport stays until the process ends. A later
-// call changes nothing and reports success.
+// The engine's tables keep pointing here, so the transport stays until the process ends. Call it
+// once, before the engine starts its client library.
 [[nodiscard]] auto installClientTransport(ClientEngine engine,
                                           std::unique_ptr<ClientProfile> profile)
     -> std::expected<void, TransportRefusal>;

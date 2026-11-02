@@ -72,8 +72,9 @@ ctest --preset windowsX86
 Execute em um ambiente de desenvolvimento x86 com Clang disponível no `PATH`.
 Veja [build.md](docs/build.md) para os pré-requisitos e as alternativas.
 
-O servidor será distribuído como plugin do Metamod; o cliente precisará de um
-componente complementar. A instalação final depende dos adaptadores ainda pendentes;
+O servidor será distribuído como plugin do Metamod; o cliente, como uma DLL aberta por um
+[inicializador próprio](docs/clientNegotiator.md#inicializador), que não é para servidores com VAC.
+A instalação final depende dos adaptadores ainda pendentes;
 a [instalação de diagnóstico](docs/metamodPlugin.md#instalação-de-diagnóstico) não amplia nada.
 Nenhum instalador ou patch dos arquivos originais está incluído.
 
