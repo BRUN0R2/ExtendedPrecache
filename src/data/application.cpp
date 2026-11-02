@@ -19,15 +19,80 @@ auto resourceFree(const Schema &schema) -> bool {
         return field.kind == ValueKind::resource;
     });
 }
-} // namespace
-void validateApplicationDefinition(const ApplicationDefinition &app,
-                                   const DigestProvider &provider) {
+void checkSchemaSet(const ApplicationDefinition &app, const DigestProvider &provider) {
     const auto schemaBytes = get(encodeSchemaSet(app.schemas, app.limits.schemaSetBytes));
     require(hash(schemaBytes, provider) == app.schemaSetHash, ErrorCode::digestMismatch);
     std::set<std::string_view> schemaNames;
     for (const auto &schema : app.schemas) {
         require(schemaNames.insert(schema.name).second, ErrorCode::invalidSchema);
     }
+}
+void checkTypedMessage(const MessageDefinition &message) {
+    require(message.nativeSize == -1 && message.resources == ResourcePolicy::typedReferences &&
+                message.legacyFields.empty(),
+            ErrorCode::invalidSchema);
+    require(message.direction != Direction::clientToServer ||
+                (message.deliveries.reliable && !message.deliveries.unreliable),
+            ErrorCode::invalidSchema);
+}
+void checkNativeMessage(const MessageDefinition &message, const Schema &schema,
+                        std::set<std::string_view> &nativeNames) {
+    require(message.direction == Direction::serverToClient &&
+                nativeNames.insert(message.name).second &&
+                message.resources != ResourcePolicy::typedReferences,
+            ErrorCode::invalidSchema);
+    require(message.resources == ResourcePolicy::resourceFree
+                ? resourceFree(schema) && message.legacyFields.empty()
+                : !message.legacyFields.empty(),
+            ErrorCode::invalidSchema);
+    std::set<FieldId> fields;
+    for (const auto &field : message.legacyFields) {
+        require(field.field.value < schema.fields.size() &&
+                    schema.fields[field.field.value].kind == ValueKind::resource &&
+                    fields.insert(field.field).second,
+                ErrorCode::invalidSchema);
+    }
+    const auto resources =
+        std::ranges::count(schema.fields, ValueKind::resource, &FieldDefinition::kind);
+    require(message.resources != ResourcePolicy::boundedLegacy ||
+                static_cast<std::size_t>(resources) == fields.size(),
+            ErrorCode::invalidSchema);
+}
+void checkMessages(const ModuleProfile &module, const ApplicationDefinition &app,
+                   std::set<std::string_view> &nativeNames) {
+    std::set<ModMessageId> ids;
+    std::set<std::string_view> names;
+    for (const auto &message : module.messages) {
+        require(module.server && module.client && message.id.value != 0 &&
+                    ids.insert(message.id).second && names.insert(message.name).second &&
+                    identifier(message.name, 15),
+                ErrorCode::invalidSchema);
+        require(message.name != session::controlMessageName &&
+                    message.name != session::controlCommandName,
+                ErrorCode::unsupportedModule);
+        const auto &schema = schemaFor(app, message.schema, SchemaRole::modMessage);
+        if (message.wireMode == WireMode::typed2) {
+            checkTypedMessage(message);
+        } else {
+            checkNativeMessage(message, schema, nativeNames);
+        }
+    }
+}
+void checkLocalReplay(const ModuleProfile &module, const ApplicationDefinition &app) {
+    require(module.replay != ReplayPolicy::wireStateOnly || module.localReplay.empty(),
+            ErrorCode::invalidSchema);
+    require(module.replay != ReplayPolicy::typedLocalState ||
+                (module.client && !module.localReplay.empty()),
+            ErrorCode::invalidSchema);
+    std::set<std::pair<LocalRecordKind, SchemaId>> local;
+    for (const auto &item : module.localReplay) {
+        require(local.emplace(item.recordKind, item.schema).second, ErrorCode::invalidSchema);
+        schemaFor(app, item.schema,
+                  item.recordKind == LocalRecordKind::moduleState ? SchemaRole::moduleState
+                                                                  : SchemaRole::localReplay);
+    }
+}
+auto checkModules(const ApplicationDefinition &app) -> std::set<ModuleId> {
     std::set<ModuleId> moduleIds;
     std::set<std::string_view> moduleNames;
     std::set<std::string_view> nativeNames;
@@ -36,61 +101,12 @@ void validateApplicationDefinition(const ApplicationDefinition &app,
                     moduleIds.insert(module.id).second && moduleNames.insert(module.name).second,
                 ErrorCode::invalidSchema);
         require(module.server || module.client, ErrorCode::unsupportedModule);
-        std::set<ModMessageId> ids;
-        std::set<std::string_view> names;
-        for (const auto &message : module.messages) {
-            require(module.server && module.client && message.id.value != 0 &&
-                        ids.insert(message.id).second && names.insert(message.name).second &&
-                        identifier(message.name, 15),
-                    ErrorCode::invalidSchema);
-            require(message.name != session::controlMessageName &&
-                        message.name != session::controlCommandName,
-                    ErrorCode::unsupportedModule);
-            const auto &schema = schemaFor(app, message.schema, SchemaRole::modMessage);
-            if (message.wireMode == WireMode::typed2) {
-                require(message.nativeSize == -1 &&
-                            message.resources == ResourcePolicy::typedReferences &&
-                            message.legacyFields.empty(),
-                        ErrorCode::invalidSchema);
-                require(message.direction != Direction::clientToServer ||
-                            (message.deliveries.reliable && !message.deliveries.unreliable),
-                        ErrorCode::invalidSchema);
-            } else {
-                require(message.direction == Direction::serverToClient &&
-                            nativeNames.insert(message.name).second &&
-                            message.resources != ResourcePolicy::typedReferences,
-                        ErrorCode::invalidSchema);
-                require(message.resources == ResourcePolicy::resourceFree
-                            ? resourceFree(schema) && message.legacyFields.empty()
-                            : !message.legacyFields.empty(),
-                        ErrorCode::invalidSchema);
-                std::set<FieldId> fields;
-                for (const auto &field : message.legacyFields) {
-                    require(field.field.value < schema.fields.size() &&
-                                schema.fields[field.field.value].kind == ValueKind::resource &&
-                                fields.insert(field.field).second,
-                            ErrorCode::invalidSchema);
-                }
-                const auto resources =
-                    std::ranges::count(schema.fields, ValueKind::resource, &FieldDefinition::kind);
-                require(message.resources != ResourcePolicy::boundedLegacy ||
-                            static_cast<std::size_t>(resources) == fields.size(),
-                        ErrorCode::invalidSchema);
-            }
-        }
-        require(module.replay != ReplayPolicy::wireStateOnly || module.localReplay.empty(),
-                ErrorCode::invalidSchema);
-        require(module.replay != ReplayPolicy::typedLocalState ||
-                    (module.client && !module.localReplay.empty()),
-                ErrorCode::invalidSchema);
-        std::set<std::pair<LocalRecordKind, SchemaId>> local;
-        for (const auto &item : module.localReplay) {
-            require(local.emplace(item.recordKind, item.schema).second, ErrorCode::invalidSchema);
-            schemaFor(app, item.schema,
-                      item.recordKind == LocalRecordKind::moduleState ? SchemaRole::moduleState
-                                                                      : SchemaRole::localReplay);
-        }
+        checkMessages(module, app, nativeNames);
+        checkLocalReplay(module, app);
     }
+    return moduleIds;
+}
+void checkEffects(const ApplicationDefinition &app, const std::set<ModuleId> &moduleIds) {
     std::set<EffectId> effectIds;
     for (const auto &policy : app.effects) {
         require(moduleIds.contains(policy.owner) && effectIds.insert(policy.id).second,
@@ -110,6 +126,8 @@ void validateApplicationDefinition(const ApplicationDefinition &app,
                     ErrorCode::invalidSchema);
         }
     }
+}
+void checkServices(const ApplicationDefinition &app, const std::set<ModuleId> &moduleIds) {
     std::set<std::pair<Direction, std::uint8_t>> services;
     for (const auto &service : app.services) {
         require(moduleIds.contains(service.owner) &&
@@ -128,6 +146,14 @@ void validateApplicationDefinition(const ApplicationDefinition &app,
                     ErrorCode::invalidSchema);
         }
     }
+}
+} // namespace
+void validateApplicationDefinition(const ApplicationDefinition &app,
+                                   const DigestProvider &provider) {
+    checkSchemaSet(app, provider);
+    const auto moduleIds = checkModules(app);
+    checkEffects(app, moduleIds);
+    checkServices(app, moduleIds);
 }
 } // namespace detail
 struct ApplicationContract::Storage final {
