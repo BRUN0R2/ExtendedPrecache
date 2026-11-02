@@ -3,6 +3,7 @@
 #include <extendedPrecache/data/application.hpp>
 
 #include <set>
+#include <utility>
 
 namespace extendedPrecache::data {
 namespace {
