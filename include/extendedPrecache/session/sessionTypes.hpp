@@ -109,7 +109,8 @@ enum class RejectCode : std::uint8_t {
 
 struct Rejection final {
     RejectCode code{RejectCode::malformedFrame};
-    std::uint8_t fieldId{};
+    // Empty for a general rejection, which the wire writes as field zero.
+    std::optional<CapabilityField> fieldId{};
     std::uint32_t offered{};
     std::uint32_t required{};
     auto operator==(const Rejection &) const -> bool = default;

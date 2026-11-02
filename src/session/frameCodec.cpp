@@ -2,6 +2,7 @@
 
 #include <concepts>
 #include <type_traits>
+#include <utility>
 
 namespace extendedPrecache::session {
 namespace {
@@ -10,6 +11,7 @@ constexpr auto wireMagic =
 constexpr auto wireMajor = std::uint8_t{1};
 constexpr auto wireMinor = std::uint16_t{0};
 constexpr auto bitsPerByte = 8U;
+constexpr auto generalRejectionField = std::uint8_t{0};
 constexpr auto commandPrefix = std::string_view{"epc1 "};
 static_assert(commandPrefix.starts_with(controlCommandName));
 constexpr auto offerBytes = 24U;
@@ -131,7 +133,10 @@ auto readPayload(MessageKind kind, Reader &reader) noexcept
         const auto code = reader.integer<std::uint16_t>();
         const auto field = reader.integer<std::uint8_t>();
         const auto reserved = reader.integer<std::uint8_t>();
-        Rejection result{static_cast<RejectCode>(code), field, reader.integer<std::uint32_t>(),
+        const auto fieldId = field == generalRejectionField
+                                 ? std::nullopt
+                                 : std::optional{static_cast<CapabilityField>(field)};
+        Rejection result{static_cast<RejectCode>(code), fieldId, reader.integer<std::uint32_t>(),
                          reader.integer<std::uint32_t>()};
         if (code < static_cast<std::uint16_t>(RejectCode::malformedFrame) ||
             code > static_cast<std::uint16_t>(RejectCode::budgetExceeded) ||
@@ -226,13 +231,14 @@ auto encodeFrame(const Frame &frame) -> std::expected<EncodedFrame, Rejection> {
                     writer.integer(body.wireValues[index]);
                 }
             } else if constexpr (std::same_as<T, RejectBody>) {
+                const auto fieldId = body.value.fieldId;
                 if (body.value.code < RejectCode::malformedFrame ||
                     body.value.code > RejectCode::budgetExceeded ||
-                    body.value.fieldId > capabilityCount) {
+                    (fieldId && !validField(*fieldId))) {
                     return false;
                 }
                 writer.integer(static_cast<std::uint16_t>(body.value.code));
-                writer.integer(body.value.fieldId);
+                writer.integer(fieldId ? std::to_underlying(*fieldId) : generalRejectionField);
                 writer.integer(std::uint8_t{});
                 writer.integer(body.value.offered);
                 writer.integer(body.value.required);

@@ -13,8 +13,9 @@ auto localSchema(const DemoLocalRecord &record, DemoLocalContext context) -> con
         });
     require(found != module->localReplay.end(), ErrorCode::unsupportedModule);
     const auto *schema = findSchema(context.application.definition().schemas, record.schema);
-    require(schema && schema->role ==
-                          (record.kind == 6 ? SchemaRole::moduleState : SchemaRole::localReplay),
+    require(schema && schema->role == (record.kind == LocalRecordKind::moduleState
+                                           ? SchemaRole::moduleState
+                                           : SchemaRole::localReplay),
             ErrorCode::invalidSchema);
     return *schema;
 }
@@ -27,7 +28,7 @@ auto encodeDemoLocal(const DemoLocalRecord &record, DemoLocalContext context) no
             get(encodeValues(schema, record.values, context.values, context.budget));
         within(add(demoLocalHeaderBytes, values.size()), context.budget.messageBytes.value);
         Writer writer{context.budget.ownedBytes.value};
-        writer.integer(record.kind);
+        writer.integer(static_cast<std::uint16_t>(record.kind));
         writer.integer(record.module.value);
         writer.integer(record.schema.value);
         writer.zero(2);
@@ -41,14 +42,20 @@ auto decodeDemoLocal(std::span<const std::byte> bytes, DemoLocalContext context)
     return detail::protect([&] {
         inputBudget(bytes, context.budget);
         Reader reader{bytes};
+        const auto kind = reader.integer<std::uint16_t>();
         DemoLocalRecord record{};
-        record.kind = reader.integer<std::uint16_t>();
         record.module = {reader.integer<std::uint16_t>()};
         record.schema = {reader.integer<std::uint16_t>()};
         reader.zero(2);
         const auto length = reader.integer<std::uint32_t>();
         const auto values = reader.take(length);
         reader.end();
+        // The wire is wider than the enum, so an unknown kind must fail before it can narrow.
+        // It reports what a record no binding approves reports.
+        require(kind >= std::to_underlying(LocalRecordKind::view) &&
+                    kind <= std::to_underlying(LocalRecordKind::moduleState),
+                ErrorCode::unsupportedModule);
+        record.kind = static_cast<LocalRecordKind>(kind);
         const auto &schema = localSchema(record, context);
         record.values = get(decodeValues(schema, values, context.values, context.budget));
         return record;

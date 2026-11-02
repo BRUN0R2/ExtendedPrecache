@@ -158,9 +158,8 @@ auto NegotiationSession::validatePayload(const Frame &frame) -> std::expected<vo
             }
             if (limits->vector().get<CapabilityField::consistencyEntries>().value >
                 limits->vector().get<CapabilityField::resourceEntries>().value) {
-                return std::unexpected{
-                    Rejection{RejectCode::invalidConfiguration,
-                              static_cast<std::uint8_t>(CapabilityField::consistencyEntries)}};
+                return std::unexpected{Rejection{RejectCode::invalidConfiguration,
+                                                 CapabilityField::consistencyEntries}};
             }
             if (kind == MessageKind::serverLimitsPage) {
                 serverLimits = *limits;

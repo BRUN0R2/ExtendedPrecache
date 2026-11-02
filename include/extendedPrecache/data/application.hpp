@@ -49,8 +49,17 @@ struct MessageDefinition final {
     ResourcePolicy resources;
     std::vector<LegacyField> legacyFields;
 };
+// The first five use the localReplay schema role; moduleState uses its own.
+enum class LocalRecordKind : std::uint8_t {
+    view = 1,
+    prediction,
+    weaponAnimation,
+    localSound,
+    localEvent,
+    moduleState
+};
 struct LocalReplayBinding final {
-    std::uint16_t recordKind{};
+    LocalRecordKind recordKind{LocalRecordKind::view};
     SchemaId schema;
 };
 struct ModuleProfile final {

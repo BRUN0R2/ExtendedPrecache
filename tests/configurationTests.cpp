@@ -150,10 +150,11 @@ void testAdmission(TestSuite &suite, const std::filesystem::path &docs) {
         if (expected == "admit") {
             static_cast<void>(suite.check(result.has_value(), item.at("name").get<std::string>()));
         } else {
-            static_cast<void>(
-                suite.check(!result && result.error().code == RejectCode::capacityInsufficient &&
-                                result.error().fieldId == item.at("fieldId").get<std::uint8_t>(),
-                            item.at("name").get<std::string>()));
+            static_cast<void>(suite.check(
+                !result && result.error().code == RejectCode::capacityInsufficient &&
+                    result.error().fieldId ==
+                        static_cast<CapabilityField>(item.at("fieldId").get<std::uint8_t>()),
+                item.at("name").get<std::string>()));
         }
     }
 }

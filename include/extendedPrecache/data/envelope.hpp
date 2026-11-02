@@ -80,17 +80,20 @@ struct Envelope final {
 [[nodiscard]] auto leadingEnvelopeBytes(std::span<const std::byte> bytes) noexcept
     -> Result<std::uint32_t>;
 enum class ReceiveDisposition : std::uint8_t { accept, staleNonce, oldUnreliable };
+// Each flow numbers its own records; only the unreliable one may skip ahead.
+enum class SequenceFlow : std::uint8_t { serverReliable, serverUnreliable, clientReliable };
+inline constexpr auto sequenceFlowCount = std::size_t{3};
+using FlowSequences = std::array<session::FrameSequence, sequenceFlowCount>;
 class SequenceTracker final {
   public:
-    SequenceTracker(SessionNonce nonce, MapEpoch epoch,
-                    std::array<std::uint32_t, 3> next = {}) noexcept
+    SequenceTracker(SessionNonce nonce, MapEpoch epoch, FlowSequences next = {}) noexcept
         : nonceValue{nonce}, epochValue{epoch}, nextValues{next} {}
     [[nodiscard]] auto accept(const Envelope &envelope) noexcept -> Result<ReceiveDisposition>;
 
   private:
     SessionNonce nonceValue;
     MapEpoch epochValue;
-    std::array<std::uint32_t, 3> nextValues;
+    FlowSequences nextValues;
 };
 [[nodiscard]] auto encodeFatal(Failure failure) noexcept -> Result<Bytes>;
 [[nodiscard]] auto decodeFatal(std::span<const std::byte> bytes) noexcept -> Result<Failure>;

@@ -45,7 +45,7 @@ struct DemoPacket final {
     std::span<const std::byte> payload;
 };
 struct DemoLocalRecord final {
-    std::uint16_t kind{};
+    LocalRecordKind kind{LocalRecordKind::view};
     ModuleId module;
     SchemaId schema;
     ValueSet values;
