@@ -31,6 +31,10 @@ class ImageRewrite final {
     auto operator=(ImageRewrite &&) -> ImageRewrite & = delete;
     ~ImageRewrite();
 
+    // Leaves the rewrites in force for good. The engine can be unmapped before this module is, so
+    // anything meant to last until the process ends must not try to restore them on the way out.
+    void keepUntilProcessEnds() && noexcept;
+
   private:
     ImageRewrite(std::byte *image, std::vector<OperandRewrite> rewrites) noexcept
         : image{image}, rewrites{std::move(rewrites)} {}

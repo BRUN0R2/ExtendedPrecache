@@ -50,6 +50,10 @@ ImageRewrite::ImageRewrite(ImageRewrite &&other) noexcept
     : image{std::exchange(other.image, nullptr)}, rewrites{std::move(other.rewrites)},
       written{std::exchange(other.written, 0)} {}
 
+void ImageRewrite::keepUntilProcessEnds() && noexcept {
+    written = 0;
+}
+
 ImageRewrite::~ImageRewrite() {
     for (const auto &rewrite : rewrites | std::views::take(written)) {
         if (!writeOperand(image + rewrite.operandRva, rewrite.expected)) {

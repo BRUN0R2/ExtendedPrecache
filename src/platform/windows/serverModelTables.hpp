@@ -6,7 +6,6 @@
 #include <cstdint>
 #include <expected>
 #include <memory>
-#include <optional>
 #include <vector>
 
 namespace extendedPrecache::platform::windows {
@@ -21,7 +20,6 @@ class ServerModelTables final {
 
     ServerModelTables(const ServerModelTables &) = delete;
     auto operator=(const ServerModelTables &) -> ServerModelTables & = delete;
-    ~ServerModelTables();
 
     [[nodiscard]] auto entriesInUse() const noexcept -> std::uint32_t;
     [[nodiscard]] auto capacityEntries() const noexcept -> std::uint32_t {
@@ -38,7 +36,6 @@ class ServerModelTables final {
     std::vector<const void *> names;
     std::vector<const void *> objects;
     std::vector<std::uint8_t> flags;
-    std::optional<ImageRewrite> rewrite;
 };
 
 } // namespace extendedPrecache::platform::windows

@@ -102,14 +102,9 @@ auto ServerModelTables::install(std::byte *image, std::uint32_t entries)
     if (!rewrite) {
         return std::unexpected{rewrite.error()};
     }
-    tables->rewrite.emplace(std::move(*rewrite));
+    std::move(*rewrite).keepUntilProcessEnds();
     zeroedWithServerState = tables.get();
     return tables;
-}
-
-ServerModelTables::~ServerModelTables() {
-    rewrite.reset();
-    zeroedWithServerState = nullptr;
 }
 
 auto ServerModelTables::entriesInUse() const noexcept -> std::uint32_t {

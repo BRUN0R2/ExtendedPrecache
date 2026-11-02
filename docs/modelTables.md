@@ -48,7 +48,8 @@ uma precache além da capacidade, sem escrever fora da tabela. O cliente recusa 
 ## Servidor
 
 As tabelas são movidas uma vez, ao carregar o plugin, porque um mapa faz precache antes de qualquer
-negociação. Uma configuração dentro do limite nativo não altera nada.
+negociação, e ficam assim até o processo terminar. Na saída, o motor pode já ter sido descarregado,
+então nada tenta restaurar o código. Uma configuração dentro do limite nativo não altera nada.
 
 O motor zera as tabelas nativas junto com todo o estado do servidor, e as movidas não fazem parte
 dele. Por isso, as três chamadas que zeram esse estado passam por uma função que também limpa as
@@ -70,6 +71,7 @@ A alteração existe só enquanto é necessária, para reduzir o risco com anti-
 | Outro mapa na mesma conexão | O código volta ao original e é alterado de novo para o novo mapa |
 | Conexão perdida, ou servidor com VAC | O código volta ao original |
 | Servidor sem negociação | O código segue original |
+| Jogo fechado durante a sessão | Nada é restaurado, porque o processo termina e o motor pode já ter sido descarregado |
 
 A [guarda de VAC](clientNegotiator.md#servidores-com-vac) roda antes da alteração, no mesmo serviço.
 Isso reduz o risco, mas não o elimina: a alteração fica ativa durante toda a sessão negociada. Nunca
