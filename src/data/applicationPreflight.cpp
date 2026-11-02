@@ -106,146 +106,197 @@ void serviceCoverage(const ApplicationContract &contract, const ApplicationBindi
         }
     }
 }
+constexpr auto schemaRoleCount = static_cast<std::size_t>(SchemaRole::localReplay);
+constexpr auto roleIndex(SchemaRole role) noexcept -> std::size_t {
+    return static_cast<std::size_t>(role) - 1;
+}
+// The largest value any schema of a role allows; every object of that role is sized by it.
+struct RolePeak final {
+    std::uint64_t wireBytes{};
+    std::uint64_t ownedBytes{};
+    std::uint64_t fields{};
+};
+using RolePeaks = std::array<RolePeak, schemaRoleCount>;
+void checkInstallation(const ApplicationDefinition &app, const PreflightContext &context) {
+    require(!context.installedDataContractHash.isZero() &&
+                context.installedDataContractHash == app.dataContractHash,
+            ErrorCode::unsupportedContract);
+    require(context.role == session::EndpointRole::client ||
+                context.role == session::EndpointRole::server,
+            ErrorCode::invalidSchema);
+    require(session::admitRequirements(context.requirements, context.selected).has_value(),
+            ErrorCode::capacity);
+    require(session::validateChunkBudget(context.selected, {chunkOverheadBytes}).has_value(),
+            ErrorCode::byteBudget);
+}
+void checkArtifactLimits(const ApplicationContract &contract, const PreflightContext &context,
+                         std::uint32_t reliableBytes) {
+    const auto &limits = contract.definition().limits;
+    within(contract.artifactBytes().value, limits.contractArtifactBytes.value);
+    within(context.installedDataArtifactBytes.value, limits.contractArtifactBytes.value);
+    within(limits.unreliableMessageBytes.value, reliableBytes);
+    require(limits.demoBlockBytes.value >=
+                add(reliableBytes, demoBlockHeaderBytes + demoPacketHeaderBytes),
+            ErrorCode::byteBudget);
+}
+auto recordHeaderBytes(const Schema &schema) -> std::uint64_t {
+    const auto state = schema.role == SchemaRole::entity || schema.role == SchemaRole::client ||
+                       schema.role == SchemaRole::weapon || schema.role == SchemaRole::moduleState;
+    return state ? 16U + (schema.fields.size() + 7U) / 8U
+                 : (schema.role == SchemaRole::eventArgs ? 16U : 8U);
+}
+auto approveSchemas(const ApplicationDefinition &app, const ApplicationBindings &bindings,
+                    std::uint32_t reliableBytes) -> RolePeaks {
+    RolePeaks peaks{};
+    for (const auto &schema : app.schemas) {
+        get(bindings.approveSchema(schema));
+        const auto encoded = get(encodeSchema(schema));
+        within(add(envelopeBytes, encoded.size()), reliableBytes);
+        const auto value = get(maxValueBytes(schema));
+        auto &peak = peaks[roleIndex(schema.role)];
+        peak.wireBytes = std::max(peak.wireBytes, value);
+        peak.ownedBytes = std::max(peak.ownedBytes, valueMemory(schema));
+        peak.fields = std::max<std::uint64_t>(peak.fields, schema.fields.size());
+        within(add(envelopeBytes, add(recordHeaderBytes(schema), value)), reliableBytes);
+    }
+    return peaks;
+}
+// What every configured object can occupy at once, on the wire and in owned memory.
+struct StateBudget final {
+    const ApplicationDefinition &app;
+    const RolePeaks &peaks;
+    std::uint64_t wireBytes{};
+    std::uint64_t ownedBytes{};
+    std::uint64_t changesOwnedBytes{};
+    void addObjects(std::uint64_t count, SchemaRole role) {
+        if (count == 0) {
+            return;
+        }
+        const auto &peak = peaks[roleIndex(role)];
+        require(std::ranges::any_of(app.schemas,
+                                    [&](const Schema &schema) { return schema.role == role; }),
+                ErrorCode::invalidSchema);
+        wireBytes = add(wireBytes, multiply(count, add(fullObjectHeaderBytes, peak.wireBytes)));
+        ownedBytes = add(ownedBytes, multiply(count, add(sizeof(FullObject), peak.ownedBytes)));
+        changesOwnedBytes = add(
+            changesOwnedBytes,
+            multiply(count, add(sizeof(FrameObject),
+                                add(peak.ownedBytes,
+                                    multiply(peak.fields, sizeof(std::optional<FieldValue>))))));
+    }
+};
+void checkTypedMessage(const MessageDefinition &message, const Schema &schema,
+                       const ApplicationLimits &limits, std::uint32_t reliableBytes) {
+    const auto bytes = add(envelopeBytes + modMessageHeaderBytes, get(maxValueBytes(schema)));
+    within(bytes, reliableBytes);
+    if (message.deliveries.unreliable && !message.deliveries.reliable) {
+        within(bytes, limits.unreliableMessageBytes.value);
+    }
+}
+void checkNativeMessage(const MessageDefinition &message, const Schema &schema,
+                        const NativeMessageProof &proof,
+                        const session::MapRequirements &requirements) {
+    within(proof.maximumPayload.value, nativeUserMessageBytes);
+    require(message.nativeSize < 0 ||
+                proof.maximumPayload.value == static_cast<std::uint32_t>(message.nativeSize),
+            ErrorCode::unsupportedModule);
+    legacyRange(message, schema, proof, requirements);
+}
+void approveMessages(const ModuleProfile &module, const ApplicationDefinition &app,
+                     const PreflightContext &context, const ApplicationBindings &bindings) {
+    const auto reliableBytes =
+        context.selected.vector().get<session::CapabilityField::reliableMessageBytes>().value;
+    for (const auto &message : module.messages) {
+        const auto *schema = findSchema(app.schemas, message.schema);
+        require(schema != nullptr, ErrorCode::invalidSchema);
+        const auto proof = get(bindings.approveMessage(module.id, message));
+        if (message.wireMode == WireMode::typed2) {
+            checkTypedMessage(message, *schema, app.limits, reliableBytes);
+        } else {
+            checkNativeMessage(message, *schema, proof, context.requirements);
+        }
+    }
+}
+void addModuleState(const ModuleProfile &module, const ApplicationBindings &bindings,
+                    StateBudget &state) {
+    for (const auto &schema : state.app.schemas) {
+        if (schema.role == SchemaRole::moduleState &&
+            bindings.allows({ObjectKind::module, {module.id.value}}, schema.id)) {
+            state.addObjects(1, SchemaRole::moduleState);
+            break;
+        }
+    }
+}
+void approveModules(const PreflightContext &context, const ApplicationBindings &bindings,
+                    StateBudget &state) {
+    for (const auto &module : state.app.modules) {
+        get(bindings.approveModule(module));
+        const auto identity =
+            context.role == session::EndpointRole::server ? module.server : module.client;
+        if (identity) {
+            require(get(bindings.identify(module.id, context.role)) == *identity,
+                    ErrorCode::unsupportedModule);
+        }
+        approveMessages(module, state.app, context, bindings);
+        addModuleState(module, bindings, state);
+    }
+}
+void checkMandatoryObjects(const ApplicationDefinition &app, const ApplicationBindings &bindings) {
+    for (const auto object : bindings.mandatoryObjects()) {
+        require(std::ranges::any_of(
+                    app.schemas,
+                    [&](const Schema &schema) { return bindings.allows(object, schema.id); }),
+                ErrorCode::unsupportedModule);
+    }
+}
+auto minimumOwnedBytes(const ApplicationDefinition &app, const PreflightContext &context,
+                       const StateBudget &state) -> std::uint64_t {
+    const auto &selected = context.selected.vector();
+    const auto &required = context.requirements.vector();
+    auto minimum =
+        add(multiply(app.limits.snapshotWindowFrames.value + std::uint64_t{1}, state.ownedBytes),
+            multiply(2, state.changesOwnedBytes));
+    minimum = add(minimum, multiply(2, state.wireBytes));
+    minimum =
+        add(minimum, add(required.get<session::CapabilityField::manifestBytes>().value,
+                         multiply(required.get<session::CapabilityField::resourceEntries>().value,
+                                  sizeof(Resource) + maxNameBytes + sizeof(Asset) + maxNameBytes)));
+    minimum =
+        add(minimum, multiply(required.get<session::CapabilityField::consistencyEntries>().value,
+                              sizeof(ConsistencyRule) + 64U));
+    minimum = add(minimum, selected.get<session::CapabilityField::inFlightBytes>().value);
+    minimum = add(minimum, multiply(3, add(app.limits.contractArtifactBytes.value,
+                                           app.limits.schemaSetBytes.value)));
+    minimum = add(minimum, app.limits.demoBootstrapBytes.value);
+    return add(minimum, multiply(2, app.limits.demoBlockBytes.value));
+}
 } // namespace
 auto preflightApplication(const ApplicationContract &contract, PreflightContext context,
                           const ApplicationBindings &bindings) noexcept -> Result<ApplicationPlan> {
     return detail::protect([&] {
         const auto &app = contract.definition();
-        require(!context.installedDataContractHash.isZero() &&
-                    context.installedDataContractHash == app.dataContractHash,
-                ErrorCode::unsupportedContract);
-        require(context.role == session::EndpointRole::client ||
-                    context.role == session::EndpointRole::server,
-                ErrorCode::invalidSchema);
-        require(session::admitRequirements(context.requirements, context.selected).has_value(),
-                ErrorCode::capacity);
-        require(session::validateChunkBudget(context.selected, {chunkOverheadBytes}).has_value(),
-                ErrorCode::byteBudget);
+        checkInstallation(app, context);
         get(bindings.approveLimits(app.limits, app.objects, context.selected));
-        const auto &selected = context.selected.vector();
-        const auto &required = context.requirements.vector();
-        within(contract.artifactBytes().value, app.limits.contractArtifactBytes.value);
-        within(context.installedDataArtifactBytes.value, app.limits.contractArtifactBytes.value);
-        within(app.limits.unreliableMessageBytes.value,
-               selected.get<session::CapabilityField::reliableMessageBytes>().value);
-        require(app.limits.demoBlockBytes.value >=
-                    add(selected.get<session::CapabilityField::reliableMessageBytes>().value,
-                        demoBlockHeaderBytes + demoPacketHeaderBytes),
-                ErrorCode::byteBudget);
-        std::array<std::uint64_t, 8> maxWire{};
-        std::array<std::uint64_t, 8> maxOwned{};
-        std::array<std::uint64_t, 8> maxFields{};
-        for (const auto &schema : app.schemas) {
-            get(bindings.approveSchema(schema));
-            const auto encoded = get(encodeSchema(schema));
-            within(add(envelopeBytes, encoded.size()),
-                   selected.get<session::CapabilityField::reliableMessageBytes>().value);
-            const auto value = get(maxValueBytes(schema));
-            const auto role = static_cast<std::size_t>(schema.role) - 1;
-            maxWire[role] = std::max(maxWire[role], value);
-            maxOwned[role] = std::max(maxOwned[role], valueMemory(schema));
-            maxFields[role] = std::max<std::uint64_t>(maxFields[role], schema.fields.size());
-            const auto state =
-                schema.role == SchemaRole::entity || schema.role == SchemaRole::client ||
-                schema.role == SchemaRole::weapon || schema.role == SchemaRole::moduleState;
-            const auto header = state ? 16U + (schema.fields.size() + 7U) / 8U
-                                      : (schema.role == SchemaRole::eventArgs ? 16U : 8U);
-            within(add(envelopeBytes, add(header, value)),
-                   selected.get<session::CapabilityField::reliableMessageBytes>().value);
-        }
-        std::uint64_t stateBytes{};
-        std::uint64_t ownedState{};
-        std::uint64_t changesOwned{};
-        const auto addObjects = [&](std::uint64_t count, SchemaRole role) {
-            if (count == 0) {
-                return;
-            }
-            const auto index = static_cast<std::size_t>(role) - 1;
-            require(std::ranges::any_of(app.schemas,
-                                        [&](const Schema &schema) { return schema.role == role; }),
-                    ErrorCode::invalidSchema);
-            stateBytes =
-                add(stateBytes, multiply(count, add(fullObjectHeaderBytes, maxWire[index])));
-            ownedState = add(ownedState, multiply(count, add(sizeof(FullObject), maxOwned[index])));
-            changesOwned = add(
-                changesOwned,
-                multiply(count,
-                         add(sizeof(FrameObject),
-                             add(maxOwned[index],
-                                 multiply(maxFields[index], sizeof(std::optional<FieldValue>))))));
-        };
-        addObjects(app.objects.entityEntries.value, SchemaRole::entity);
-        addObjects(app.objects.clientEntries.value, SchemaRole::client);
-        addObjects(app.objects.weaponEntries.value, SchemaRole::weapon);
-        addObjects(app.objects.staticEntries.value, SchemaRole::entity);
-        for (const auto &module : app.modules) {
-            get(bindings.approveModule(module));
-            const auto identity =
-                context.role == session::EndpointRole::server ? module.server : module.client;
-            if (identity) {
-                require(get(bindings.identify(module.id, context.role)) == *identity,
-                        ErrorCode::unsupportedModule);
-            }
-            for (const auto &message : module.messages) {
-                const auto *schema = findSchema(app.schemas, message.schema);
-                require(schema != nullptr, ErrorCode::invalidSchema);
-                const auto proof = get(bindings.approveMessage(module.id, message));
-                if (message.wireMode == WireMode::typed2) {
-                    const auto bytes =
-                        add(envelopeBytes + modMessageHeaderBytes, get(maxValueBytes(*schema)));
-                    within(bytes,
-                           selected.get<session::CapabilityField::reliableMessageBytes>().value);
-                    if (message.deliveries.unreliable && !message.deliveries.reliable) {
-                        within(bytes, app.limits.unreliableMessageBytes.value);
-                    }
-                } else {
-                    within(proof.maximumPayload.value, nativeUserMessageBytes);
-                    require(message.nativeSize < 0 ||
-                                proof.maximumPayload.value ==
-                                    static_cast<std::uint32_t>(message.nativeSize),
-                            ErrorCode::unsupportedModule);
-                    legacyRange(message, *schema, proof, context.requirements);
-                }
-            }
-            for (const auto &schema : app.schemas) {
-                if (schema.role == SchemaRole::moduleState &&
-                    bindings.allows({ObjectKind::module, {module.id.value}}, schema.id)) {
-                    addObjects(1, SchemaRole::moduleState);
-                    break;
-                }
-            }
-        }
+        const auto reliableBytes =
+            context.selected.vector().get<session::CapabilityField::reliableMessageBytes>().value;
+        checkArtifactLimits(contract, context, reliableBytes);
+        const auto peaks = approveSchemas(app, bindings, reliableBytes);
+        StateBudget state{app, peaks};
+        state.addObjects(app.objects.entityEntries.value, SchemaRole::entity);
+        state.addObjects(app.objects.clientEntries.value, SchemaRole::client);
+        state.addObjects(app.objects.weaponEntries.value, SchemaRole::weapon);
+        state.addObjects(app.objects.staticEntries.value, SchemaRole::entity);
+        approveModules(context, bindings, state);
         require(!app.modules.empty(), ErrorCode::unsupportedModule);
         for (const auto &effect : app.effects) {
             get(bindings.approveEffect(effect));
         }
-        serviceCoverage(contract, bindings,
-                        selected.get<session::CapabilityField::reliableMessageBytes>().value);
+        serviceCoverage(contract, bindings, reliableBytes);
         validateServiceSizes(contract, context.selected);
-        within(stateBytes, app.limits.stateFrameBytes.value);
-        for (const auto object : bindings.mandatoryObjects()) {
-            require(std::ranges::any_of(
-                        app.schemas,
-                        [&](const Schema &schema) { return bindings.allows(object, schema.id); }),
-                    ErrorCode::unsupportedModule);
-        }
-        auto minimum =
-            add(multiply(app.limits.snapshotWindowFrames.value + std::uint64_t{1}, ownedState),
-                multiply(2, changesOwned));
-        minimum = add(minimum, multiply(2, stateBytes));
-        minimum = add(
-            minimum, add(required.get<session::CapabilityField::manifestBytes>().value,
-                         multiply(required.get<session::CapabilityField::resourceEntries>().value,
-                                  sizeof(Resource) + maxNameBytes + sizeof(Asset) + maxNameBytes)));
-        minimum = add(minimum,
-                      multiply(required.get<session::CapabilityField::consistencyEntries>().value,
-                               sizeof(ConsistencyRule) + 64U));
-        minimum = add(minimum, selected.get<session::CapabilityField::inFlightBytes>().value);
-        minimum = add(minimum, multiply(3, add(app.limits.contractArtifactBytes.value,
-                                               app.limits.schemaSetBytes.value)));
-        minimum = add(minimum, app.limits.demoBootstrapBytes.value);
-        minimum = add(minimum, multiply(2, app.limits.demoBlockBytes.value));
-        const CoreRequirements core{app.limits.schemaSetBytes, {stateBytes}, {minimum}};
+        within(state.wireBytes, app.limits.stateFrameBytes.value);
+        checkMandatoryObjects(app, bindings);
+        const auto minimum = minimumOwnedBytes(app, context, state);
+        const CoreRequirements core{app.limits.schemaSetBytes, {state.wireBytes}, {minimum}};
         const auto quote = get(bindings.quotePeak(core));
         require(quote.value >= minimum, ErrorCode::storageUnavailable);
         within(quote.value, context.metadataBudget.value);
