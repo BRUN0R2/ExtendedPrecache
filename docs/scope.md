@@ -33,7 +33,8 @@ Sua ampliação não faz parte automaticamente desta primeira extensão de preca
 - Servidor inicial de investigação: instalação `REHLDS-Rezombie` indicada pelo mantenedor.
 - Distribuição pretendida do servidor: plugin do Metamod com integração específica
   do motor. Metamod-R requer ReHLDS; não deve ser apresentado como opção para HLDS original.
-- Cliente: DLL complementar, com carregamento explícito a definir após auditoria.
+- Cliente: DLL complementar, carregada por um [inicializador próprio](clientNegotiator.md#inicializador),
+  sem alterar a instalação. Não é para servidores com VAC.
 - Linux, HLTV e outros motores: sem suporte declarado; avaliar separadamente.
 
 ## Critérios de aceitação do produto

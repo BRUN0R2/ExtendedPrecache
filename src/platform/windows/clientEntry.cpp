@@ -1,59 +1,88 @@
+#include "buildIdentity.hpp"
 #include "clientEngine.hpp"
+#include "clientLoadStatus.hpp"
 #include "clientTransport.hpp"
-#include "engineIdentity.hpp"
 
 #include <windows.h>
 
 #include <new>
-#include <string_view>
 #include <utility>
 
 namespace {
 using namespace extendedPrecache::platform::windows;
 
 constexpr auto engineModuleName = L"hw.dll";
-constexpr auto selectedEngineSha256 =
-    std::string_view{"9ba9a2db5e07598fd59afa35507a98c86162e4e15b3835177b78c11842cd2295"};
+constexpr ULONG dllLoadedReason = 1;
 
-// Returned to whoever loaded this module, because the engine's console may not exist yet.
-enum class AttachResult : std::uint8_t {
-    installed,
-    noApprovedProfile,
-    engineNotLoaded,
-    engineUnreadable,
-    engineUnknownBuild,
-    noBinding,
-    unexpectedTables,
-    outOfMemory,
-    cannotPin
+// ntdll exports these entries without declaring them in a public header.
+struct CountedText final {
+    USHORT length;
+    USHORT capacity;
+    const wchar_t *text;
 };
+struct DllEvent final {
+    ULONG flags;
+    const CountedText *fullName;
+    const CountedText *baseName;
+    void *base;
+    ULONG size;
+};
+using DllEventHandler = void(NTAPI *)(ULONG reason, const DllEvent *event, void *context);
+using RegisterDllEvents = LONG(NTAPI *)(ULONG flags, DllEventHandler handler, void *context,
+                                        void **cookie);
+using UnregisterDllEvents = LONG(NTAPI *)(void *cookie);
 
-// The engine's tables will point into this module, which must then outlive its loader's intent.
-auto pinThisModule() noexcept -> bool {
-    auto module = HMODULE{};
-    const auto flags = GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_PIN;
-    return GetModuleHandleExW(flags, reinterpret_cast<LPCWSTR>(&engineModuleName), &module) !=
-           FALSE;
+// Runs under the loader lock, so it only compares a name and signals.
+void NTAPI onDllEvent(ULONG reason, const DllEvent *event, void *context) {
+    if (reason != dllLoadedReason) {
+        return;
+    }
+    const auto &name = *event->baseName;
+    const auto characters = static_cast<int>(name.length) / static_cast<int>(sizeof(wchar_t));
+    if (CompareStringOrdinal(name.text, characters, engineModuleName, -1, TRUE) == CSTR_EQUAL) {
+        SetEvent(static_cast<HANDLE>(context));
+    }
 }
 
-auto attach() -> AttachResult {
+template <typename Function> auto ntdllEntry(const char *name) noexcept -> Function {
+    return reinterpret_cast<Function>(GetProcAddress(GetModuleHandleW(L"ntdll.dll"), name));
+}
+
+// Blocks until the engine is mapped; it stays blocked in a game that never loads this engine.
+auto waitForEngine() noexcept -> HMODULE {
+    const auto registerEvents = ntdllEntry<RegisterDllEvents>("LdrRegisterDllNotification");
+    const auto unregisterEvents = ntdllEntry<UnregisterDllEvents>("LdrUnregisterDllNotification");
+    auto *const loaded = CreateEventW(nullptr, TRUE, FALSE, nullptr);
+    void *cookie = nullptr;
+    const auto watching = registerEvents != nullptr && unregisterEvents != nullptr &&
+                          loaded != nullptr && registerEvents(0, onDllEvent, loaded, &cookie) == 0;
+    if (watching && GetModuleHandleW(engineModuleName) == nullptr) {
+        WaitForSingleObject(loaded, INFINITE);
+    }
+    if (watching) {
+        unregisterEvents(cookie);
+    }
+    if (loaded != nullptr) {
+        CloseHandle(loaded);
+    }
+    return GetModuleHandleW(engineModuleName);
+}
+
+auto attach(HMODULE engine) -> client::AttachResult {
+    using client::AttachResult;
     auto profile = client::approvedClientProfile();
     if (!profile) {
         return AttachResult::noApprovedProfile;
     }
-    auto *const module = GetModuleHandleW(engineModuleName);
-    if (module == nullptr) {
-        return AttachResult::engineNotLoaded;
+    if (engine == nullptr) {
+        return AttachResult::engineUnreadable;
     }
-    if (const auto verified = verifyEngineBuild(module, selectedEngineSha256); !verified) {
-        return verified.error() == EngineRefusal::unknownBuild ? AttachResult::engineUnknownBuild
-                                                               : AttachResult::engineUnreadable;
-    }
-    if (!pinThisModule()) {
-        return AttachResult::cannotPin;
+    if (const auto verified = verifyModuleBuild(engine, client::selectedEngineSha256); !verified) {
+        return verified.error() == BuildRefusal::unknownBuild ? AttachResult::engineUnknownBuild
+                                                              : AttachResult::engineUnreadable;
     }
     const auto installed =
-        client::installClientTransport(client::ClientEngine{module}, std::move(profile));
+        client::installClientTransport(client::ClientEngine{engine}, std::move(profile));
     if (!installed) {
         return installed.error() == client::TransportRefusal::noBinding
                    ? AttachResult::noBinding
@@ -61,13 +90,29 @@ auto attach() -> AttachResult {
     }
     return AttachResult::installed;
 }
+
+auto attachWhenLoaded() noexcept -> client::AttachResult {
+    try {
+        return attach(waitForEngine());
+    } catch (const std::bad_alloc &) {
+        return client::AttachResult::outOfMemory;
+    }
+}
+
+auto WINAPI attachThread(void *) -> DWORD {
+    client::publishAttachResult(attachWhenLoaded());
+    return 0;
+}
 } // namespace
 
-// Runs outside the loader lock, on the thread its caller chooses, before the first connection.
-extern "C" auto extendedPrecacheClientAttach() noexcept -> std::int32_t {
-    try {
-        return std::to_underlying(attach());
-    } catch (const std::bad_alloc &) {
-        return std::to_underlying(AttachResult::outOfMemory);
+// Everything else runs on its own thread, which starts once the loader lock is released.
+auto WINAPI DllMain(HINSTANCE module, DWORD reason, void *) -> BOOL {
+    if (reason == DLL_PROCESS_ATTACH) {
+        DisableThreadLibraryCalls(module);
+        auto *const thread = CreateThread(nullptr, 0, attachThread, nullptr, 0, nullptr);
+        if (thread != nullptr) {
+            CloseHandle(thread);
+        }
     }
+    return TRUE;
 }

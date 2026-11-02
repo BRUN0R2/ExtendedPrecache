@@ -147,6 +147,7 @@ if(extendedPrecacheBuildDll)
     add_library(extendedPrecacheServer SHARED
         src/platform/windows/metamodEntry.cpp
         src/platform/windows/approvedProfile.cpp
+        src/platform/windows/buildIdentity.cpp
         src/platform/windows/engineIdentity.cpp
         src/platform/windows/rehldsApi.cpp
         src/platform/windows/serverTransport.cpp
@@ -159,19 +160,29 @@ if(extendedPrecacheBuildDll)
     extendedPrecacheApplyOptions(extendedPrecacheServer)
     set_target_properties(extendedPrecacheServer PROPERTIES PREFIX "")
 
-    add_library(extendedPrecacheClient SHARED
+    # Loaded into the game process and never linked against, so it exports nothing.
+    add_library(extendedPrecacheClient MODULE
         src/platform/windows/clientEntry.cpp
         src/platform/windows/approvedClientProfile.cpp
+        src/platform/windows/buildIdentity.cpp
         src/platform/windows/clientEngine.cpp
+        src/platform/windows/clientLoadStatus.cpp
         src/platform/windows/clientTransport.cpp
-        src/platform/windows/engineIdentity.cpp
-        src/platform/windows/rehldsApi.cpp
-        src/platform/windows/extendedPrecacheClient.def
     )
     target_compile_definitions(extendedPrecacheClient PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX _WIN32_WINNT=0x0A00)
     target_link_libraries(extendedPrecacheClient PRIVATE extendedPrecacheTransport extendedPrecacheCrypto)
     extendedPrecacheApplyOptions(extendedPrecacheClient)
     set_target_properties(extendedPrecacheClient PROPERTIES PREFIX "")
+
+    add_executable(extendedPrecacheLauncher
+        src/platform/windows/launcherMain.cpp
+        src/platform/windows/approvedClientProfile.cpp
+        src/platform/windows/buildIdentity.cpp
+        src/platform/windows/clientLoadStatus.cpp
+    )
+    target_compile_definitions(extendedPrecacheLauncher PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX _WIN32_WINNT=0x0A00)
+    target_link_libraries(extendedPrecacheLauncher PRIVATE extendedPrecacheSession extendedPrecacheCrypto)
+    extendedPrecacheApplyOptions(extendedPrecacheLauncher)
 
     if(BUILD_TESTING)
         add_executable(extensionApiTests tests/extensionApiTests.cpp)

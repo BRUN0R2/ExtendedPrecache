@@ -1,11 +1,11 @@
 # Negociação no cliente
 
-Estado: **núcleo e adaptador implementados, sem carregador e sem perfil aprovado**.
+Estado: **núcleo, adaptador e inicializador implementados, inativos sem perfil aprovado**.
 `ClientNegotiator`, no alvo `extendedPrecacheTransport`, conduz o lado do cliente da
 [negociação](negotiation.md), ao longo dos mapas de uma conexão, e é independente do motor. O alvo
-`extendedPrecacheClient` o liga ao `hw.dll`, mas nada carrega essa DLL no jogo ainda e, sem perfil
-aprovado, ela não altera nada. A contraparte no servidor é a
-[barreira do sign-on](signonBarrier.md), com as mesmas portas.
+`extendedPrecacheClient` o liga ao `hw.dll`, e `extendedPrecacheLauncher` carrega essa DLL no jogo.
+Sem perfil aprovado, e não há nenhum, o inicializador se recusa a abrir o jogo. A contraparte no
+servidor é a [barreira do sign-on](signonBarrier.md), com as mesmas portas.
 
 ## Decisões por fase
 
@@ -34,23 +34,28 @@ recusa: uma nova conexão recomeça do zero e pode ter outro ID.
 
 ## Adaptador no `hw.dll`
 
-`extendedPrecacheClientAttach` é a única entrada da DLL e devolve um código a quem a carregou,
-porque o console do motor pode ainda não existir. Com um perfil aprovado, confere o SHA-256 do
-`hw.dll` contra o hash selecionado e instala o adaptador; sem perfil, não faz nada. Precisa rodar
-fora do loader lock e antes da primeira conexão.
+A DLL não exporta nada. `DllMain` só cria uma thread, que roda quando o loader lock é liberado:
+ela espera o `hw.dll` ser mapeado, confere o SHA-256 contra o hash selecionado e instala o adaptador.
 
 **Nenhum código do motor é alterado.** O adaptador troca entradas de tabelas de dados do `hw.dll`,
-conferindo antes se elas contêm o que este build tem, e usa as funções que o motor entrega à
+depois de conferir que todas contêm o que este build tem, e usa as funções que o motor entrega à
 ClientDLL:
 
 | Ponto | Origem | Papel |
 | --- | --- | --- |
 | `svc_newusermsg` | Tabela de serviços | Na primeira vez, associa o handler; confere o registro e segue o parser nativo |
 | `svc_serverinfo` | Tabela de serviços | Chama `admitServerInfo` antes do parser nativo |
+| `pfnRegisterVariable` | API do motor | Na primeira chamada da ClientDLL, registra o opt-in e começa o `pump` |
 | `HUD_Frame` | Tabela de funções do cliente | Detecta perda de conexão e chama `pump` |
 | `pfnHookUserMsg` | API do motor | Entrega os frames de `ExtPrecache` ao adaptador |
 | `pfnServerCmd`, `pfnClientCmd`, `pfnConsolePrint` | API do motor | Envia `epc1`, desconecta e informa o motivo |
 | `pNetAPI->Status` | API do motor | Informa se há conexão e desde quando |
+
+O opt-in é a variável `epc`, com `FCVAR_USERINFO`, e não `setinfo`. O motor grava em `config.cfg`
+as chaves de `setinfo`, então o opt-in sobreviveria à sessão e o jogo aberto pela Steam, sem o
+adaptador, pediria uma negociação que não conseguiria conduzir. Uma variável não arquivada não é
+gravada, e a chave que tem o nome de uma variável também não. Assim, o opt-in só existe com o
+adaptador instalado, e uma falha ao instalar deixa um cliente legado comum.
 
 O registro segue pelo parser nativo, e não por uma tabela privada. A associação é por nome e
 [sobrevive](transportBootstrap.md#registro-e-despacho-no-cliente) a `CL_ClearState`, à troca de
@@ -62,17 +67,48 @@ vai ao fim da mensagem: o parser nativo não roda e o motor não lê o restante 
 conexão nova é percebida quando o motor informa que não há conexão, ou quando o tempo de conexão
 regride, e nenhuma resposta é enviada à conexão antiga.
 
-As tabelas ficam apontando para a DLL, então ela se fixa no processo antes de alterá-las, e uma
-segunda chamada de `extendedPrecacheClientAttach` não muda nada.
+## Servidores com VAC
+
+O adaptador recusa servidores seguros. O servidor declara isso na
+[resposta de challenge](https://github.com/rehlds/ReHLDS/blob/196300131858d1e087267fb2fb60cb935f8f8873/rehlds/engine/sv_main.cpp#L2636),
+e o `hw.dll` guarda o valor em `cls.isVAC2Secure`. O adaptador lê esse campo a cada frame e antes
+dos parsers, porque o parser de serverinfo o sobrescreve. Se estiver ligado, imprime o motivo e
+pede `disconnect`, sem negociar nem chegar ao serverinfo.
+
+**Isso reduz o risco, mas não o elimina.** O `connect` sai na mesma chamada em que a resposta de
+challenge é tratada, antes do próximo frame, e nenhuma tabela permite agir antes disso. O
+adaptador só recusa depois, então a conexão a um servidor seguro chega a começar. Por isso, não
+use o inicializador para abrir servidores com VAC.
+
+`-insecure` não ajuda aqui: no `hw.dll`, seus dois usos ficam na ativação do servidor Steam, como
+em [`CSteam3Server::Activate`](https://github.com/rehlds/ReHLDS/blob/196300131858d1e087267fb2fb60cb935f8f8873/rehlds/engine/sv_steam3.cpp#L260).
+Ele afeta um servidor hospedado pelo próprio jogo, não o cliente que entra em outro.
+
+## Inicializador
+
+```text
+extendedPrecacheLauncher [--game-dir <pasta>] [-- <argumentos do jogo>]
+```
+
+Sem `--game-dir`, usa a pasta padrão da Steam. O inicializador confere o SHA-256 de `hl.exe` e
+`hw.dll` e abre o jogo suspenso, com a pasta dele como diretório atual e `-game cstrike`. A carga
+de `extendedPrecacheClient.dll`, que precisa estar ao lado dele, é a primeira coisa que a thread
+principal faz, antes do ponto de entrada do jogo. Nenhum arquivo da instalação é alterado, e fechar
+o jogo desfaz tudo.
+
+O resultado volta por um mapeamento e um evento nomeados pelo processo do jogo, porque o console
+do motor ainda não existe nesse momento. Uma falha ao instalar é informada e o jogo continua aberto,
+como cliente legado. O código de saída diz o que aconteceu.
 
 ## Limites
 
-O adaptador foi exercitado localmente no `hw.dll` real contra o plugin real, com perfis sintéticos
-e com o laboratório no lugar do carregador; as observações estão em
-[transportBootstrap.md](transportBootstrap.md#situação-em-execução). Falta o carregador, que também
-precisa colocar `epc=1` no `userinfo` antes de conectar: sem isso, o servidor trata o cliente como
-legado. **O comportamento com VAC não foi testado.** Alterar tabelas do motor em memória é o tipo
-de coisa que um anti-cheat pode punir, então o adaptador não deve ser usado em servidores seguros.
+O conjunto foi exercitado localmente com o `hw.dll` real contra o plugin real e com perfis
+sintéticos, inclusive sem nenhuma instrumentação no cliente; as observações estão em
+[transportBootstrap.md](transportBootstrap.md#situação-em-execução). **Nunca foi testado contra um
+servidor com VAC real:** a guarda foi exercitada ligando o campo em memória, sem VAC envolvido, e a
+origem do valor é observação estática. Alterar tabelas do motor em memória é o tipo de coisa que um
+anti-cheat pode punir.
 
-Cliente legado em `preferExtended` segue sem a prova de `checkLegacyAdmission`, aceitável enquanto
-nada amplia limites. A reserva é sintética. Não amplia limites nem habilita transporte.
+O build em Debug depende do CRT de depuração, então ainda não há pacote de distribuição. Cliente
+legado em `preferExtended` segue sem a prova de `checkLegacyAdmission`, aceitável enquanto nada
+amplia limites. A reserva é sintética. Não amplia limites nem habilita transporte.
