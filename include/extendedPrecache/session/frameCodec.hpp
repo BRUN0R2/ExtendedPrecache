@@ -5,6 +5,10 @@
 
 namespace extendedPrecache::session {
 
+// Reserved names of the control channel in the shared user message and command spaces.
+inline constexpr auto controlMessageName = std::string_view{"ExtPrecache"};
+inline constexpr auto controlCommandName = std::string_view{"epc1"};
+
 enum class MessageKind : std::uint8_t {
     serverOffer = 1,
     applicationContract,

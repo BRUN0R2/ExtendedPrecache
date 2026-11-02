@@ -44,12 +44,19 @@ void legacyRange(const MessageDefinition &message, const Schema &schema,
                 ErrorCode::unsupportedModule);
     }
 }
+constexpr auto badOpcode = 0U;
+// Native opcodes the data plane replaces or never emits, and those no audited table defines.
+constexpr auto suppressedServerOpcodes = std::array{badOpcode, 7U, 20U};
+constexpr auto firstReservedServerOpcode = 60U;
+constexpr auto firstReservedClientOpcode = 12U;
 auto dataOpcode(Direction direction, std::uint8_t opcode) -> bool {
-    constexpr auto server =
-        std::array<std::uint8_t, 12>{3, 6, 14, 15, 21, 22, 23, 29, 36, 40, 41, 43};
+    constexpr auto server = std::array{
+        Service::event,         Service::sound,        Service::schema,     Service::clientData,
+        Service::reliableEvent, Service::initialFrame, Service::effect,     Service::staticSound,
+        Service::decalName,     Service::fullFrame,    Service::deltaFrame, Service::resource};
     return direction == Direction::clientToServer
-               ? opcode == 7
-               : std::ranges::find(server, opcode) != server.end();
+               ? opcode == clientDataOpcode
+               : std::ranges::find(server, static_cast<Service>(opcode)) != server.end();
 }
 // Each record kind needs a live phase, so a service missing one of its phases would fail
 // only after the offer, when it first tried to send.
@@ -70,17 +77,21 @@ void dataServicePhases(const ServicePolicy &service) {
 void serviceCoverage(const ApplicationContract &contract, const ApplicationBindings &bindings,
                      std::uint32_t reliableBytes) {
     for (const auto direction : {Direction::serverToClient, Direction::clientToServer}) {
-        const auto count = direction == Direction::serverToClient ? 64U : 256U;
+        const auto count =
+            direction == Direction::serverToClient ? serverOpcodeCount : clientOpcodeCount;
         for (unsigned opcode = 0; opcode < count; ++opcode) {
             const auto *service = contract.service(direction, static_cast<std::uint8_t>(opcode));
             require(service != nullptr, ErrorCode::unsupportedModule);
             const auto data = dataOpcode(direction, service->opcode);
             require((service->mode == ServiceMode::data2) == data, ErrorCode::unsupportedContract);
             if (direction == Direction::serverToClient &&
-                (opcode == 0 || opcode == 7 || opcode == 20 || opcode >= 60)) {
+                (std::ranges::find(suppressedServerOpcodes, opcode) !=
+                     suppressedServerOpcodes.end() ||
+                 opcode >= firstReservedServerOpcode)) {
                 require(service->mode == ServiceMode::forbidden, ErrorCode::unsupportedModule);
             }
-            if (direction == Direction::clientToServer && (opcode == 0 || opcode >= 12)) {
+            if (direction == Direction::clientToServer &&
+                (opcode == badOpcode || opcode >= firstReservedClientOpcode)) {
                 require(service->mode == ServiceMode::forbidden, ErrorCode::unsupportedModule);
             }
             if (service->mode == ServiceMode::forbidden) {

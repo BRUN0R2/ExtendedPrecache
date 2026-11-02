@@ -1,6 +1,8 @@
 #pragma once
 #include <extendedPrecache/data/types.hpp>
 
+#include <utility>
+
 namespace extendedPrecache::data {
 enum class Service : std::uint8_t {
     event = 3,
@@ -36,6 +38,13 @@ enum class ResourceMessageKind : std::uint8_t {
     fatal = 255
 };
 enum class FrameKind : std::uint8_t { begin = 1, object, end };
+enum class SchemaKind : std::uint8_t { schema = 1, setEnd };
+// Services with one record type use this kind; fatal shares one value across services.
+inline constexpr auto singleRecordKind = std::uint8_t{1};
+inline constexpr auto fatalKind = std::uint8_t{255};
+inline constexpr auto clientDataOpcode = std::uint8_t{7};
+inline constexpr auto serverOpcodeCount = 64U;
+inline constexpr auto clientOpcodeCount = 256U;
 struct Route final {
     Direction direction;
     std::uint8_t opcode;
@@ -43,6 +52,17 @@ struct Route final {
     Delivery delivery;
     auto operator==(const Route &) const -> bool = default;
 };
+[[nodiscard]] constexpr auto isService(Route route, Service service) noexcept -> bool {
+    return route.opcode == std::to_underlying(service);
+}
+template <typename Kind>
+[[nodiscard]] constexpr auto hasKind(Route route, Kind kind) noexcept -> bool {
+    return route.kind == std::to_underlying(kind);
+}
+template <typename Kind>
+[[nodiscard]] constexpr auto kindWithin(Route route, Kind first, Kind last) noexcept -> bool {
+    return route.kind >= std::to_underlying(first) && route.kind <= std::to_underlying(last);
+}
 struct Envelope final {
     Route route;
     SessionNonce nonce;
