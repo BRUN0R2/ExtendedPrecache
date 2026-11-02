@@ -1,9 +1,9 @@
 # Bootstrap e barreira de transporte
 
 Estado: **investigação parcial** dos dois hashes de [engineAudit.md](engineAudit.md):
-estática nos dois, e em execução somente do lado do servidor. Não há transporte, hook, perfil
-ou adaptador aprovado. Os endereços identificam observações nesses artefatos e não são uma
-interface de integração nem autorizam instalar patches.
+estática nos dois e observada em execução nos dois, sob instrumentação local. Não há
+transporte, hook, perfil ou adaptador aprovado. Os endereços identificam observações nesses
+artefatos e não são uma interface de integração nem autorizam instalar patches.
 
 ## Servidor: entrada e retomada
 
@@ -76,6 +76,15 @@ ClientDLL, com validação explícita de ID, nome, tamanho e limite, conforme
 [negotiation.md](negotiation.md). Essas observações não demonstram que uma
 interceptação específica seja segura em execução.
 
+`RegUserMsg` não é privado: toda entrada nova
+[segue aos clientes conectados](https://github.com/rehlds/ReHLDS/blob/196300131858d1e087267fb2fb60cb935f8f8873/rehlds/engine/sv_main.cpp#L5112)
+no frame seguinte, e um cliente na barreira recebe essa cópia além da enviada pelo bootstrap.
+**Requisito:** registrar antes de haver cliente conectado, e não ao tratar `new`. O registro
+privado do cliente precisa aceitar a repetição do mesmo ID, nome e tamanho sem abrir outra
+sessão; sessão nova é uma oferta com outro nonce. A lista nativa sobrevive à troca de mapa e à
+reconexão, logo uma sessão nova pode encontrar a associação já presente e deve validá-la, como
+qualquer outra.
+
 O parser de serverinfo `0x101a78c0` chama o caminho de limpeza `0x101a1ae0`
 antes de verificar o protocolo. A rotina `0x101a18d0` libera estruturas e zera
 a região auditada do estado de cliente. O acordo e a reserva preparada devem
@@ -140,27 +149,29 @@ A tabela de evidências acima não inclui observação de execução.
 
 ## Situação em execução
 
-Em laboratório local, o [núcleo de sessão](sessionCore.md) real rodou dentro do servidor
-selecionado, sob instrumentação, com um cliente sintético que fala o protocolo 48 e executa
-o papel de cliente do mesmo núcleo. Os frames são reais, trafegados pelo netchan do motor.
-Isso é observação em execução do **lado do servidor**, não um binding de produção nem uma
-conexão do `hw.dll`. Os resultados permanecem locais.
+Em laboratório local, o [núcleo de sessão](sessionCore.md) real rodou sob instrumentação
+dentro do servidor selecionado, primeiro com um cliente sintético que fala o protocolo 48 e
+depois dentro do `hw.dll` selecionado, nos dois papéis do mesmo núcleo. Os frames são reais,
+trafegados pelo netchan do motor. Isso é observação em execução, não um binding de produção.
+Os resultados permanecem locais.
 
 | Ponto a provar | Servidor real | Cliente real (`hw.dll`) |
 | --- | --- | --- |
 | **Continuação:** corpo de `SV_New_f` executado uma única vez a partir do acordo, sem outro `new` do cliente | Observado | Não se aplica |
 | **Bloqueio:** `sendres`, `spawn` e `new` repetido retidos até a liberação | Observado | Não se aplica |
-| **Bootstrap:** os 26 frames pelos transportes de controle | Observado na emissão | Pendente: registro privado, sem callback nativo, sobrevivendo ao reset |
-| **Despacho:** `epc1` tratado antes da GameDLL | Observado, inclusive sob flood; falta o limite próprio acima | Pendente: emissão pelo cliente real |
+| **Bootstrap:** os 26 frames pelos transportes de controle | Observado na emissão | Observado: registro privado anterior ao serverinfo, sem callback nativo, e registro normal com o mesmo ID |
+| **Despacho:** `epc1` tratado antes da GameDLL | Observado, inclusive sob flood; falta o limite próprio acima | Observado na emissão |
 | **Drain:** predicado sobre mensagem, fragmentos e filas | Observado com dado pendente no commit e com perda | Não se aplica |
-| **Invalidação:** desconexão, conexão substituída e troca de mapa encerram a sessão | Observado | Pendente: reset, reserva e reconexão do cliente |
+| **Invalidação:** desconexão, conexão substituída e troca de mapa encerram a sessão | Observado | Observado: `retry` e troca de mapa abrem um acordo novo |
+| **Reset:** o acordo sobrevive a `CL_ClearState` | Não se aplica | Observado; falta a reserva concreta |
 
-Limites: um único cliente por vez; a instrumentação não é o caminho de produção; a reserva é
-sintética; a identidade usada para detectar conexão substituída (`connect_time`) e os
-endereços são observações deste hash, não uma interface aprovada. O endereço de `client_t` se
-repete entre conexões, logo não identifica a geração.
+Limites: um único cliente por vez, na mesma máquina; a instrumentação não é o caminho de
+produção; a reserva é sintética; a identidade usada para detectar conexão substituída
+(`connect_time`) e os endereços são observações destes hashes, não uma interface aprovada. O
+endereço de `client_t` se repete entre conexões, logo não identifica a geração. Com o
+`hw.dll`, a perda de pacotes não foi exercitada. O `retry` dele desconecta antes de conectar de
+novo, então a conexão substituída sem queda só foi exercitada pelo cliente sintético.
 
-Próximo passo: repetir os pontos pendentes com o `hw.dll` real e então levar a barreira do
-laboratório para o [plugin Metamod](metamodPlugin.md), que hoje é somente o ponto de carga.
-Registrar as evidências localmente, sem alterar os originais ou publicar fixtures, traces e
-resultados.
+Próximo passo: levar a barreira do laboratório para o [plugin Metamod](metamodPlugin.md), que
+hoje é somente o ponto de carga, com o limite próprio de `epc1`. Registrar as evidências
+localmente, sem alterar os originais ou publicar fixtures, traces e resultados.

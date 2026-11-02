@@ -18,16 +18,18 @@ gameplay antes da validação do catálogo e do carregamento previstos nesse con
    índice dependente de capacidade **antes de `SV_SendServerinfo`**. A fonte
    auditada emite deltas dentro dessa função, antes de `SV_SendUserReg` e de
    `ClientConnect`; um callback tardio do Metamod não basta.
-3. Para opt-in aceito, registrar uma única mensagem variável `ExtPrecache`
-   (`RegUserMsg(..., -1)`). Enviar seu registro SVC 39 antes do primeiro frame,
-   usando o ID alocado, nunca um ID fixo. Colisão de nome/size/ownership ou falta
+3. Registrar uma única mensagem variável `ExtPrecache` (`RegUserMsg(..., -1)`)
+   antes de haver cliente conectado, porque o motor envia toda entrada nova a quem
+   estiver conectado. Para opt-in aceito, enviar seu registro SVC 39 antes do primeiro
+   frame, usando o ID alocado, nunca um ID fixo. Colisão de nome/size/ownership ou falta
    de slot recusa o transporte; `RegUserMsg` pode devolver um registro existente,
    portanto resultado não zero sozinho não prova ownership.
 4. Cliente intercepta o registro e os frames antes da entrega à ClientDLL,
    inclusive antes de serverinfo. Esse estado fica fora da região zerada por
    `CL_ClearState`. Não depender de callback de HUD ou de ClientDLL já inicializada.
    O registro de bootstrap é consumido em uma tabela privada, sem chamar o
-   handler nativo prematuramente. O registro normal posterior ao serverinfo
+   handler nativo prematuramente. Repetir o mesmo registro não abre sessão; sessão
+   nova é uma oferta com outro nonce. O registro normal posterior ao serverinfo
    precisa manter o mesmo ID/nome/size; mudança nessa associação é erro.
 5. Servidor só libera o fluxo nativo depois de `clientCommitAck` válido, com
    mesmo snapshot, canal ainda válido e filas de controle confirmadas/drenadas.
