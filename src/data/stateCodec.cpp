@@ -9,23 +9,24 @@ void validateFrameBegin(FrameBegin begin) {
     require(begin.serverTime >= 0);
 }
 auto objectSchema(ObjectKey key, SchemaId id, const StateContext &context) -> const Schema & {
-    require(
-        context.objects.entityEntries > 0 && context.objects.entityEntries <= maxEntityEntries &&
-            context.objects.clientEntries > 0 && context.objects.clientEntries <= maxClientEntries,
-        ErrorCode::capacity);
+    require(context.objects.entityEntries.value > 0 &&
+                context.objects.entityEntries <= maxEntityEntries &&
+                context.objects.clientEntries.value > 0 &&
+                context.objects.clientEntries <= maxClientEntries,
+            ErrorCode::capacity);
     auto role = SchemaRole::entity;
     switch (key.kind) {
     case ObjectKind::entity:
-        require(key.id.value < context.objects.entityEntries, ErrorCode::capacity);
+        require(key.id.value < context.objects.entityEntries.value, ErrorCode::capacity);
         role = SchemaRole::entity;
         break;
     case ObjectKind::client:
-        require(key.id.value > 0 && key.id.value <= context.objects.clientEntries,
+        require(key.id.value > 0 && key.id.value <= context.objects.clientEntries.value,
                 ErrorCode::capacity);
         role = SchemaRole::client;
         break;
     case ObjectKind::weapon:
-        require(key.id.value < context.objects.weaponEntries, ErrorCode::capacity);
+        require(key.id.value < context.objects.weaponEntries.value, ErrorCode::capacity);
         role = SchemaRole::weapon;
         break;
     case ObjectKind::module:
@@ -34,7 +35,7 @@ auto objectSchema(ObjectKey key, SchemaId id, const StateContext &context) -> co
         role = SchemaRole::moduleState;
         break;
     case ObjectKind::staticObject:
-        require(key.id.value < context.objects.staticEntries, ErrorCode::capacity);
+        require(key.id.value < context.objects.staticEntries.value, ErrorCode::capacity);
         role = SchemaRole::entity;
         break;
     default:
@@ -53,7 +54,7 @@ auto encodeFrameBegin(FrameBegin begin) noexcept -> Result<Bytes> {
         detail::Writer writer{frameBeginBytes};
         writer.integer(begin.id.value);
         writer.integer(begin.base.value);
-        writer.integer(begin.changeCount);
+        writer.integer(begin.changeCount.value);
         writer.integer(begin.changeBytes.value);
         writer.f32(begin.serverTime);
         writer.zero(4);
@@ -65,7 +66,7 @@ auto decodeFrameBegin(std::span<const std::byte> bytes) noexcept -> Result<Frame
         detail::Reader reader{bytes};
         const FrameBegin begin{{reader.integer<std::uint32_t>()},
                                {reader.integer<std::uint32_t>()},
-                               reader.integer<std::uint32_t>(),
+                               {reader.integer<std::uint32_t>()},
                                {reader.integer<std::uint32_t>()},
                                reader.f32()};
         reader.zero(4);
@@ -170,7 +171,7 @@ auto encodeFrameEnd(FrameEnd end) noexcept -> Result<Bytes> {
                         !end.snapshotHash.isZero());
         detail::Writer writer{frameEndBytes};
         writer.integer(end.id.value);
-        writer.integer(end.changeCount);
+        writer.integer(end.changeCount.value);
         writer.bytes(end.snapshotHash.bytes);
         return std::move(writer).finish();
     });
@@ -179,7 +180,7 @@ auto decodeFrameEnd(std::span<const std::byte> bytes) noexcept -> Result<FrameEn
     return detail::protect([&] {
         detail::Reader reader{bytes};
         const FrameEnd result{{reader.integer<std::uint32_t>()},
-                              reader.integer<std::uint32_t>(),
+                              {reader.integer<std::uint32_t>()},
                               reader.identity<Digest>()};
         reader.end();
         detail::require(result.id.value > 0 && result.id.value <= maxSequence &&

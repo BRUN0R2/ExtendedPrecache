@@ -15,7 +15,7 @@ struct ObjectKey final {
 struct FrameBegin final {
     StateFrameId id;
     StateFrameId base;
-    std::uint32_t changeCount{};
+    ChangeCount changeCount;
     ByteCount changeBytes;
     float serverTime{};
     auto operator==(const FrameBegin &) const -> bool = default;
@@ -30,7 +30,7 @@ struct FrameObject final {
 };
 struct FrameEnd final {
     StateFrameId id;
-    std::uint32_t changeCount{};
+    ChangeCount changeCount;
     Digest snapshotHash;
     auto operator==(const FrameEnd &) const -> bool = default;
 };
@@ -56,7 +56,7 @@ struct StateContext final {
     std::span<const Schema> schemas;
     const ObjectBindings &bindings;
     ObjectLimits objects;
-    std::uint32_t moduleEntries{};
+    ModuleEntries moduleEntries;
     MapEpoch epoch;
     ByteCount frameBytes;
     RecordBudget records;
@@ -88,7 +88,7 @@ struct StateSnapshot final {
 enum class FrameDisposition : std::uint8_t { staged, applied, obsolete, needsRecovery };
 class FrameReceiver final {
   public:
-    FrameReceiver(StateContext context, const DigestProvider &provider, std::uint16_t window)
+    FrameReceiver(StateContext context, const DigestProvider &provider, SnapshotWindow window)
         : contextValue{std::move(context)}, digestProvider{provider}, windowFrames{window} {}
     [[nodiscard]] auto begin(Route route, FrameBegin frame) noexcept -> Result<FrameDisposition>;
     [[nodiscard]] auto object(Route route, const FrameObject &object) noexcept
@@ -113,7 +113,7 @@ class FrameReceiver final {
     auto failure(Failure error) noexcept -> std::unexpected<Failure>;
     StateContext contextValue;
     const DigestProvider &digestProvider;
-    std::uint16_t windowFrames;
+    SnapshotWindow windowFrames;
     std::array<std::optional<Pending>, 2> pending;
     std::deque<std::shared_ptr<const StateSnapshot>> retained;
     bool recoveryNeeded{};
@@ -123,7 +123,7 @@ class FrameReceiver final {
 
 class FrameLedger final {
   public:
-    explicit FrameLedger(std::uint16_t window) : windowFrames{window} {}
+    explicit FrameLedger(SnapshotWindow window) : windowFrames{window} {}
     [[nodiscard]] auto recordSent(std::shared_ptr<const StateSnapshot> snapshot, Delivery delivery,
                                   bool recovery = false) noexcept -> Result<void>;
     [[nodiscard]] auto acknowledge(FrameAck ack) noexcept -> Result<bool>;
@@ -137,7 +137,7 @@ class FrameLedger final {
         std::shared_ptr<const StateSnapshot> snapshot;
         bool acknowledged{};
     };
-    std::uint16_t windowFrames;
+    SnapshotWindow windowFrames;
     StateFrameId lastSent{};
     StateFrameId retiredThrough{};
     std::optional<FrameAck> recoveryFrame;

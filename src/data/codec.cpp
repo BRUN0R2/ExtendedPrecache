@@ -21,7 +21,7 @@ auto stateContext(const CodecContext &context, RecordBudget budget) -> StateCont
             context.application.definition().schemas,
             *context.bindings.objects,
             context.application.definition().objects,
-            narrow(context.application.definition().modules.size()),
+            {narrow(context.application.definition().modules.size())},
             context.epoch,
             context.application.definition().limits.stateFrameBytes,
             budget};
@@ -125,9 +125,9 @@ void semantic(const CatalogBegin &begin, const CodecContext &context) {
     const auto &required = context.requirements.vector();
     require(begin.totalBytes.value ==
                     required.get<session::CapabilityField::manifestBytes>().value &&
-                begin.resourceCount ==
+                begin.resourceCount.value ==
                     required.get<session::CapabilityField::resourceEntries>().value &&
-                begin.consistencyCount ==
+                begin.consistencyCount.value ==
                     required.get<session::CapabilityField::consistencyEntries>().value,
             ErrorCode::capacity);
 }

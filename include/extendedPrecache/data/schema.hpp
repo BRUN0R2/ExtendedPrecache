@@ -103,7 +103,7 @@ class ReferenceValidator {
 };
 struct ValueContext final {
     const ReferenceValidator &resources;
-    std::uint32_t entityEntries{maxEntityEntries};
+    EntityEntries entityEntries{maxEntityEntries};
 };
 [[nodiscard]] auto encodeValues(const Schema &schema, const ValueSet &values, ValueContext context,
                                 RecordBudget budget = {}) noexcept -> Result<Bytes>;

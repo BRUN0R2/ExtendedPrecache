@@ -9,8 +9,8 @@ template <typename T> auto atomAs(const Atom &atom) -> const T & {
     return *value;
 }
 void validEntity(std::uint16_t value, ValueContext context) {
-    require(context.entityEntries > 0 && context.entityEntries <= maxEntityEntries &&
-                value < context.entityEntries,
+    require(context.entityEntries.value > 0 && context.entityEntries <= maxEntityEntries &&
+                value < context.entityEntries.value,
             ErrorCode::capacity);
 }
 void writeAtom(Writer &writer, const FieldDefinition &field, const Atom &atom,

@@ -37,8 +37,9 @@ void objectRoute(Route route, Route begin, ObjectKind kind) {
 }
 auto maxFrameObjects(const StateContext &context) -> std::uint64_t {
     const auto &limits = context.objects;
-    return add(add(limits.entityEntries, limits.clientEntries),
-               add(add(limits.weaponEntries, limits.staticEntries), context.moduleEntries));
+    return add(add(limits.entityEntries.value, limits.clientEntries.value),
+               add(add(limits.weaponEntries.value, limits.staticEntries.value),
+                   context.moduleEntries.value));
 }
 } // namespace
 auto FrameReceiver::failure(Failure error) noexcept -> std::unexpected<Failure> {
@@ -56,7 +57,7 @@ auto FrameReceiver::recoveryRequest() const noexcept -> std::optional<StateFrame
 }
 auto FrameReceiver::begin(Route route, FrameBegin frame) noexcept -> Result<FrameDisposition> {
     auto result = detail::protect([&] {
-        require(!failed && windowFrames > 0, ErrorCode::wrongPhase);
+        require(!failed && windowFrames.value > 0, ErrorCode::wrongPhase);
         validateFrameBegin(frame);
         frameRoute(route, FrameKind::begin, frame);
         const auto index = flow(route);
@@ -67,16 +68,17 @@ auto FrameReceiver::begin(Route route, FrameBegin frame) noexcept -> Result<Fram
         require(!prior || route.opcode != static_cast<std::uint8_t>(Service::initialFrame),
                 ErrorCode::wrongPhase);
         within(frame.changeBytes.value, contextValue.frameBytes.value);
-        within(frame.changeCount, maxFrameObjects(contextValue));
-        require(multiply(frame.changeCount, frameObjectHeaderBytes) <= frame.changeBytes.value);
+        within(frame.changeCount.value, maxFrameObjects(contextValue));
+        require(multiply(frame.changeCount.value, frameObjectHeaderBytes) <=
+                frame.changeBytes.value);
         Pending next{frame, route, {}, 0, prior && frame.id.value <= prior->begin.id.value, false};
-        next.ownedBytes = multiply(frame.changeCount, sizeof(FrameObject));
+        next.ownedBytes = multiply(frame.changeCount.value, sizeof(FrameObject));
         within(next.ownedBytes, contextValue.records.ownedBytes.value);
         if (index == 0 && next.discard) {
             return FrameDisposition::obsolete;
         }
         if (!next.discard) {
-            next.changes.reserve(frame.changeCount);
+            next.changes.reserve(frame.changeCount.value);
         }
         if (!next.discard && prior) {
             require(frame.serverTime >= prior->begin.serverTime);
@@ -131,7 +133,7 @@ auto FrameReceiver::object(Route route, const FrameObject &value) noexcept
             return FrameDisposition::obsolete;
         }
         require(stage.changes.empty() || stage.changes.back().key < value.key);
-        require(stage.changes.size() < stage.begin.changeCount);
+        require(stage.changes.size() < stage.begin.changeCount.value);
         within(add(stage.bytes, encoded.size()), stage.begin.changeBytes.value);
         stage.bytes += encoded.size();
         auto owned = multiply(value.fields.size(), sizeof(std::optional<FieldValue>));
@@ -156,7 +158,7 @@ auto FrameReceiver::end(Route route, FrameEnd frame) noexcept -> Result<FrameDis
         const auto index = flow(route);
         get(encodeFrameEnd(frame));
         frameMessageRoute(route, FrameKind::end);
-        within(frame.changeCount, maxFrameObjects(contextValue));
+        within(frame.changeCount.value, maxFrameObjects(contextValue));
         const auto prior = current();
         if (index == 0 && prior && frame.id.value <= prior->begin.id.value) {
             if (pending[index] && pending[index]->begin.id == frame.id) {
@@ -186,7 +188,7 @@ auto FrameReceiver::end(Route route, FrameEnd frame) noexcept -> Result<FrameDis
             pending[index].reset();
             return FrameDisposition::obsolete;
         }
-        if (stage.missingBase || stage.changes.size() != frame.changeCount ||
+        if (stage.missingBase || stage.changes.size() != frame.changeCount.value ||
             stage.bytes != stage.begin.changeBytes.value) {
             require(index == 0, ErrorCode::malformed);
             pending[index].reset();
@@ -213,7 +215,7 @@ auto FrameReceiver::end(Route route, FrameEnd frame) noexcept -> Result<FrameDis
         require(snapshot.digest == frame.snapshotHash, ErrorCode::digestMismatch);
         const auto recoveryComplete = snapshot.begin.base.value == 0 && index == 1;
         retained.push_back(std::make_shared<const StateSnapshot>(std::move(snapshot)));
-        while (retained.size() > windowFrames) {
+        while (retained.size() > windowFrames.value) {
             retained.pop_front();
         }
         pending[index].reset();
@@ -231,7 +233,7 @@ auto FrameReceiver::end(Route route, FrameEnd frame) noexcept -> Result<FrameDis
 auto FrameLedger::recordSent(std::shared_ptr<const StateSnapshot> snapshot, Delivery delivery,
                              bool recovery) noexcept -> Result<void> {
     return detail::protect([&] {
-        require(windowFrames > 0 && snapshot && !snapshot->digest.isZero() && !recoveryFrame,
+        require(windowFrames.value > 0 && snapshot && !snapshot->digest.isZero() && !recoveryFrame,
                 ErrorCode::wrongPhase);
         validateFrameBegin(snapshot->begin);
         require(snapshot->begin.id.value > lastSent.value, ErrorCode::sequence);
@@ -254,7 +256,7 @@ auto FrameLedger::recordSent(std::shared_ptr<const StateSnapshot> snapshot, Deli
         if (recovery) {
             recoveryFrame = FrameAck{snapshot->begin.id, snapshot->digest};
         }
-        while (retained.size() > windowFrames) {
+        while (retained.size() > windowFrames.value) {
             retiredThrough = retained.front().snapshot->begin.id;
             retained.pop_front();
         }

@@ -35,7 +35,7 @@ struct EffectContext final {
     const ApplicationContract &application;
     const Catalog &catalog;
     const EffectBindings &bindings;
-    std::uint32_t entityEntries;
+    EntityEntries entityEntries;
     RecordBudget budget;
 };
 [[nodiscard]] auto encodeEffect(const EffectMessage &effect, Delivery delivery, Phase phase,

@@ -174,10 +174,10 @@ auto preflightApplication(const ApplicationContract &contract, PreflightContext 
                              add(maxOwned[index],
                                  multiply(maxFields[index], sizeof(std::optional<FieldValue>))))));
         };
-        addObjects(app.objects.entityEntries, SchemaRole::entity);
-        addObjects(app.objects.clientEntries, SchemaRole::client);
-        addObjects(app.objects.weaponEntries, SchemaRole::weapon);
-        addObjects(app.objects.staticEntries, SchemaRole::entity);
+        addObjects(app.objects.entityEntries.value, SchemaRole::entity);
+        addObjects(app.objects.clientEntries.value, SchemaRole::client);
+        addObjects(app.objects.weaponEntries.value, SchemaRole::weapon);
+        addObjects(app.objects.staticEntries.value, SchemaRole::entity);
         for (const auto &module : app.modules) {
             get(bindings.approveModule(module));
             const auto identity =
@@ -229,8 +229,9 @@ auto preflightApplication(const ApplicationContract &contract, PreflightContext 
                         [&](const Schema &schema) { return bindings.allows(object, schema.id); }),
                     ErrorCode::unsupportedModule);
         }
-        auto minimum = add(multiply(app.limits.snapshotWindowFrames + std::uint64_t{1}, ownedState),
-                           multiply(2, changesOwned));
+        auto minimum =
+            add(multiply(app.limits.snapshotWindowFrames.value + std::uint64_t{1}, ownedState),
+                multiply(2, changesOwned));
         minimum = add(minimum, multiply(2, stateBytes));
         minimum = add(
             minimum, add(required.get<session::CapabilityField::manifestBytes>().value,
