@@ -80,12 +80,9 @@ auto writeCatalog(const CatalogData &data, std::uint32_t maximum) -> Bytes {
     }
     return std::move(writer).finish();
 }
-void validateData(const CatalogData &data, CatalogContext context) {
-    require(session::admitRequirements(context.requirements, context.selected).has_value(),
-            ErrorCode::capacity);
-    require(!data.schemaSetHash.isZero() && data.schemaSetHash == context.schemaSetHash,
-            ErrorCode::digestMismatch);
-    const auto &required = context.requirements.vector();
+// Returns the total resources, which every later table is measured against.
+auto validateCounts(const CatalogData &data, const session::CapabilityVector &required)
+    -> std::uint64_t {
     std::uint64_t count{};
     for (std::size_t index = 0; index < data.counts.size(); ++index) {
         require(data.counts[index] == required.wireValues()[index], ErrorCode::capacity);
@@ -98,14 +95,18 @@ void validateData(const CatalogData &data, CatalogContext context) {
                 data.assets.size() <= count && data.rules.size() <= count &&
                 !data.resources.empty(),
             ErrorCode::capacity);
-    AllocationBudget allocation{context.ownedBytes};
+    return count;
+}
+void chargeTables(const CatalogData &data, const session::CapabilityVector &required,
+                  AllocationBudget &allocation) {
     allocation.charge(
-        add(sizeof(CatalogData),
-            context.requirements.vector().get<session::CapabilityField::manifestBytes>().value));
+        add(sizeof(CatalogData), required.get<session::CapabilityField::manifestBytes>().value));
     allocation.charge(multiply(data.resources.size(), sizeof(Resource)));
     allocation.charge(multiply(data.assets.size(), sizeof(Asset)));
     allocation.charge(multiply(data.rules.size(), sizeof(ConsistencyRule)));
-    std::set<std::pair<ResourceKind, std::string_view>> names;
+}
+void validateAssets(const CatalogData &data, const session::CapabilityVector &required,
+                    AllocationBudget &allocation) {
     std::set<std::string_view> assetPaths;
     for (std::size_t index = 0; index < data.assets.size(); ++index) {
         const auto &asset = data.assets[index];
@@ -118,8 +119,43 @@ void validateData(const CatalogData &data, CatalogContext context) {
         require(assetPaths.insert(asset.path).second, ErrorCode::assetFailure);
         allocation.charge(asset.path.size());
     }
-    std::vector<bool> used(data.assets.size());
-    std::uint32_t nextAsset{};
+}
+void validateResourceType(const Resource &row, ResourceKind kind, std::size_t category) {
+    const auto type = static_cast<std::uint8_t>(row.type);
+    require(kind == ResourceKind::model ? type >= 1 && type <= 4 : type == category + 4);
+}
+// Assets first appear in ordinal order, so one catalog has one canonical manifest.
+struct AssetFirstUse final {
+    std::vector<bool> used;
+    std::uint32_t next{};
+};
+void markAssetUse(AssetFirstUse &uses, AssetOrdinal asset) {
+    if (!uses.used[asset.value]) {
+        require(asset.value == uses.next);
+        uses.used[asset.value] = true;
+        ++uses.next;
+    }
+}
+void validateResourceRole(const Resource &row, ResourceKind kind, std::uint32_t id,
+                          const CatalogData &data) {
+    if (row.type == ResourceType::world) {
+        require(id == 1);
+    }
+    if (kind == ResourceKind::model && id == 1) {
+        require(row.type == ResourceType::world);
+    }
+    if (row.type == ResourceType::inlineModel) {
+        require(row.parent == ResourceReference{ResourceKind::model, {1}} &&
+                row.asset == data.resources.front().asset);
+        inlineModelName(row.name);
+    } else {
+        require(!row.parent && row.name.front() != inlineModelPrefix);
+    }
+    require(kind != ResourceKind::sound || row.name.front() != sentencePrefix);
+}
+void validateResources(const CatalogData &data, AllocationBudget &allocation) {
+    std::set<std::pair<ResourceKind, std::string_view>> names;
+    AssetFirstUse uses{std::vector<bool>(data.assets.size())};
     std::size_t ordinal{};
     for (std::size_t category = 0; category < data.counts.size(); ++category) {
         const auto kind = static_cast<ResourceKind>(category + 1);
@@ -131,30 +167,14 @@ void validateData(const CatalogData &data, CatalogContext context) {
             path(row.name, kind == ResourceKind::decal ? maxDecalNameBytes : maxNameBytes);
             require(names.emplace(kind, row.name).second);
             allocation.charge(row.name.size());
-            const auto type = static_cast<std::uint8_t>(row.type);
-            require(kind == ResourceKind::model ? type >= 1 && type <= 4 : type == category + 4);
-            if (!used[row.asset.value]) {
-                require(row.asset.value == nextAsset);
-                used[row.asset.value] = true;
-                ++nextAsset;
-            }
-            if (row.type == ResourceType::world) {
-                require(id == 1);
-            }
-            if (kind == ResourceKind::model && id == 1) {
-                require(row.type == ResourceType::world);
-            }
-            if (row.type == ResourceType::inlineModel) {
-                require(row.parent == ResourceReference{ResourceKind::model, {1}} &&
-                        row.asset == data.resources.front().asset);
-                inlineModelName(row.name);
-            } else {
-                require(!row.parent && row.name.front() != inlineModelPrefix);
-            }
-            require(kind != ResourceKind::sound || row.name.front() != sentencePrefix);
+            validateResourceType(row, kind, category);
+            markAssetUse(uses, row.asset);
+            validateResourceRole(row, kind, id, data);
         }
     }
-    require(nextAsset == data.assets.size());
+    require(uses.next == data.assets.size());
+}
+void validateRules(const CatalogData &data, std::uint64_t count) {
     std::optional<ResourceOrdinal> previous;
     for (const auto &rule : data.rules) {
         require(rule.resource.value < count &&
@@ -168,6 +188,103 @@ void validateData(const CatalogData &data, CatalogContext context) {
             bounds(*rule.bounds);
         }
     }
+}
+void validateData(const CatalogData &data, CatalogContext context) {
+    require(session::admitRequirements(context.requirements, context.selected).has_value(),
+            ErrorCode::capacity);
+    require(!data.schemaSetHash.isZero() && data.schemaSetHash == context.schemaSetHash,
+            ErrorCode::digestMismatch);
+    const auto &required = context.requirements.vector();
+    const auto count = validateCounts(data, required);
+    AllocationBudget allocation{context.ownedBytes};
+    chargeTables(data, required, allocation);
+    validateAssets(data, required, allocation);
+    validateResources(data, allocation);
+    validateRules(data, count);
+}
+// The identity is proven first, so nothing below parses bytes the caller did not expect.
+void verifyManifestIdentity(std::span<const std::byte> bytes, CatalogContext context,
+                            Digest expected, const DigestProvider &provider) {
+    within(bytes.size(), context.ownedBytes.value);
+    require(bytes.size() ==
+                context.requirements.vector().get<session::CapabilityField::manifestBytes>().value,
+            ErrorCode::byteBudget);
+    within(bytes.size(),
+           context.selected.vector().get<session::CapabilityField::manifestBytes>().value);
+    require(!expected.isZero() && hash(bytes, provider) == expected, ErrorCode::digestMismatch);
+}
+struct ManifestSizes final {
+    ResourceCount resources;
+    AssetCount assets;
+    ConsistencyCount rules;
+};
+auto readManifestSizes(Reader &reader, CatalogContext context) -> ManifestSizes {
+    require(reader.text(catalogMagic.size(), catalogMagic.size()) == catalogMagic);
+    require(reader.integer<std::uint16_t>() == catalogVersion, ErrorCode::unsupportedContract);
+    reader.zero(2);
+    const ManifestSizes sizes{{reader.integer<std::uint32_t>()},
+                              {reader.integer<std::uint32_t>()},
+                              {reader.integer<std::uint32_t>()}};
+    const auto &required = context.requirements.vector();
+    require(sizes.resources.value ==
+                    required.get<session::CapabilityField::resourceEntries>().value &&
+                sizes.rules.value ==
+                    required.get<session::CapabilityField::consistencyEntries>().value &&
+                sizes.assets.value <= sizes.resources.value &&
+                sizes.rules.value <= sizes.resources.value,
+            ErrorCode::capacity);
+    return sizes;
+}
+auto readResource(Reader &reader, AllocationBudget &allocation) -> Resource {
+    Resource row{};
+    row.ordinal = {reader.integer<std::uint32_t>()};
+    row.reference.kind = reader.enumeration<ResourceKind>();
+    row.type = reader.enumeration<ResourceType>();
+    require(reader.integer<std::uint16_t>() == 1);
+    row.reference.id = {reader.integer<std::uint32_t>()};
+    row.asset = {reader.integer<std::uint32_t>()};
+    const auto parentKind = reader.integer<std::uint8_t>();
+    reader.zero(3);
+    const auto parentId = reader.integer<std::uint32_t>();
+    if (parentKind != 0 || parentId != 0) {
+        require(parentKind != 0 && parentId != 0);
+        row.parent = ResourceReference{static_cast<ResourceKind>(parentKind), {parentId}};
+    }
+    const auto length = reader.integer<std::uint16_t>();
+    reader.zero(2);
+    allocation.charge(length);
+    row.name = reader.text(length, maxNameBytes);
+    return row;
+}
+auto readAsset(Reader &reader, AllocationBudget &allocation) -> Asset {
+    Asset asset{};
+    asset.ordinal = {reader.integer<std::uint32_t>()};
+    asset.fileBytes = {reader.integer<std::uint32_t>()};
+    asset.digest = reader.identity<Digest>();
+    const auto length = reader.integer<std::uint16_t>();
+    const auto flags = reader.integer<std::uint16_t>();
+    require(flags <= 1);
+    asset.downloadAllowed = flags == 1;
+    allocation.charge(length);
+    asset.path = reader.text(length, maxNameBytes);
+    return asset;
+}
+auto readRule(Reader &reader) -> ConsistencyRule {
+    ConsistencyRule rule{};
+    rule.resource = {reader.integer<std::uint32_t>()};
+    rule.mode = reader.enumeration<ConsistencyMode>();
+    reader.zero(3);
+    if (rule.mode == ConsistencyMode::exactBounds || rule.mode == ConsistencyMode::withinBounds) {
+        Bounds value{};
+        for (auto &item : value.mins) {
+            item = reader.f32();
+        }
+        for (auto &item : value.maxs) {
+            item = reader.f32();
+        }
+        rule.bounds = value;
+    }
+    return rule;
 }
 } // namespace
 struct Catalog::Storage final {
@@ -205,30 +322,9 @@ auto Catalog::decode(std::span<const std::byte> bytes, CatalogContext context,
                      Digest expectedCatalogHash, const DigestProvider &provider) noexcept
     -> Result<Catalog> {
     return detail::protect([&] {
-        within(bytes.size(), context.ownedBytes.value);
-        require(
-            bytes.size() ==
-                context.requirements.vector().get<session::CapabilityField::manifestBytes>().value,
-            ErrorCode::byteBudget);
-        within(bytes.size(),
-               context.selected.vector().get<session::CapabilityField::manifestBytes>().value);
-        require(!expectedCatalogHash.isZero() && hash(bytes, provider) == expectedCatalogHash,
-                ErrorCode::digestMismatch);
+        verifyManifestIdentity(bytes, context, expectedCatalogHash, provider);
         Reader reader{bytes};
-        require(reader.text(catalogMagic.size(), catalogMagic.size()) == catalogMagic);
-        require(reader.integer<std::uint16_t>() == catalogVersion, ErrorCode::unsupportedContract);
-        reader.zero(2);
-        const auto count = reader.integer<std::uint32_t>();
-        const auto assets = reader.integer<std::uint32_t>();
-        const auto rules = reader.integer<std::uint32_t>();
-        require(count == context.requirements.vector()
-                             .get<session::CapabilityField::resourceEntries>()
-                             .value &&
-                    rules == context.requirements.vector()
-                                 .get<session::CapabilityField::consistencyEntries>()
-                                 .value &&
-                    assets <= count && rules <= count,
-                ErrorCode::capacity);
+        const auto sizes = readManifestSizes(reader, context);
         CatalogData data{};
         for (auto &value : data.counts) {
             value = reader.integer<std::uint32_t>();
@@ -236,66 +332,23 @@ auto Catalog::decode(std::span<const std::byte> bytes, CatalogContext context,
         data.schemaSetHash = reader.identity<Digest>();
         AllocationBudget allocation{context.ownedBytes};
         allocation.charge(add(sizeof(CatalogData), bytes.size()));
-        allocation.charge(
-            add(add(multiply(count, sizeof(Resource)), multiply(assets, sizeof(Asset))),
-                multiply(rules, sizeof(ConsistencyRule))));
-        reader.count(count, resourceHeaderBytes + minimumNameBytes);
-        data.resources.reserve(count);
-        for (std::uint32_t index = 0; index < count; ++index) {
-            Resource row{};
-            row.ordinal = {reader.integer<std::uint32_t>()};
-            row.reference.kind = reader.enumeration<ResourceKind>();
-            row.type = reader.enumeration<ResourceType>();
-            require(reader.integer<std::uint16_t>() == 1);
-            row.reference.id = {reader.integer<std::uint32_t>()};
-            row.asset = {reader.integer<std::uint32_t>()};
-            const auto parentKind = reader.integer<std::uint8_t>();
-            reader.zero(3);
-            const auto parentId = reader.integer<std::uint32_t>();
-            if (parentKind != 0 || parentId != 0) {
-                require(parentKind != 0 && parentId != 0);
-                row.parent = ResourceReference{static_cast<ResourceKind>(parentKind), {parentId}};
-            }
-            const auto length = reader.integer<std::uint16_t>();
-            reader.zero(2);
-            allocation.charge(length);
-            row.name = reader.text(length, maxNameBytes);
-            data.resources.push_back(std::move(row));
+        allocation.charge(add(add(multiply(sizes.resources.value, sizeof(Resource)),
+                                  multiply(sizes.assets.value, sizeof(Asset))),
+                              multiply(sizes.rules.value, sizeof(ConsistencyRule))));
+        reader.count(sizes.resources.value, resourceHeaderBytes + minimumNameBytes);
+        data.resources.reserve(sizes.resources.value);
+        for (std::uint32_t index = 0; index < sizes.resources.value; ++index) {
+            data.resources.push_back(readResource(reader, allocation));
         }
-        reader.count(assets, assetHeaderBytes + minimumNameBytes);
-        data.assets.reserve(assets);
-        for (std::uint32_t index = 0; index < assets; ++index) {
-            Asset asset{};
-            asset.ordinal = {reader.integer<std::uint32_t>()};
-            asset.fileBytes = {reader.integer<std::uint32_t>()};
-            asset.digest = reader.identity<Digest>();
-            const auto length = reader.integer<std::uint16_t>();
-            const auto flags = reader.integer<std::uint16_t>();
-            require(flags <= 1);
-            asset.downloadAllowed = flags == 1;
-            allocation.charge(length);
-            asset.path = reader.text(length, maxNameBytes);
-            data.assets.push_back(std::move(asset));
+        reader.count(sizes.assets.value, assetHeaderBytes + minimumNameBytes);
+        data.assets.reserve(sizes.assets.value);
+        for (std::uint32_t index = 0; index < sizes.assets.value; ++index) {
+            data.assets.push_back(readAsset(reader, allocation));
         }
-        reader.count(rules, 8);
-        data.rules.reserve(rules);
-        for (std::uint32_t index = 0; index < rules; ++index) {
-            ConsistencyRule rule{};
-            rule.resource = {reader.integer<std::uint32_t>()};
-            rule.mode = reader.enumeration<ConsistencyMode>();
-            reader.zero(3);
-            if (rule.mode == ConsistencyMode::exactBounds ||
-                rule.mode == ConsistencyMode::withinBounds) {
-                Bounds value{};
-                for (auto &item : value.mins) {
-                    item = reader.f32();
-                }
-                for (auto &item : value.maxs) {
-                    item = reader.f32();
-                }
-                rule.bounds = value;
-            }
-            data.rules.push_back(rule);
+        reader.count(sizes.rules.value, 8);
+        data.rules.reserve(sizes.rules.value);
+        for (std::uint32_t index = 0; index < sizes.rules.value; ++index) {
+            data.rules.push_back(readRule(reader));
         }
         reader.end();
         return get(create(std::move(data), context, provider));
