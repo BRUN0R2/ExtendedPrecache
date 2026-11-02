@@ -4,14 +4,15 @@
 namespace extendedPrecache::data {
 auto encodeCatalogBegin(CatalogBegin begin) noexcept -> Result<Bytes> {
     return detail::protect([&] {
-        detail::require(begin.totalBytes.value >= catalogHeaderBytes && begin.resourceCount > 0 &&
-                        begin.assetCount <= begin.resourceCount &&
-                        begin.consistencyCount <= begin.resourceCount);
+        detail::require(begin.totalBytes.value >= catalogHeaderBytes &&
+                        begin.resourceCount.value > 0 &&
+                        begin.assetCount.value <= begin.resourceCount.value &&
+                        begin.consistencyCount.value <= begin.resourceCount.value);
         detail::Writer writer{catalogBeginBytes};
         writer.integer(begin.totalBytes.value);
-        writer.integer(begin.resourceCount);
-        writer.integer(begin.assetCount);
-        writer.integer(begin.consistencyCount);
+        writer.integer(begin.resourceCount.value);
+        writer.integer(begin.assetCount.value);
+        writer.integer(begin.consistencyCount.value);
         return std::move(writer).finish();
     });
 }
@@ -19,9 +20,9 @@ auto decodeCatalogBegin(std::span<const std::byte> bytes) noexcept -> Result<Cat
     return detail::protect([&] {
         detail::Reader reader{bytes};
         const CatalogBegin result{{reader.integer<std::uint32_t>()},
-                                  reader.integer<std::uint32_t>(),
-                                  reader.integer<std::uint32_t>(),
-                                  reader.integer<std::uint32_t>()};
+                                  {reader.integer<std::uint32_t>()},
+                                  {reader.integer<std::uint32_t>()},
+                                  {reader.integer<std::uint32_t>()}};
         reader.end();
         detail::get(encodeCatalogBegin(result));
         return result;
@@ -31,9 +32,9 @@ auto verifyCatalogBegin(CatalogBegin begin, const Catalog &catalog) noexcept -> 
     return detail::protect([&] {
         const auto &data = catalog.data();
         detail::require(begin.totalBytes.value == catalog.bytes().size() &&
-                        begin.resourceCount == data.resources.size() &&
-                        begin.assetCount == data.assets.size() &&
-                        begin.consistencyCount == data.rules.size());
+                        begin.resourceCount.value == data.resources.size() &&
+                        begin.assetCount.value == data.assets.size() &&
+                        begin.consistencyCount.value == data.rules.size());
     });
 }
 auto encodeChunk(ChunkView chunk, ByteCount maxPayload, RecordBudget budget) noexcept

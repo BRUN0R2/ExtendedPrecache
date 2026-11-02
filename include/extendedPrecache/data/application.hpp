@@ -7,7 +7,7 @@ struct ApplicationLimits final {
     ByteCount schemaSetBytes;
     ByteCount contractArtifactBytes;
     ByteCount stateFrameBytes;
-    std::uint16_t snapshotWindowFrames{};
+    SnapshotWindow snapshotWindowFrames;
     ByteCount unreliableMessageBytes;
     session::DurationMs loadTimeout;
     session::DurationMs consistencyTimeout;

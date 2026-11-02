@@ -10,7 +10,9 @@ alterá-lo.
 ## Fronteiras da API
 
 Os headers em `include/extendedPrecache/data` usam IDs distintos para recursos,
-ordinais, schemas, campos, módulos, frames, entidades, offsets e tempos.
+ordinais, schemas, campos, módulos, frames, entidades, offsets e tempos, e tipos
+próprios para capacidades de objetos, janela de snapshots e contagens de catálogo
+e de frame. O formato de wire não muda com esses tipos.
 `ResourceReference` combina categoria e ID de domínio u32; o catálogo confere a
 categoria, o intervalo e a nulabilidade. Índices nativos zero/um continuam sendo
 responsabilidade dos bindings especificados em [indexMapping.md](indexMapping.md).

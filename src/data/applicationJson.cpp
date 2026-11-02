@@ -97,7 +97,7 @@ auto parseLimits(const Json &object) -> ApplicationLimits {
     return {bytes("schemaSetBytes", 2),
             bytes("contractArtifactBytes", 1),
             bytes("stateFrameBytes", 1),
-            static_cast<std::uint16_t>(number(object, "snapshotWindowFrames", 1, 65535)),
+            {static_cast<std::uint16_t>(number(object, "snapshotWindowFrames", 1, 65535))},
             {static_cast<std::uint32_t>(
                 number(object, "unreliableMessageBytes", envelopeBytes, maxMessageBytes))},
             {static_cast<std::uint32_t>(
@@ -111,10 +111,11 @@ auto parseLimits(const Json &object) -> ApplicationLimits {
 }
 auto parseObjects(const Json &object) -> ObjectLimits {
     closed(object, {"entityEntries", "clientEntries", "weaponEntries", "staticEntries"});
-    return {static_cast<std::uint32_t>(number(object, "entityEntries", 1, maxEntityEntries)),
-            static_cast<std::uint32_t>(number(object, "clientEntries", 1, maxClientEntries)),
-            static_cast<std::uint32_t>(number(object, "weaponEntries", 0, 65535)),
-            static_cast<std::uint32_t>(number(object, "staticEntries", 0, maxMetadataBytes))};
+    return {
+        {static_cast<std::uint32_t>(number(object, "entityEntries", 1, maxEntityEntries.value))},
+        {static_cast<std::uint32_t>(number(object, "clientEntries", 1, maxClientEntries.value))},
+        {static_cast<std::uint32_t>(number(object, "weaponEntries", 0, 65535))},
+        {static_cast<std::uint32_t>(number(object, "staticEntries", 0, maxMetadataBytes))}};
 }
 auto parseSchemas(const Json &root) -> std::vector<Schema> {
     std::vector<Schema> schemas;

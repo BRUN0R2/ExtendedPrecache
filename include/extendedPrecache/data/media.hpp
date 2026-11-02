@@ -27,7 +27,7 @@ class SoundBindings {
 struct SoundContext final {
     const ReferenceValidator &resources;
     const SoundBindings &bindings;
-    std::uint32_t entityEntries{maxEntityEntries};
+    EntityEntries entityEntries{maxEntityEntries};
     RecordBudget budget;
 };
 [[nodiscard]] auto encodeSound(const Sound &sound, Route route, Phase phase,
@@ -54,7 +54,7 @@ struct EventContext final {
     const ApplicationContract &application;
     const ReferenceValidator &resources;
     const EventBindings &bindings;
-    std::uint32_t entityEntries{maxEntityEntries};
+    EntityEntries entityEntries{maxEntityEntries};
     RecordBudget budget;
 };
 [[nodiscard]] auto encodeEvent(const Event &event, Route route, Phase phase,

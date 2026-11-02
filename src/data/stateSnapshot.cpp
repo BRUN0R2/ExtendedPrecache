@@ -112,7 +112,7 @@ auto reconstructState(FrameBegin begin, std::span<const FrameObject> changes,
         validateFrameBegin(begin);
         begin.serverTime = canonicalFloat(begin.serverTime);
         require((begin.base.value != 0) == (base != nullptr));
-        require(changes.size() == begin.changeCount);
+        require(changes.size() == begin.changeCount.value);
         within(begin.changeBytes.value, context.frameBytes.value);
         if (base) {
             require(base->begin.id == begin.base && base->epoch == context.epoch &&

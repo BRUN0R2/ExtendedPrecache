@@ -39,6 +39,16 @@ using Coords = std::array<Coord, 3>;
 using Vec3 = std::array<float, 3>;
 using TimeMicros = Id<struct TimeMicrosTag, std::uint64_t>;
 using FileOffset = Id<struct FileOffsetTag, std::uint64_t>;
+using EntityEntries = session::Quantity<struct EntityEntriesTag, std::uint32_t>;
+using ClientEntries = session::Quantity<struct ClientEntriesTag, std::uint32_t>;
+using WeaponEntries = session::Quantity<struct WeaponEntriesTag, std::uint32_t>;
+using StaticEntries = session::Quantity<struct StaticEntriesTag, std::uint32_t>;
+using ModuleEntries = session::Quantity<struct ModuleEntriesTag, std::uint32_t>;
+using SnapshotWindow = session::Quantity<struct SnapshotWindowTag, std::uint16_t>;
+using ResourceCount = session::Quantity<struct ResourceCountTag, std::uint32_t>;
+using AssetCount = session::Quantity<struct AssetCountTag, std::uint32_t>;
+using ConsistencyCount = session::Quantity<struct ConsistencyCountTag, std::uint32_t>;
+using ChangeCount = session::Quantity<struct ChangeCountTag, std::uint32_t>;
 
 inline constexpr auto maxMessageBytes = std::uint32_t{65536};
 inline constexpr auto chunkOverheadBytes = maxChunkOverheadBytes;
@@ -46,8 +56,8 @@ inline constexpr auto maxSequence = std::uint32_t{0xfffffffe};
 inline constexpr auto noSubject = std::uint32_t{0xffffffff};
 inline constexpr auto maxMetadataBytes = std::uint64_t{2147483647};
 inline constexpr auto maxFileBytes = std::uint32_t{16777215};
-inline constexpr auto maxEntityEntries = std::uint32_t{2048};
-inline constexpr auto maxClientEntries = std::uint32_t{32};
+inline constexpr auto maxEntityEntries = EntityEntries{2048};
+inline constexpr auto maxClientEntries = ClientEntries{32};
 inline constexpr auto maxNameBytes = std::uint32_t{63};
 inline constexpr auto maxDecalNameBytes = std::uint32_t{15};
 inline constexpr auto nativeUserMessageBytes = std::uint32_t{192};
@@ -112,10 +122,10 @@ struct FieldValue final {
 using ValueSet = std::vector<FieldValue>;
 
 struct ObjectLimits final {
-    std::uint32_t entityEntries{1};
-    std::uint32_t clientEntries{1};
-    std::uint32_t weaponEntries{};
-    std::uint32_t staticEntries{};
+    EntityEntries entityEntries{1};
+    ClientEntries clientEntries{1};
+    WeaponEntries weaponEntries;
+    StaticEntries staticEntries;
     auto operator==(const ObjectLimits &) const -> bool = default;
 };
 struct RecordBudget final {

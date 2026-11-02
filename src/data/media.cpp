@@ -9,8 +9,8 @@ void soundValid(const Sound &sound, Route route, Phase phase, SoundContext conte
             (route.opcode == static_cast<std::uint8_t>(Service::sound) ||
              route.opcode == static_cast<std::uint8_t>(Service::staticSound)));
     require(phase == Phase::gameplay, ErrorCode::wrongPhase);
-    require(context.entityEntries > 0 && context.entityEntries <= maxEntityEntries &&
-                sound.entity.value < context.entityEntries && sound.channel <= 7,
+    require(context.entityEntries.value > 0 && context.entityEntries <= maxEntityEntries &&
+                sound.entity.value < context.entityEntries.value && sound.channel <= 7,
             ErrorCode::capacity);
     require(sound.action >= SoundAction::start && sound.action <= SoundAction::update);
     if (sound.action == SoundAction::stop) {
@@ -41,8 +41,8 @@ auto eventSchema(const Event &event, Route route, Phase phase, EventContext cont
             (route.opcode == static_cast<std::uint8_t>(Service::event) ||
              route.opcode == static_cast<std::uint8_t>(Service::reliableEvent)));
     require(phase == Phase::gameplay, ErrorCode::wrongPhase);
-    require(context.entityEntries > 0 && context.entityEntries <= maxEntityEntries &&
-                event.entity.value < context.entityEntries,
+    require(context.entityEntries.value > 0 && context.entityEntries <= maxEntityEntries &&
+                event.entity.value < context.entityEntries.value,
             ErrorCode::capacity);
     require((event.behaviorFlags & ~15U) == 0 && (event.behaviorFlags & 9U) != 9U);
     get(context.resources.validate({ResourceKind::event, event.id}, false));

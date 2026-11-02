@@ -68,9 +68,9 @@ class Catalog final : public ReferenceValidator {
 };
 struct CatalogBegin final {
     ByteCount totalBytes;
-    std::uint32_t resourceCount{};
-    std::uint32_t assetCount{};
-    std::uint32_t consistencyCount{};
+    ResourceCount resourceCount;
+    AssetCount assetCount;
+    ConsistencyCount consistencyCount;
     auto operator==(const CatalogBegin &) const -> bool = default;
 };
 struct ChunkView final {
