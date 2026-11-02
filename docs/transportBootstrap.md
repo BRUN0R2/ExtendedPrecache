@@ -110,7 +110,8 @@ O [limitador nativo](https://github.com/rehlds/ReHLDS/blob/196300131858d1e087267
 conta os comandos, mas só age sobre clientes `active`. Durante a barreira o cliente ainda não
 é ativo, então nada limita a taxa de `epc1`; a sessão também não cobra quota de repetições
 idênticas. **Requisito:** o transporte precisa de um limite próprio de comandos `epc1` por
-conexão, recusando com `budgetExceeded`, em vez de contar com o motor ou com a sessão.
+conexão, recusando com `budgetExceeded`, em vez de contar com o motor ou com a sessão. O
+[núcleo da barreira](signonBarrier.md#limite-de-comandos) define esse limite.
 
 ## Drenagem e reset
 
@@ -172,6 +173,6 @@ endereço de `client_t` se repete entre conexões, logo não identifica a geraç
 `hw.dll`, a perda de pacotes não foi exercitada. O `retry` dele desconecta antes de conectar de
 novo, então a conexão substituída sem queda só foi exercitada pelo cliente sintético.
 
-Próximo passo: levar a barreira do laboratório para o [plugin Metamod](metamodPlugin.md), que
-hoje é somente o ponto de carga, com o limite próprio de `epc1`. Registrar as evidências
-localmente, sem alterar os originais ou publicar fixtures, traces e resultados.
+Próximo passo: ligar o [núcleo da barreira](signonBarrier.md) ao [plugin Metamod](metamodPlugin.md),
+que hoje é somente o ponto de carga. Registrar as evidências localmente, sem alterar os
+originais ou publicar fixtures, traces e resultados.

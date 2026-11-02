@@ -26,6 +26,8 @@ existirem consumidores e evidências suficientes.
 - `src/domain`: validação de caminhos canônicos, independente do motor.
 - `include/extendedPrecache/session` e `src/session`: configuração, admissão,
   codec e máquina de estados, sem dependência de APIs do motor.
+- `include/extendedPrecache/transport` e `src/transport`: [barreira do sign-on](signonBarrier.md)
+  por conexão e bytes do canal de controle, atrás de portas, sem APIs do motor.
 - `include/extendedPrecache/data` e `src/data`: codecs 2.0, preflights e estado,
   sem SDKs/offsets do motor; APIs e ownership em [dataCore.md](dataCore.md).
 - `include/extendedPrecache/metamod` e `src/metamod`: fases e decisões de carga do

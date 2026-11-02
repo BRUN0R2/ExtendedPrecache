@@ -46,7 +46,7 @@ nonce não zero, reservados zero e páginas de quatro IDs consecutivos. O codec
 verifica a forma da página; a sessão verifica sua posição na conversa.
 `decodeClientCommand` aceita exclusivamente `epc1 ` e hexadecimal minúsculo,
 até 125 caracteres, sem newline, NUL, aspas ou outros comandos. Opcode, NUL e
-registro de user message pertencem ao transporte futuro.
+registro de user message pertencem ao [transporte](signonBarrier.md).
 
 ## Sessão e envio confiável
 
