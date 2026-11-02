@@ -29,6 +29,21 @@ essa observação de fonte não comprova a execução desse ramo no perfil selec
 O futuro binding deve cobrir todas as entradas relevantes para o perfil ou
 recusá-lo, invalidar a geração anterior e liberar a continuação no máximo uma vez.
 
+O inventário integral de referências do hash selecionado fecha as entradas diretas:
+
+| Alvo | Referências estáticas | Consequência para a barreira |
+| --- | --- | --- |
+| `SV_New_f`, `0x049aa800` | Dados em `0x049b8ef3` (registro do comando `new`); chamada em `0x049ab0f9`, dentro de `spawn` | Interceptar o corpo cobre os dois caminhos, em vez de só o comando |
+| Wrapper de serverinfo, `0x049a8f10` | Chamada em `0x049aa922`, dentro de `SV_New_f`; chamada em `0x049b43b3`, em `0x049b4090` (`SV_ActivateServer`) | Fora de `SV_New_f`, só a ativação emite serverinfo |
+| `sendres`, `0x049aada0` | Dados em `0x049b8f02` (registro do comando) | Precisa de bloqueio próprio: não passa por `SV_New_f` |
+
+A [fonte fixada](https://github.com/rehlds/ReHLDS/blob/196300131858d1e087267fb2fb60cb935f8f8873/rehlds/engine/sv_main.cpp#L6219)
+só alcança a emissão na ativação com `maxclients <= 1`, valor possível também em servidor
+dedicado com `-maxplayers 1`. **Decisão:** o perfil recusa `maxclients <= 1`, em vez de
+barrar esse ramo, pois o protocolo de negociação pressupõe um cliente remoto. A
+correspondência entre a fonte e esse ramo do binário ainda é estática. Chamadas indiretas
+continuam fora desse inventário: a tabela não prova ausência de ponteiros calculados.
+
 O núcleo de sessão concede `releaseSignon` no máximo uma vez por binding;
 repetições invalidam a sessão. Essa garantia não suspende nem retoma uma chamada
 nativa: o futuro binding ainda precisa demonstrar que associa essa autorização
@@ -104,11 +119,25 @@ não há predicado de drain aprovado por este documento.
 Os bundles completos ficam localmente em `.local/research`. Chamadas indiretas
 e limites de análise declarados pelo provedor permanecem desconhecidos; os
 resultados de fonte não são tratados como identidade automática com o binário.
-Não houve observação de execução nesta investigação.
+A tabela acima não inclui observação de execução. Ensaios instrumentados existem
+somente em área local; são protótipos, não uma implementação da barreira.
 
-Para concluir a etapa, construir um ambiente isolado e instrumentado com os
-dois hashes e provar: bloqueio e retomada sem duplicação em todas as entradas;
-bootstrap antes do reset; despacho e rate dos comandos; drain sob fragmentação,
-perda e confirmação; e invalidação de canal, sessão e reserva em desconexão,
-reconexão e troca de mapa. Registrar evidências de execução localmente, sem
-alterar os originais ou publicar fixtures, traces e resultados locais.
+Para concluir a etapa, provar nos dois hashes, de ponta a ponta com o [núcleo de
+sessão](sessionCore.md), e não com frames sintéticos:
+
+1. **Continuação:** reter `SV_New_f` na primeira entrada e executar o corpo uma única
+   vez a partir do acordo, sem depender de outro comando `new` do cliente.
+2. **Bloqueio:** segurar `sendres` e `spawn` da mesma conexão até a liberação.
+3. **Bootstrap:** os 26 frames reais pelos transportes de controle, com registro privado
+   no cliente, sem callback nativo e sobrevivendo ao reset.
+4. **Despacho:** `epc1` tratado antes da GameDLL, com a contabilização de rate
+   preservada, inclusive em saturação.
+5. **Drain:** um predicado sobre mensagem, fragmentos, filas e confirmação, testado com
+   fragmentação e perda.
+6. **Invalidação:** desconexão, reconexão e troca de mapa encerram canal, sessão e
+   reserva. O endereço de `client_t` pode se repetir entre conexões, logo não identifica
+   a geração.
+
+Registrar as evidências localmente, sem alterar os originais ou publicar fixtures,
+traces e resultados. O [plugin Metamod](metamodPlugin.md) é o ponto de carga nativo
+desse trabalho; carregá-lo não comprova nenhum desses itens.
