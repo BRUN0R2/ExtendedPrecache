@@ -55,6 +55,18 @@ incluem esses testes, mesmo com a DLL desativada.
 `integrationContractTests` também verifica as equações/layouts da especificação
 de integração; ele não implementa o serviço ou adaptadores.
 
+O job de CI `C++26 GCC core x64` repete esses comandos em Windows x64, com
+`--no-tests=error` no CTest para reprovar uma execução sem testes. Usa o build
+WinLibs do GCC 16.2.0 (UCRT, MinGW-w64 14.0.0), fixado pela tag do release e pelo
+SHA-256 do arquivo. O mesmo arquivo fornece CMake e Ninja, então um único hash cobre
+as ferramentas do job. O MSYS2 UCRT64 continua como referência local, mas não fixa a
+versão na CI: seus pacotes são contínuos e o `pacman` instala a revisão vigente.
+
+A imagem também traz GCC 15.2.0, CMake e Ninja próprios. Por isso o job falha se
+`g++`, `cmake`, `ctest` ou `ninja` não vierem do arquivo fixado, ou se a versão do
+compilador divergir. Ele não publica artefatos e não é exigido pela proteção de
+`main`; incluí-lo como check obrigatório depende de aprovação do mantenedor.
+
 ## Análise estática e formatação
 
 ```powershell

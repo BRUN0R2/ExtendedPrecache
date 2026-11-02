@@ -161,3 +161,20 @@ suas respectivas etapas e não são evidência de integração dos codecs com o 
 O contrato e os limites do plugin inerte estão em [metamodPlugin.md](metamodPlugin.md).
 Sua verificação local e em host real, assim como seus resultados, permanece em área
 ignorada. Não é evidência de barreira, transporte ou suporte ao motor.
+
+## Núcleo em GCC na CI
+
+A CI cobria somente Clang para MSVC em x86, e um `#include <utility>` ausente quebrou
+o build em GCC sem reprovar nenhum check. O job `C++26 GCC core x64` compila o núcleo
+sem DLL em cada push e PR, com warnings como erros, e executa os cinco alvos CTest
+do núcleo em Windows: `resourceCatalog`, `configuration`, `integrationContract`,
+`frameCodec` e `negotiation`. Comandos e origem do toolchain em [build.md](build.md).
+
+O compilador não é o mesmo binário da referência local: a CI usa WinLibs GCC 16.2.0
+com MinGW-w64 14.0.0, e a referência usa GCC 16.2.0 do MSYS2 UCRT64. Versão do GCC e
+runtime UCRT coincidem; os builds são distintos. O SHA-256 fixado coincide com o
+arquivo `.sha256` do release e com o digest informado pelo GitHub para o asset, e o
+job o confere em cada execução.
+
+O job não roda clang-tidy, clang-format ou a probe C17, não produz DLL e não comprova
+suporte ao motor. `C++26 Windows x86` continua sendo o único check exigido em `main`.
