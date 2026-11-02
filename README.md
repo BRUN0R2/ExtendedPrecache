@@ -36,6 +36,7 @@ automaticamente resolvidos pelo precache.
 - [Protocolo de negociação 1.0](docs/negotiation.md)
 - [Bootstrap, barreira e limites de transporte](docs/transportBootstrap.md)
 - [API e ciclo de vida do núcleo de sessão](docs/sessionCore.md)
+- [Barreira do sign-on por conexão](docs/signonBarrier.md)
 - [Entradas e ciclo de vida do plugin Metamod](docs/metamodPlugin.md)
 - [Conversão de índices e namespaces](docs/indexMapping.md)
 - [Ownership e estabilidade dos endereços](docs/storageOwnership.md)

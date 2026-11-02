@@ -45,6 +45,15 @@ target_compile_features(extendedPrecacheSession PUBLIC cxx_std_26)
 target_link_libraries(extendedPrecacheSession PRIVATE nlohmann_json::nlohmann_json)
 extendedPrecacheApplyOptions(extendedPrecacheSession)
 
+add_library(extendedPrecacheTransport STATIC
+    src/transport/controlChannel.cpp
+    src/transport/clientBarrier.cpp
+)
+target_include_directories(extendedPrecacheTransport PUBLIC include)
+target_compile_features(extendedPrecacheTransport PUBLIC cxx_std_26)
+target_link_libraries(extendedPrecacheTransport PUBLIC extendedPrecacheSession)
+extendedPrecacheApplyOptions(extendedPrecacheTransport)
+
 add_library(extendedPrecacheData STATIC
     src/data/types.cpp
     src/data/envelope.cpp
