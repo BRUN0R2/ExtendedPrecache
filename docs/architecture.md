@@ -28,8 +28,11 @@ introduzidos quando existirem consumidores e evidências suficientes.
   codec e máquina de estados, sem dependência de APIs do motor.
 - `include/extendedPrecache/data` e `src/data`: codecs 2.0, preflights e estado,
   sem SDKs/offsets do motor; APIs e ownership em [dataCore.md](dataCore.md).
+- `include/extendedPrecache/metamod` e `src/metamod`: fases e decisões de carga do
+  [plugin Metamod](metamodPlugin.md), sem Windows ou tabelas do motor.
 - `include/extendedPrecache/abi`: contrato POD com linkage C e versão explícita.
-- `src/platform/windows`: DLL diagnóstica sem hooks e provider CNG em alvo estático separado.
+- `src/platform/windows`: DLL diagnóstica sem hooks, plugin Metamod inerte e provider CNG
+  em alvo estático separado.
 - `tests`: domínio, configuração, corpus do protocolo, sessões e carregamento da DLL.
 - `cmake`: opções de compilação aplicadas por alvo.
 
@@ -62,7 +65,8 @@ uma largura de campo independente da capacidade do armazenamento.
 
 ## Integração futura
 
-A entrada do Metamod é apenas o carregador do lado servidor. Remover uma verificação
+A [entrada do Metamod](metamodPlugin.md) é apenas o carregador do lado servidor e
+ainda não instala nada no motor. Remover uma verificação
 de overflow ou interceptar `PrecacheModel` não amplia os demais arrays e consumidores.
 O adaptador deverá cobrir leitura, escrita, índices, carregamento e encerramento.
 

@@ -7,5 +7,6 @@ namespace extendedPrecache {
 inline constexpr std::uint32_t projectVersionMajor = @PROJECT_VERSION_MAJOR@;
 inline constexpr std::uint32_t projectVersionMinor = @PROJECT_VERSION_MINOR@;
 inline constexpr std::uint32_t projectVersionPatch = @PROJECT_VERSION_PATCH@;
+inline constexpr auto projectVersionText = "@PROJECT_VERSION@";
 
 } // namespace extendedPrecache

@@ -29,11 +29,13 @@ ctest --preset windowsX86
 
 A configuração falha se o alvo não for Windows de 32 bits. O teste da DLL carrega
 o arquivo produzido e resolve o nome exportado sem depender da biblioteca de importação.
-A DLL não deve ser instalada no Metamod nesta fase; ainda faltam as entradas desse SDK.
+A DLL diagnóstica não é um plugin. O preset também produz `extendedPrecacheServer.dll`,
+o [plugin Metamod inerte](metamodPlugin.md); sua instalação serve somente a diagnóstico.
 
 ## Núcleo sem DLL
 
-Compila domínio, sessão e dados com um compilador C++26 em outra arquitetura:
+Compila domínio, sessão, dados e o ciclo de vida do plugin com um compilador C++26 em
+outra arquitetura:
 
 ```powershell
 cmake -S . -B out/core -G Ninja -DCMAKE_CXX_COMPILER=g++ -DextendedPrecacheBuildDll=OFF
