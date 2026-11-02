@@ -8,35 +8,39 @@ auto validRoute(Route route) noexcept -> bool {
     }
     const auto reliable = route.delivery == Delivery::reliable;
     if (route.direction == Direction::clientToServer) {
-        return route.opcode == 7 && reliable &&
-               ((route.kind >= 1 && route.kind <= 7) || route.kind == 255);
+        return route.opcode == clientDataOpcode && reliable &&
+               (kindWithin(route, ClientKind::consistencyPage, ClientKind::modMessage) ||
+                route.kind == fatalKind);
     }
     if (route.direction != Direction::serverToClient) {
         return false;
     }
     switch (static_cast<Service>(route.opcode)) {
     case Service::schema:
-        return reliable && (route.kind == 1 || route.kind == 2);
+        return reliable && kindWithin(route, SchemaKind::schema, SchemaKind::setEnd);
     case Service::resource:
-        return ((route.kind >= 1 && route.kind <= 4) || route.kind == 255)
+        return (kindWithin(route, ResourceMessageKind::catalogBegin,
+                           ResourceMessageKind::gameStart) ||
+                route.kind == fatalKind)
                    ? reliable
-                   : (route.kind == 5 || route.kind == 6);
+                   : kindWithin(route, ResourceMessageKind::modMessage,
+                                ResourceMessageKind::moduleState);
     case Service::initialFrame:
-        return reliable && route.kind >= 1 && route.kind <= 3;
+        return reliable && kindWithin(route, FrameKind::begin, FrameKind::end);
     case Service::fullFrame:
     case Service::deltaFrame:
-        return route.kind >= 1 && route.kind <= 3;
+        return kindWithin(route, FrameKind::begin, FrameKind::end);
     case Service::clientData:
-        return route.kind == 2;
+        return hasKind(route, FrameKind::object);
     case Service::event:
-        return !reliable && route.kind == 1;
+        return !reliable && route.kind == singleRecordKind;
     case Service::reliableEvent:
     case Service::staticSound:
     case Service::decalName:
-        return reliable && route.kind == 1;
+        return reliable && route.kind == singleRecordKind;
     case Service::sound:
     case Service::effect:
-        return route.kind == 1;
+        return route.kind == singleRecordKind;
     }
     return false;
 }

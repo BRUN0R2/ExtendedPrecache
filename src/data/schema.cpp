@@ -7,10 +7,11 @@ namespace extendedPrecache::data {
 namespace {
 using namespace detail;
 auto fixedBytes(ValueKind kind) -> std::uint16_t {
-    constexpr auto widths =
-        std::array<std::uint16_t, 14>{1, 1, 2, 2, 4, 4, 4, 0, 4, 2, 2, 2, 6, 12};
-    require(kind >= ValueKind::u8 && kind <= ValueKind::vec3f32, ErrorCode::invalidSchema);
-    return widths[static_cast<std::size_t>(kind) - 1];
+    const auto width = fixedValueBytes(kind);
+    if (!width) {
+        fail(ErrorCode::invalidSchema);
+    }
+    return *width;
 }
 } // namespace
 
@@ -101,7 +102,7 @@ auto decodeSchema(std::span<const std::byte> bytes, RecordBudget budget) noexcep
         AllocationBudget allocation{budget.ownedBytes};
         allocation.charge(add(sizeof(Schema), nameBytes));
         schema.name = reader.text(nameBytes, maxNameBytes);
-        reader.count(count, 13);
+        reader.count(count, fieldHeaderBytes + minimumNameBytes);
         allocation.charge(multiply(count, sizeof(FieldDefinition)));
         schema.fields.reserve(count);
         for (std::size_t index = 0; index < count; ++index) {
@@ -149,7 +150,7 @@ auto decodeSchemaSet(std::span<const std::byte> bytes, ByteCount maximum) noexce
         Reader reader{bytes};
         const auto count = reader.integer<std::uint16_t>();
         require(count > 0, ErrorCode::invalidSchema);
-        reader.count(count, 13);
+        reader.count(count, fieldHeaderBytes + minimumNameBytes);
         std::vector<Schema> result;
         result.reserve(count);
         std::uint16_t previous{};

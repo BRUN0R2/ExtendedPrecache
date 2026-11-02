@@ -4,7 +4,11 @@
 namespace extendedPrecache::data {
 // Fixed wire widths from data contract 2; independent of C++ object layouts.
 inline constexpr auto envelopeMajor = std::uint8_t{2};
+inline constexpr auto catalogVersion = std::uint16_t{2};
+inline constexpr auto demoVersion = std::uint16_t{2};
+inline constexpr auto moduleStateRecordKind = std::uint16_t{6};
 inline constexpr auto envelopeBytes = std::uint32_t{40};
+inline constexpr auto minimumNameBytes = std::uint32_t{1};
 inline constexpr auto catalogHeaderBytes = std::uint32_t{72};
 inline constexpr auto resourceHeaderBytes = std::uint32_t{28};
 inline constexpr auto assetHeaderBytes = std::uint32_t{44};

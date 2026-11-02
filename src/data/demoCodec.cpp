@@ -3,6 +3,9 @@
 
 namespace extendedPrecache::data {
 namespace {
+constexpr auto demoMagic = std::string_view{"EPCDEMO2"};
+} // namespace
+namespace {
 using namespace detail;
 void validHeader(const DemoHeader &header) {
     require(header.epoch.value != 0 && !header.nonce.isZero());
@@ -21,8 +24,8 @@ auto encodeDemoHeader(const DemoHeader &header, const DigestProvider &provider) 
     return detail::protect([&] {
         validHeader(header);
         Writer writer{demoHeaderBytes};
-        writer.text("EPCDEMO2");
-        writer.integer(std::uint16_t{2});
+        writer.text(demoMagic);
+        writer.integer(demoVersion);
         writer.zero(2);
         writer.integer(demoHeaderBytes);
         writer.integer(std::uint32_t{2});
@@ -46,8 +49,8 @@ auto decodeDemoHeader(std::span<const std::byte> bytes, const DigestProvider &pr
     return detail::protect([&] {
         require(bytes.size() == demoHeaderBytes);
         Reader reader{bytes};
-        require(reader.text(8, 8) == "EPCDEMO2");
-        require(reader.integer<std::uint16_t>() == 2, ErrorCode::unsupportedContract);
+        require(reader.text(demoMagic.size(), demoMagic.size()) == demoMagic);
+        require(reader.integer<std::uint16_t>() == demoVersion, ErrorCode::unsupportedContract);
         reader.zero(2);
         require(reader.integer<std::uint32_t>() == demoHeaderBytes &&
                     reader.integer<std::uint32_t>() == 2,

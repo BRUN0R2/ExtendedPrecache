@@ -34,6 +34,33 @@ enum class ValueKind : std::uint8_t {
     vec3f32
 };
 enum class FieldFlag : std::uint8_t { nullable = 1, array = 2, nativeCString = 4 };
+// Wire bytes of one atom; byte strings carry their own length, so their fixed part is zero.
+[[nodiscard]] constexpr auto fixedValueBytes(ValueKind kind) noexcept
+    -> std::optional<std::uint16_t> {
+    switch (kind) {
+    case ValueKind::u8:
+    case ValueKind::i8:
+        return 1;
+    case ValueKind::u16:
+    case ValueKind::i16:
+    case ValueKind::entity16:
+    case ValueKind::packedEntity16:
+    case ValueKind::coord16:
+        return 2;
+    case ValueKind::u32:
+    case ValueKind::i32:
+    case ValueKind::f32:
+    case ValueKind::resource:
+        return 4;
+    case ValueKind::bytes:
+        return 0;
+    case ValueKind::coords3:
+        return 6;
+    case ValueKind::vec3f32:
+        return 12;
+    }
+    return std::nullopt;
+}
 struct FieldDefinition final {
     FieldId id;
     ValueKind kind{ValueKind::u8};

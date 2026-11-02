@@ -1,5 +1,6 @@
 #include "applicationJson.hpp"
 #include <extendedPrecache/data/effects.hpp>
+#include <extendedPrecache/session/frameCodec.hpp>
 
 #include <set>
 
@@ -11,6 +12,8 @@ auto schemaFor(const ApplicationDefinition &app, SchemaId id, SchemaRole role) -
     require(schema && schema->role == role, ErrorCode::invalidSchema);
     return *schema;
 }
+// Effects no module may redefine with its own schema; 117 and 118 are native-only aliases.
+constexpr auto reservedEffects = std::array{16U, 26U, 117U, 118U};
 auto resourceFree(const Schema &schema) -> bool {
     return std::ranges::none_of(schema.fields, [](const FieldDefinition &field) {
         return field.kind == ValueKind::resource;
@@ -40,7 +43,8 @@ void validateApplicationDefinition(const ApplicationDefinition &app,
                         ids.insert(message.id).second && names.insert(message.name).second &&
                         identifier(message.name, 15),
                     ErrorCode::invalidSchema);
-            require(message.name != "ExtPrecache" && message.name != "epc1",
+            require(message.name != session::controlMessageName &&
+                        message.name != session::controlCommandName,
                     ErrorCode::unsupportedModule);
             const auto &schema = schemaFor(app, message.schema, SchemaRole::modMessage);
             if (message.wireMode == WireMode::typed2) {
@@ -83,7 +87,8 @@ void validateApplicationDefinition(const ApplicationDefinition &app,
         for (const auto &item : module.localReplay) {
             require(local.emplace(item.recordKind, item.schema).second, ErrorCode::invalidSchema);
             schemaFor(app, item.schema,
-                      item.recordKind == 6 ? SchemaRole::moduleState : SchemaRole::localReplay);
+                      item.recordKind == moduleStateRecordKind ? SchemaRole::moduleState
+                                                               : SchemaRole::localReplay);
         }
     }
     std::set<EffectId> effectIds;
@@ -96,8 +101,9 @@ void validateApplicationDefinition(const ApplicationDefinition &app,
                         policy.resources == ResourcePolicy::typedReferences,
                     ErrorCode::invalidSchema);
         } else {
-            require(!builtin && policy.id.value != 16 && policy.id.value != 26 &&
-                        policy.id.value != 117 && policy.id.value != 118 &&
+            require(!builtin &&
+                        std::ranges::find(reservedEffects, policy.id.value) ==
+                            reservedEffects.end() &&
                         policy.resources == ResourcePolicy::resourceFree,
                     ErrorCode::invalidSchema);
             require(resourceFree(schemaFor(app, policy.schema, SchemaRole::effect)),
@@ -109,7 +115,8 @@ void validateApplicationDefinition(const ApplicationDefinition &app,
         require(moduleIds.contains(service.owner) &&
                     services.emplace(service.direction, service.opcode).second,
                 ErrorCode::invalidSchema);
-        require(service.direction != Direction::serverToClient || service.opcode < 64,
+        require(service.direction != Direction::serverToClient ||
+                    service.opcode < serverOpcodeCount,
                 ErrorCode::invalidSchema);
         const auto anyPhase = std::ranges::any_of(service.phases, [](bool value) { return value; });
         if (service.mode == ServiceMode::forbidden) {

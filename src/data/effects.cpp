@@ -4,6 +4,9 @@
 namespace extendedPrecache::data {
 namespace {
 using namespace detail;
+constexpr auto bspDecalEffect = EffectId{13};
+constexpr auto bspDecalEntityField = std::size_t{2};
+constexpr auto bspDecalModelField = std::size_t{3};
 #include "effectRegistry.inc"
 auto schemaFor(EffectId id, EffectContext context) -> Schema {
     const auto *policy = context.application.effect(id);
@@ -44,9 +47,11 @@ void validateEffect(const EffectMessage &effect, Delivery delivery, Phase phase,
                                   ~static_cast<unsigned>(*field.allowedMask)) == 0);
             }
         }
-        if (effect.id.value == 13) {
-            const auto *entity = std::get_if<EntityId>(&effect.values[2].elements.front());
-            const auto *model = std::get_if<ResourceReference>(&effect.values[3].elements.front());
+        if (effect.id == bspDecalEffect) {
+            const auto *entity =
+                std::get_if<EntityId>(&effect.values[bspDecalEntityField].elements.front());
+            const auto *model =
+                std::get_if<ResourceReference>(&effect.values[bspDecalModelField].elements.front());
             require(entity && model);
             require(entity->value == 0 ? model->id.value == 0
                                        : get(context.bindings.bspModel(*entity)) == *model,
@@ -69,14 +74,16 @@ auto builtinEffectSchema(EffectId id) noexcept -> Result<Schema> {
                       std::string{descriptor->name},
                       {}};
         for (const auto &field : descriptor->fields) {
-            constexpr auto widths =
-                std::array<std::uint16_t, 14>{1, 1, 2, 2, 4, 4, 4, 0, 4, 2, 2, 2, 6, 12};
+            const auto width = fixedValueBytes(field.kind);
+            if (!width) {
+                fail(ErrorCode::invalidSchema);
+            }
             schema.fields.push_back({{small(schema.fields.size())},
                                      field.kind,
                                      field.resourceKind,
                                      static_cast<std::uint16_t>(field.nullable ? 1 : 0),
                                      1,
-                                     widths[static_cast<std::size_t>(field.kind) - 1],
+                                     *width,
                                      std::string{field.name}});
         }
         get(validateSchema(schema));

@@ -8,6 +8,7 @@
 namespace extendedPrecache::data {
 namespace {
 using namespace detail;
+constexpr auto catalogMagic = std::string_view{"EPCM"};
 constexpr auto sentencePrefix = '!';
 constexpr auto inlineModelPrefix = '*';
 void path(std::string_view name, std::uint32_t maximum) {
@@ -31,8 +32,8 @@ void bounds(const Bounds &value) {
 }
 auto writeCatalog(const CatalogData &data, std::uint32_t maximum) -> Bytes {
     Writer writer{maximum};
-    writer.text("EPCM");
-    writer.integer(std::uint16_t{2});
+    writer.text(catalogMagic);
+    writer.integer(catalogVersion);
     writer.zero(2);
     writer.integer(narrow(data.resources.size()));
     writer.integer(narrow(data.assets.size()));
@@ -214,8 +215,8 @@ auto Catalog::decode(std::span<const std::byte> bytes, CatalogContext context,
         require(!expectedCatalogHash.isZero() && hash(bytes, provider) == expectedCatalogHash,
                 ErrorCode::digestMismatch);
         Reader reader{bytes};
-        require(reader.text(4, 4) == "EPCM");
-        require(reader.integer<std::uint16_t>() == 2, ErrorCode::unsupportedContract);
+        require(reader.text(catalogMagic.size(), catalogMagic.size()) == catalogMagic);
+        require(reader.integer<std::uint16_t>() == catalogVersion, ErrorCode::unsupportedContract);
         reader.zero(2);
         const auto count = reader.integer<std::uint32_t>();
         const auto assets = reader.integer<std::uint32_t>();
@@ -238,7 +239,7 @@ auto Catalog::decode(std::span<const std::byte> bytes, CatalogContext context,
         allocation.charge(
             add(add(multiply(count, sizeof(Resource)), multiply(assets, sizeof(Asset))),
                 multiply(rules, sizeof(ConsistencyRule))));
-        reader.count(count, 29);
+        reader.count(count, resourceHeaderBytes + minimumNameBytes);
         data.resources.reserve(count);
         for (std::uint32_t index = 0; index < count; ++index) {
             Resource row{};
@@ -261,7 +262,7 @@ auto Catalog::decode(std::span<const std::byte> bytes, CatalogContext context,
             row.name = reader.text(length, maxNameBytes);
             data.resources.push_back(std::move(row));
         }
-        reader.count(assets, 45);
+        reader.count(assets, assetHeaderBytes + minimumNameBytes);
         data.assets.reserve(assets);
         for (std::uint32_t index = 0; index < assets; ++index) {
             Asset asset{};
