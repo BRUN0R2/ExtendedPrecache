@@ -102,7 +102,7 @@ class NegotiationSession final {
     [[nodiscard]] auto poll(SessionContext context) -> std::expected<void, Rejection>;
     [[nodiscard]] auto releaseSignon(SessionContext context)
         -> std::expected<SessionAgreement, Rejection>;
-    [[nodiscard]] auto confirmServerInfo(std::uint32_t protocol, SpawnCount spawn,
+    [[nodiscard]] auto confirmServerInfo(ProtocolVersion protocol, SpawnCount spawn,
                                          SessionContext context) -> std::expected<void, Rejection>;
     void abort(Rejection reason) noexcept;
     void close() noexcept;
@@ -170,9 +170,10 @@ class NegotiationSession final {
 
 // The external proof covers all native consumers, byte budgets and module contracts.
 enum class LegacyProof : std::uint8_t { unverified, complete };
+enum class NegotiationProgress : std::uint8_t { notStarted, started };
 [[nodiscard]] auto checkLegacyAdmission(const Configuration &configuration,
                                         const MapRequirements &map, LegacyProof proof,
-                                        bool negotiationStarted) noexcept
+                                        NegotiationProgress progress) noexcept
     -> std::expected<void, Rejection>;
 
 } // namespace extendedPrecache::session

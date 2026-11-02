@@ -7,7 +7,7 @@ auto validateResourcePath(std::string_view path, CatalogLimits limits) noexcept
     if (path.empty()) {
         return std::unexpected{ResourceError::invalidPath};
     }
-    if (path.size() > limits.maxPathBytes()) {
+    if (path.size() > limits.maxPathBytes().value) {
         return std::unexpected{ResourceError::pathTooLong};
     }
 

@@ -6,7 +6,6 @@ namespace extendedPrecache::session {
 auto NegotiationSession::hash(MessageKind kind) const noexcept -> std::expected<Digest, Rejection> {
     constexpr char offerLabel[] = "ExtendedPrecache/offer/1";
     constexpr char clientLabel[] = "ExtendedPrecache/client/1";
-    constexpr char selectionLabel[] = "ExtendedPrecache/selection/1";
     std::array<std::byte, transcriptHashWorkspaceBytes> bytes{};
     std::size_t used{};
     const auto append = [&bytes, &used](std::span<const std::byte> source) {
@@ -26,7 +25,7 @@ auto NegotiationSession::hash(MessageKind kind) const noexcept -> std::expected<
         direction = Direction::client;
         count = detail::clientHashFrameCount;
     } else if (kind == MessageKind::selectionEnd) {
-        append(std::as_bytes(std::span{selectionLabel}));
+        append(std::as_bytes(std::span{selectionHashLabel}));
         append(offerHash.bytes);
         append(clientHash.bytes);
         direction = Direction::server;

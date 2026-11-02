@@ -398,7 +398,7 @@ auto NegotiationSession::releaseSignon(SessionContext context)
     nativeHandoff = true;
     return agreement();
 }
-auto NegotiationSession::confirmServerInfo(std::uint32_t protocol, SpawnCount spawn,
+auto NegotiationSession::confirmServerInfo(ProtocolVersion protocol, SpawnCount spawn,
                                            SessionContext context)
     -> std::expected<void, Rejection> {
     if (const auto valid = checkContext(context); !valid) {
@@ -407,8 +407,11 @@ auto NegotiationSession::confirmServerInfo(std::uint32_t protocol, SpawnCount sp
     if (nativeHandoff || state() != SessionState::armed) {
         return reject({RejectCode::unexpectedMessage});
     }
-    if (!snapshot || protocol != legacyProtocolVersion || spawn != snapshot.value().spawn) {
+    if (!snapshot || protocol != legacyProtocolVersion) {
         return reject({RejectCode::unsupportedContract});
+    }
+    if (spawn != snapshot.value().spawn) {
+        return reject({RejectCode::mapChanged});
     }
     if (const auto valid = checkStorage(); !valid) {
         return reject(valid.error());
@@ -428,10 +431,10 @@ auto minimumSessionMetadataBytes(const Configuration &configuration) noexcept ->
 }
 
 auto checkLegacyAdmission(const Configuration &configuration, const MapRequirements &map,
-                          LegacyProof proof, bool negotiationStarted) noexcept
+                          LegacyProof proof, NegotiationProgress progress) noexcept
     -> std::expected<void, Rejection> {
-    if (configuration.values().policy == ConnectionPolicy::requireExtended || negotiationStarted ||
-        proof != LegacyProof::complete) {
+    if (configuration.values().policy == ConnectionPolicy::requireExtended ||
+        progress != NegotiationProgress::notStarted || proof != LegacyProof::complete) {
         return std::unexpected{Rejection{RejectCode::legacyIncompatible}};
     }
     const auto admitted =

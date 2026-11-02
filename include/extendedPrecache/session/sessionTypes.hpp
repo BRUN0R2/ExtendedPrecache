@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <expected>
+#include <limits>
 #include <optional>
 #include <span>
 #include <string>
@@ -28,6 +29,7 @@ using MapEpoch = Quantity<struct MapEpochTag, std::uint64_t>;
 using LocalGeneration = Quantity<struct LocalGenerationTag, std::uint64_t>;
 using SpawnCount = Quantity<struct SpawnCountTag, std::uint32_t>;
 using DataContractId = Quantity<struct DataContractIdTag, std::uint32_t>;
+using ProtocolVersion = Quantity<struct ProtocolVersionTag, std::uint32_t>;
 using ModelCacheEntries = Quantity<struct ModelCacheEntriesTag, std::uint32_t>;
 using LocalModelReserve = Quantity<struct LocalModelReserveTag, std::uint32_t>;
 using SoundDescriptors = Quantity<struct SoundDescriptorsTag, std::uint32_t>;
@@ -113,13 +115,17 @@ struct Rejection final {
     auto operator==(const Rejection &) const -> bool = default;
 };
 
+inline constexpr auto signedMaximum = std::uint32_t{std::numeric_limits<std::int32_t>::max()};
+inline constexpr auto modelDescriptorBytes = std::uint64_t{392};
+inline constexpr auto soundDescriptorBytes = std::uint64_t{72};
+inline constexpr auto hudDescriptorBytes = std::uint64_t{12};
 inline constexpr std::uint32_t maxConfigurationBytes = 65536;
 inline constexpr std::uint32_t minTimeoutMs = 1000;
 inline constexpr std::uint32_t maxTimeoutMs = 60000;
 inline constexpr std::uint32_t normalTranscriptBytes = 1544;
 inline constexpr std::uint32_t maxTranscriptBytes = 4096;
 inline constexpr std::uint32_t maxFramesPerDirection = 32;
-inline constexpr std::uint32_t legacyProtocolVersion = 48;
+inline constexpr auto legacyProtocolVersion = ProtocolVersion{48};
 
 [[nodiscard]] constexpr auto validField(CapabilityField field) noexcept -> bool {
     return field >= CapabilityField::modelEntries && field <= CapabilityField::reliableMessageBytes;

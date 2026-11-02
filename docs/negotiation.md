@@ -238,13 +238,13 @@ SVC novo foi reservado aqui.
 | 4 | `unexpectedSequence` | Gap, sequência fora da faixa ou repetição diferente |
 | 5 | `unsupportedContract` | Identidade, ID, perfil local ou codecs não aprovados |
 | 6 | `capacityInsufficient` | Requisito maior que o limite selecionado; informar field ID |
-| 7 | `invalidConfiguration` | Contradição na política/limites locais |
+| 7 | `invalidConfiguration` | Contradição na política/limites, inclusive seleção do par diferente do mínimo exato |
 | 8 | `storageUnavailable` | Cotação, reserva, alocação ou decoder indisponível |
 | 9 | `transcriptMismatch` | Hash ou echo não corresponde ao transcript |
 | 10 | `deadlineExceeded` | Prazo fixo encerrado |
 | 11 | `mapChanged` | Snapshot ou geração do mapa mudou |
 | 12 | `legacyIncompatible` | Par legado não comporta o mapa completo |
-| 13 | `transportUnavailable` | Registro, ownership, rate/canal ou barreira inviável |
+| 13 | `transportUnavailable` | Registro, ownership, rate/canal, barreira inviável ou provider de digest indisponível |
 | 14 | `budgetExceeded` | Bytes/frames de controle excedem a política |
 
 Campo geral e valores sem aplicação usam zero. Motivo legível é derivado

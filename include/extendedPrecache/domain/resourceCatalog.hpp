@@ -36,7 +36,8 @@ template <ResourceKind kind> class ResourceCatalog final {
         if (frozen) {
             return std::unexpected{ResourceError::catalogFrozen};
         }
-        if (entries.size() >= catalogLimits.entryCapacity()) {
+        if (entries.size() >= catalogLimits.entryCapacity().value ||
+            entries.size() >= maxResourceEntries(kind)) {
             return std::unexpected{ResourceError::capacityReached};
         }
 

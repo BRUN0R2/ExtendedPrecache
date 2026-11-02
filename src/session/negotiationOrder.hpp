@@ -38,7 +38,6 @@ inline constexpr auto order =
 inline constexpr std::size_t offerFrameCount = 11;
 inline constexpr std::size_t capabilitiesEndStep = 18;
 inline constexpr std::size_t selectionEndStep = 22;
-inline constexpr std::size_t readyStep = 23;
 inline constexpr std::size_t commitStep = 24;
 inline constexpr std::uint32_t offerHashFrameCount = 10;
 inline constexpr std::uint32_t clientHashFrameCount = 7;

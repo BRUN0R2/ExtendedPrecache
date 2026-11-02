@@ -8,6 +8,22 @@ namespace extendedPrecache {
 
 enum class ResourceKind : std::uint8_t { model, sound, generic, event, decal };
 
+// Models and sounds reserve index zero, and the engine API carries event indices as u16.
+[[nodiscard]] constexpr auto maxResourceEntries(ResourceKind kind) noexcept -> std::uint32_t {
+    constexpr auto signedMaximum = std::uint32_t{std::numeric_limits<std::int32_t>::max()};
+    switch (kind) {
+    case ResourceKind::model:
+    case ResourceKind::sound:
+        return signedMaximum - 1;
+    case ResourceKind::event:
+        return std::numeric_limits<std::uint16_t>::max();
+    case ResourceKind::generic:
+    case ResourceKind::decal:
+        return signedMaximum;
+    }
+    return 0;
+}
+
 enum class ResourceError : std::uint8_t {
     invalidCapacity,
     invalidPathLimit,
@@ -40,21 +56,21 @@ class CatalogLimits final {
         return CatalogLimits{entryCapacity, maxPathBytes};
     }
 
-    [[nodiscard]] constexpr auto entryCapacity() const noexcept -> std::uint32_t {
+    [[nodiscard]] constexpr auto entryCapacity() const noexcept -> ResourceCapacity {
         return entryCapacityValue;
     }
 
-    [[nodiscard]] constexpr auto maxPathBytes() const noexcept -> std::uint32_t {
+    [[nodiscard]] constexpr auto maxPathBytes() const noexcept -> ResourcePathByteLimit {
         return maxPathBytesValue;
     }
 
   private:
     constexpr CatalogLimits(ResourceCapacity entryCapacity,
                             ResourcePathByteLimit maxPathBytes) noexcept
-        : entryCapacityValue{entryCapacity.value}, maxPathBytesValue{maxPathBytes.value} {}
+        : entryCapacityValue{entryCapacity}, maxPathBytesValue{maxPathBytes} {}
 
-    std::uint32_t entryCapacityValue;
-    std::uint32_t maxPathBytesValue;
+    ResourceCapacity entryCapacityValue;
+    ResourcePathByteLimit maxPathBytesValue;
 };
 
 template <ResourceKind kind> class ResourceCatalog;
@@ -77,14 +93,18 @@ template <ResourceKind kind> class ResourceIndex final {
     std::uint32_t rawValue;
 };
 
+struct IndexBitCount final {
+    std::uint32_t value;
+};
+
 class IndexEncoding final {
   public:
-    [[nodiscard]] static constexpr auto create(std::uint32_t bitCount) noexcept
+    [[nodiscard]] static constexpr auto create(IndexBitCount bitCount) noexcept
         -> std::expected<IndexEncoding, ResourceError> {
-        if (bitCount == 0 || bitCount > storageBits) {
+        if (bitCount.value == 0 || bitCount.value > storageBits) {
             return std::unexpected{ResourceError::invalidBitWidth};
         }
-        return IndexEncoding{static_cast<std::uint8_t>(bitCount)};
+        return IndexEncoding{static_cast<std::uint8_t>(bitCount.value)};
     }
 
     [[nodiscard]] constexpr auto maxValue() const noexcept -> std::uint32_t {

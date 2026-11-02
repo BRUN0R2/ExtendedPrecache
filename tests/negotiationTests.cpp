@@ -56,8 +56,9 @@ void testExchange(TestSuite &suite, const std::filesystem::path &docs) {
                                       agreement.clientNonce == f.clientIdentity() &&
                                       agreement.map.catalog == f.map.catalog,
                                   "agreement binds map and both identities"));
-    static_cast<void>(suite.check(f.client.confirmServerInfo(48, {37}, f.clientContext).has_value(),
-                                  "armed client validates first serverinfo"));
+    static_cast<void>(
+        suite.check(f.client.confirmServerInfo({48}, {37}, f.clientContext).has_value(),
+                    "armed client validates first serverinfo"));
     static_cast<void>(
         suite.check(f.serverStorage.probe.calls == 1 && f.clientStorage.probe.calls == 1,
                     "preparation runs once per endpoint"));
@@ -305,15 +306,15 @@ void testBindingsAndRejection(TestSuite &suite, const std::filesystem::path &doc
     {
         DuplexFixture f{docs};
         f.advanceTo(suite, exchangeComplete);
-        expectFailure(suite, f.client.confirmServerInfo(47, {37}, f.clientContext),
+        expectFailure(suite, f.client.confirmServerInfo({47}, {37}, f.clientContext),
                       RejectCode::unsupportedContract,
                       "protocol mismatch after ACK invalidates agreement");
     }
     {
         DuplexFixture f{docs};
         f.advanceTo(suite, exchangeComplete);
-        expectFailure(suite, f.client.confirmServerInfo(48, {38}, f.clientContext),
-                      RejectCode::unsupportedContract, "spawn mismatch invalidates agreement");
+        expectFailure(suite, f.client.confirmServerInfo({48}, {38}, f.clientContext),
+                      RejectCode::mapChanged, "spawn mismatch invalidates agreement");
     }
 }
 
@@ -488,23 +489,30 @@ void testLegacy(TestSuite &suite, const std::filesystem::path &docs) {
     values[0] = 1;
     values[5] = 1;
     const auto map = MapRequirements::create(CapabilityVector{values}).value();
-    static_cast<void>(
-        suite.check(checkLegacyAdmission(config, map, LegacyProof::complete, false).has_value(),
-                    "explicit complete legacy proof before offer"));
-    expectFailure(suite, checkLegacyAdmission(config, map, LegacyProof::unverified, false),
-                  RejectCode::legacyIncompatible, "numeric fit alone is not legacy compatibility");
-    expectFailure(suite, checkLegacyAdmission(config, map, LegacyProof::complete, true),
-                  RejectCode::legacyIncompatible, "no downgrade after offer");
+    static_cast<void>(suite.check(
+        checkLegacyAdmission(config, map, LegacyProof::complete, NegotiationProgress::notStarted)
+            .has_value(),
+        "explicit complete legacy proof before offer"));
+    expectFailure(
+        suite,
+        checkLegacyAdmission(config, map, LegacyProof::unverified, NegotiationProgress::notStarted),
+        RejectCode::legacyIncompatible, "numeric fit alone is not legacy compatibility");
+    expectFailure(
+        suite,
+        checkLegacyAdmission(config, map, LegacyProof::complete, NegotiationProgress::started),
+        RejectCode::legacyIncompatible, "no downgrade after offer");
     const auto required =
         parseConfiguration(readText(docs / "examples/serverExtendedDraft.json")).value();
-    expectFailure(suite, checkLegacyAdmission(required, map, LegacyProof::complete, false),
-                  RejectCode::legacyIncompatible, "required extension never accepts legacy");
+    expectFailure(
+        suite,
+        checkLegacyAdmission(required, map, LegacyProof::complete, NegotiationProgress::notStarted),
+        RejectCode::legacyIncompatible, "required extension never accepts legacy");
     values[0] = 512;
     values[5] = 512;
     expectFailure(suite,
                   checkLegacyAdmission(config,
                                        MapRequirements::create(CapabilityVector{values}).value(),
-                                       LegacyProof::complete, false),
+                                       LegacyProof::complete, NegotiationProgress::notStarted),
                   RejectCode::legacyIncompatible, "legacy complete map must fit native indices");
 }
 } // namespace

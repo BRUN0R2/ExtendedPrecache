@@ -1,32 +1,56 @@
 #include <extendedPrecache/session/capabilities.hpp>
 
+#include <extendedPrecache/domain/resourceTypes.hpp>
+
+#include <utility>
+
 namespace extendedPrecache::session {
 namespace {
-constexpr auto signedCountMaximum = std::uint32_t{2147483647};
-constexpr auto maximumValues = std::array<std::uint32_t, capabilityCount>{signedCountMaximum - 1,
-                                                                          signedCountMaximum - 1,
-                                                                          signedCountMaximum,
-                                                                          65535,
-                                                                          signedCountMaximum,
-                                                                          signedCountMaximum,
-                                                                          signedCountMaximum,
-                                                                          signedCountMaximum,
-                                                                          65536,
-                                                                          signedCountMaximum,
-                                                                          16777215,
-                                                                          65536};
-constexpr auto minimumValues =
-    std::array<std::uint32_t, capabilityCount>{1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1};
+constexpr auto maxMessageBytes = std::uint32_t{65536};
+constexpr auto maxFileBytes = std::uint32_t{16777215};
+
+struct FieldRange final {
+    std::uint32_t minimum;
+    std::uint32_t maximum;
+};
+constexpr auto fieldRange(CapabilityField field) noexcept -> FieldRange {
+    switch (field) {
+    case CapabilityField::modelEntries:
+        return {1, maxResourceEntries(ResourceKind::model)};
+    case CapabilityField::soundEntries:
+        return {0, maxResourceEntries(ResourceKind::sound)};
+    case CapabilityField::genericEntries:
+        return {0, maxResourceEntries(ResourceKind::generic)};
+    case CapabilityField::eventEntries:
+        return {0, maxResourceEntries(ResourceKind::event)};
+    case CapabilityField::decalEntries:
+        return {0, maxResourceEntries(ResourceKind::decal)};
+    case CapabilityField::resourceEntries:
+        return {1, signedMaximum};
+    case CapabilityField::consistencyEntries:
+        return {0, signedMaximum};
+    case CapabilityField::manifestBytes:
+    case CapabilityField::inFlightBytes:
+        return {1, signedMaximum};
+    case CapabilityField::chunkBytes:
+    case CapabilityField::reliableMessageBytes:
+        return {1, maxMessageBytes};
+    case CapabilityField::fileBytes:
+        return {1, maxFileBytes};
+    }
+    return {};
+}
 } // namespace
 
 auto CapabilityLimits::create(CapabilityVector values) noexcept
     -> std::expected<CapabilityLimits, Rejection> {
-    for (std::size_t index = 0; index < capabilityCount; ++index) {
-        const auto value = values.wireValues()[index];
-        if (value < minimumValues[index] || value > maximumValues[index]) {
-            return std::unexpected{Rejection{RejectCode::invalidConfiguration,
-                                             static_cast<std::uint8_t>(index + 1), value,
-                                             maximumValues[index]}};
+    for (const auto field : capabilityFields) {
+        const auto value = values.wireValues()[fieldIndex(field)];
+        const auto range = fieldRange(field);
+        if (value < range.minimum || value > range.maximum) {
+            return std::unexpected{
+                Rejection{RejectCode::invalidConfiguration, std::to_underlying(field), value,
+                          value < range.minimum ? range.minimum : range.maximum}};
         }
     }
     return CapabilityLimits{values};
@@ -34,15 +58,14 @@ auto CapabilityLimits::create(CapabilityVector values) noexcept
 
 auto MapRequirements::create(CapabilityVector values) noexcept
     -> std::expected<MapRequirements, Rejection> {
-    const auto &input = values.wireValues();
-    std::uint64_t total{};
-    constexpr auto categoryCount = 5U;
-    for (std::size_t index = 0; index < categoryCount; ++index) {
-        total += input[index];
-    }
-    if (input[fieldIndex(CapabilityField::modelEntries)] == 0 ||
-        total != input[fieldIndex(CapabilityField::resourceEntries)] ||
-        input[fieldIndex(CapabilityField::consistencyEntries)] > total) {
+    const auto total = std::uint64_t{values.get<CapabilityField::modelEntries>().value} +
+                       values.get<CapabilityField::soundEntries>().value +
+                       values.get<CapabilityField::genericEntries>().value +
+                       values.get<CapabilityField::eventEntries>().value +
+                       values.get<CapabilityField::decalEntries>().value;
+    if (values.get<CapabilityField::modelEntries>().value == 0 ||
+        total != values.get<CapabilityField::resourceEntries>().value ||
+        values.get<CapabilityField::consistencyEntries>().value > total) {
         return std::unexpected{Rejection{RejectCode::invalidConfiguration}};
     }
     return MapRequirements{values};
@@ -61,13 +84,12 @@ auto intersectLimits(const CapabilityLimits &server, const CapabilityLimits &cli
 auto admitRequirements(const MapRequirements &requirements,
                        const CapabilityLimits &selected) noexcept
     -> std::expected<void, Rejection> {
-    for (std::size_t index = 0; index < capabilityCount; ++index) {
-        const auto needed = requirements.vector().wireValues()[index];
-        const auto offered = selected.vector().wireValues()[index];
+    for (const auto field : capabilityFields) {
+        const auto needed = requirements.vector().wireValues()[fieldIndex(field)];
+        const auto offered = selected.vector().wireValues()[fieldIndex(field)];
         if (needed > offered) {
             return std::unexpected{Rejection{RejectCode::capacityInsufficient,
-                                             static_cast<std::uint8_t>(index + 1), offered,
-                                             needed}};
+                                             std::to_underlying(field), offered, needed}};
         }
     }
     return {};
@@ -83,14 +105,27 @@ auto validateChunkBudget(const CapabilityLimits &limits, ByteCount framingBytes)
         if (required > offered) {
             return std::unexpected{Rejection{
                 RejectCode::invalidConfiguration, static_cast<std::uint8_t>(field), offered,
-                static_cast<std::uint32_t>(std::min(required, std::uint64_t{signedCountMaximum}))}};
+                static_cast<std::uint32_t>(std::min(required, std::uint64_t{signedMaximum}))}};
         }
     }
     return {};
 }
 
+// The proven native limits from capabilities.md, in wire order.
 auto legacyLimits() noexcept -> CapabilityLimits {
-    return CapabilityLimits{CapabilityVector{
-        {511, 511, 4095, 255, 512, 4095, 512, 4194304, 16384, 65536, 16777215, 65536}}};
+    return CapabilityLimits{CapabilityVector{{
+        511,      // modelEntries
+        511,      // soundEntries
+        4095,     // genericEntries
+        255,      // eventEntries
+        512,      // decalEntries
+        4095,     // resourceEntries
+        512,      // consistencyEntries
+        4194304,  // manifestBytes
+        16384,    // chunkBytes
+        65536,    // inFlightBytes
+        16777215, // fileBytes
+        65536,    // reliableMessageBytes
+    }}};
 }
 } // namespace extendedPrecache::session
