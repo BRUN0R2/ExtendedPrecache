@@ -1,16 +1,14 @@
 #pragma once
 
+#include "clientBuild.hpp"
+
 #include <cstddef>
 #include <cstdint>
 #include <span>
-#include <string_view>
 
-// Own declarations of what the selected hw.dll keeps in writable tables and of the engine
-// functions it hands to its client library. These positions hold only for that exact build.
+// Own declarations of what a verified hw.dll keeps in writable tables and of the engine functions
+// it hands to its client library. Where they are comes from the layout of that exact build.
 namespace extendedPrecache::platform::windows::client {
-
-inline constexpr auto selectedEngineSha256 =
-    std::string_view{"9ba9a2db5e07598fd59afa35507a98c86162e4e15b3835177b78c11842cd2295"};
 
 using ServiceParser = void (*)();
 using FrameFunction = void (*)(double time);
@@ -33,7 +31,8 @@ struct ConnectionStatus final {
 
 class ClientEngine final {
   public:
-    explicit ClientEngine(void *base) noexcept : base{static_cast<std::byte *>(base)} {}
+    ClientEngine(void *base, const EngineLayout &layout) noexcept
+        : base{static_cast<std::byte *>(base)}, layout{&layout} {}
 
     [[nodiscard]] auto image() const noexcept -> std::byte * {
         return base;
@@ -68,6 +67,7 @@ class ClientEngine final {
     [[nodiscard]] auto engineFunction(std::size_t entry) const noexcept -> Function;
 
     std::byte *base;
+    const EngineLayout *layout;
 };
 
 } // namespace extendedPrecache::platform::windows::client

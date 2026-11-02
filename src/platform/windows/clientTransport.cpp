@@ -82,10 +82,9 @@ class ClientTransport final : public transport::SessionSource,
                               public session::SessionPreparer {
   public:
     ClientTransport(ClientEngine engine, std::unique_ptr<ClientProfile> profile,
-                    ConnectionBinding binding, std::uint32_t modelSlotLimit) noexcept
+                    ConnectionBinding binding, ClientModelTables models) noexcept
         : engine{engine}, profile{std::move(profile)},
-          negotiator{this->profile->policy(), binding, *this, *this},
-          models{engine.image(), modelSlotLimit} {}
+          negotiator{this->profile->policy(), binding, *this, *this}, models{std::move(models)} {}
 
     [[nodiscard]] auto open(session::SessionContext context)
         -> std::expected<NegotiationSession, Rejection> override {
@@ -322,14 +321,14 @@ auto ClientTransport::hookEngine() noexcept -> bool {
 } // namespace
 
 auto installClientTransport(ClientEngine engine, std::unique_ptr<ClientProfile> profile,
-                            std::uint32_t modelSlotLimit) -> std::expected<void, TransportRefusal> {
+                            ClientModelTables models) -> std::expected<void, TransportRefusal> {
     const auto connection = randomIdentity<session::ConnectionToken>();
     const auto peer = randomIdentity<session::PeerToken>();
     if (!connection || !peer) {
         return std::unexpected{TransportRefusal::noBinding};
     }
     auto transport = std::make_unique<ClientTransport>(
-        engine, std::move(profile), ConnectionBinding{*connection, *peer, {1}}, modelSlotLimit);
+        engine, std::move(profile), ConnectionBinding{*connection, *peer, {1}}, std::move(models));
     // The hooks can fire as soon as they are in the tables.
     activeTransport = transport.get();
     if (!transport->hookEngine()) {
