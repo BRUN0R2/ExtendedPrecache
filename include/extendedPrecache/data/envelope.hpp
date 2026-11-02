@@ -56,6 +56,9 @@ struct Envelope final {
 // The result borrows the input; it never guesses the framing of a native service.
 [[nodiscard]] auto decodeEnvelope(std::span<const std::byte> bytes, Direction direction,
                                   RecordBudget budget = {}) noexcept -> Result<Envelope>;
+// Delimits the first record of a buffer shared by several; decodeEnvelope still validates it.
+[[nodiscard]] auto leadingEnvelopeBytes(std::span<const std::byte> bytes) noexcept
+    -> Result<std::uint32_t>;
 enum class ReceiveDisposition : std::uint8_t { accept, staleNonce, oldUnreliable };
 class SequenceTracker final {
   public:

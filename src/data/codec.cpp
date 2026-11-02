@@ -20,6 +20,7 @@ auto stateContext(const CodecContext &context, RecordBudget budget) -> StateCont
             context.application.definition().schemas,
             *context.bindings.objects,
             context.application.definition().objects,
+            narrow(context.application.definition().modules.size()),
             context.epoch,
             context.application.definition().limits.stateFrameBytes,
             budget};

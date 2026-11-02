@@ -50,6 +50,22 @@ auto dataOpcode(Direction direction, std::uint8_t opcode) -> bool {
                ? opcode == 7
                : std::ranges::find(server, opcode) != server.end();
 }
+// Each record kind needs a live phase, so a service missing one of its phases would fail
+// only after the offer, when it first tried to send.
+void dataServicePhases(const ServicePolicy &service) {
+    const auto enabled = [&](Phase phase) {
+        return service.phases[static_cast<std::size_t>(phase)];
+    };
+    const auto server = service.direction == Direction::serverToClient;
+    const auto metadata = server && (service.opcode == std::to_underlying(Service::schema) ||
+                                     service.opcode == std::to_underlying(Service::initialFrame));
+    const auto twoPhases = !server || service.opcode == std::to_underlying(Service::clientData) ||
+                           service.opcode == std::to_underlying(Service::resource);
+    require(!enabled(Phase::negotiation) && !enabled(Phase::bootstrap) &&
+                enabled(Phase::loading) == (metadata || twoPhases) &&
+                enabled(Phase::gameplay) == !metadata,
+            ErrorCode::invalidSchema);
+}
 void serviceCoverage(const ApplicationContract &contract, const ApplicationBindings &bindings,
                      std::uint32_t reliableBytes) {
     for (const auto direction : {Direction::serverToClient, Direction::clientToServer}) {
@@ -71,16 +87,8 @@ void serviceCoverage(const ApplicationContract &contract, const ApplicationBindi
             }
             within(service->maxBytes.value, reliableBytes);
             if (data) {
-                require(service->maxBytes.value >= envelopeBytes && !service->phases[0] &&
-                            !service->phases[1],
-                        ErrorCode::invalidSchema);
-                if (direction == Direction::serverToClient) {
-                    const auto metadata = opcode == 14 || opcode == 22;
-                    const auto both = opcode == 15 || opcode == 43;
-                    require(both || (metadata ? !service->phases[3] && service->phases[2]
-                                              : !service->phases[2] && service->phases[3]),
-                            ErrorCode::invalidSchema);
-                }
+                require(service->maxBytes.value >= envelopeBytes, ErrorCode::invalidSchema);
+                dataServicePhases(*service);
             }
             get(bindings.approveService(*service));
         }

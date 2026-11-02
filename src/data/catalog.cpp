@@ -8,9 +8,19 @@
 namespace extendedPrecache::data {
 namespace {
 using namespace detail;
+constexpr auto sentencePrefix = '!';
+constexpr auto inlineModelPrefix = '*';
 void path(std::string_view name, std::uint32_t maximum) {
     const auto limits = ::extendedPrecache::CatalogLimits::create({1}, {maximum});
     require(limits && validateResourcePath(name, *limits).has_value());
+}
+// One submodel has one spelling, so deduplication by name also identifies it.
+void inlineModelName(const std::string &name) {
+    require(name.size() > 1 && name.front() == inlineModelPrefix && name[1] != '0');
+    std::uint32_t submodel{};
+    const auto *const last = name.data() + name.size();
+    const auto parsed = std::from_chars(name.data() + 1, last, submodel);
+    require(parsed.ec == std::errc{} && parsed.ptr == last && submodel > 0);
 }
 void bounds(const Bounds &value) {
     for (std::size_t index = 0; index < 3; ++index) {
@@ -136,15 +146,11 @@ void validateData(const CatalogData &data, CatalogContext context) {
             if (row.type == ResourceType::inlineModel) {
                 require(row.parent == ResourceReference{ResourceKind::model, {1}} &&
                         row.asset == data.resources.front().asset);
-                require(row.name.size() > 1 && row.name.front() == '*');
-                std::uint32_t submodel{};
-                const auto parsed = std::from_chars(row.name.data() + 1,
-                                                    row.name.data() + row.name.size(), submodel);
-                require(parsed.ec == std::errc{} &&
-                        parsed.ptr == row.name.data() + row.name.size() && submodel > 0);
+                inlineModelName(row.name);
             } else {
-                require(!row.parent);
+                require(!row.parent && row.name.front() != inlineModelPrefix);
             }
+            require(kind != ResourceKind::sound || row.name.front() != sentencePrefix);
         }
     }
     require(nextAsset == data.assets.size());

@@ -56,6 +56,7 @@ struct StateContext final {
     std::span<const Schema> schemas;
     const ObjectBindings &bindings;
     ObjectLimits objects;
+    std::uint32_t moduleEntries{};
     MapEpoch epoch;
     ByteCount frameBytes;
     RecordBudget records;

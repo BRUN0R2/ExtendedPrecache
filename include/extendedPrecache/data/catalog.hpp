@@ -80,6 +80,9 @@ struct ChunkView final {
 [[nodiscard]] auto encodeCatalogBegin(CatalogBegin begin) noexcept -> Result<Bytes>;
 [[nodiscard]] auto decodeCatalogBegin(std::span<const std::byte> bytes) noexcept
     -> Result<CatalogBegin>;
+// The begin record precedes the manifest, so its counts can only be bound once it is decoded.
+[[nodiscard]] auto verifyCatalogBegin(CatalogBegin begin, const Catalog &catalog) noexcept
+    -> Result<void>;
 [[nodiscard]] auto encodeChunk(ChunkView chunk, ByteCount maxPayload, RecordBudget budget) noexcept
     -> Result<Bytes>;
 [[nodiscard]] auto decodeChunk(std::span<const std::byte> bytes, ByteCount maxPayload,

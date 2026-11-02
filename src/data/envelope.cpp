@@ -49,7 +49,7 @@ auto encodeEnvelope(const Envelope &value, RecordBudget budget) noexcept -> Resu
         detail::Writer writer{
             std::min<std::uint64_t>(budget.messageBytes.value, budget.ownedBytes.value)};
         writer.integer(value.route.opcode);
-        writer.integer(std::uint8_t{2});
+        writer.integer(envelopeMajor);
         writer.integer(value.route.kind);
         writer.enumeration(value.route.delivery);
         writer.integer(detail::narrow(value.body.size()));
@@ -68,7 +68,8 @@ auto decodeEnvelope(std::span<const std::byte> bytes, Direction direction,
         detail::within(bytes.size(), maxMessageBytes);
         detail::Reader reader{bytes};
         const auto opcode = reader.integer<std::uint8_t>();
-        detail::require(reader.integer<std::uint8_t>() == 2, ErrorCode::unsupportedContract);
+        detail::require(reader.integer<std::uint8_t>() == envelopeMajor,
+                        ErrorCode::unsupportedContract);
         const auto kind = reader.integer<std::uint8_t>();
         const auto delivery = reader.enumeration<Delivery>();
         const auto count = reader.integer<std::uint32_t>();
@@ -82,6 +83,21 @@ auto decodeEnvelope(std::span<const std::byte> bytes, Direction direction,
         const auto body = reader.take(count);
         reader.end();
         return Envelope{route, nonce, epoch, sequence, body};
+    });
+}
+auto leadingEnvelopeBytes(std::span<const std::byte> bytes) noexcept -> Result<std::uint32_t> {
+    return detail::protect([&] {
+        constexpr auto opcodeBytes = std::size_t{1};
+        constexpr auto kindAndFlagsBytes = std::size_t{2};
+        detail::Reader reader{bytes};
+        reader.take(opcodeBytes);
+        detail::require(reader.integer<std::uint8_t>() == envelopeMajor,
+                        ErrorCode::unsupportedContract);
+        reader.take(kindAndFlagsBytes);
+        const auto total = detail::add(envelopeBytes, reader.integer<std::uint32_t>());
+        detail::within(total, maxMessageBytes);
+        detail::require(total <= bytes.size());
+        return static_cast<std::uint32_t>(total);
     });
 }
 auto SequenceTracker::accept(const Envelope &value) noexcept -> Result<ReceiveDisposition> {

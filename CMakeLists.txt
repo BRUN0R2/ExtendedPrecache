@@ -49,6 +49,7 @@ add_library(extendedPrecacheData STATIC
     src/data/types.cpp
     src/data/envelope.cpp
     src/data/schema.cpp
+    src/data/schemaSetReceiver.cpp
     src/data/values.cpp
     src/data/catalog.cpp
     src/data/chunks.cpp
