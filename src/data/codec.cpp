@@ -198,6 +198,107 @@ auto encode(const T &value, Route route, const CodecContext &context, RecordBudg
         return get(encodeFatal(value.failure));
     }
 }
+auto decodeClientRecord(std::span<const std::byte> bytes, Route route, const CodecContext &context,
+                        RecordBudget budget) -> DataPayload {
+    switch (static_cast<ClientKind>(route.kind)) {
+    case ClientKind::consistencyPage:
+        return get(decodeConsistencyPage(bytes, budget));
+    case ClientKind::consistencyEnd:
+        return get(decodeConsistencyEnd(bytes));
+    case ClientKind::assetsReady:
+        return get(decodeAssetsReady(bytes));
+    case ClientKind::gameplayAck:
+        return GameplayAck{get(decodeFrameAck(bytes))};
+    case ClientKind::frameAck:
+        return get(decodeFrameAck(bytes));
+    case ClientKind::resyncRequest:
+        return ResyncRequest{get(decodeResyncRequest(bytes))};
+    case ClientKind::modMessage:
+        return get(decodeModMessage(bytes, modContext(context, route, budget)));
+    case ClientKind::fatal:
+        break;
+    }
+    fail();
+}
+auto decodeSchemaRecord(std::span<const std::byte> bytes, Route route, RecordBudget budget)
+    -> DataPayload {
+    if (hasKind(route, SchemaKind::schema)) {
+        return get(decodeSchema(bytes, budget));
+    }
+    return SchemaSetEnd{get(decodeDigest(bytes))};
+}
+auto decodeResourceRecord(std::span<const std::byte> bytes, Route route,
+                          const CodecContext &context, RecordBudget budget) -> DataPayload {
+    switch (static_cast<ResourceMessageKind>(route.kind)) {
+    case ResourceMessageKind::catalogBegin:
+        return get(decodeCatalogBegin(bytes));
+    case ResourceMessageKind::catalogChunk:
+        return get(decodeChunk(
+            bytes, {context.selected.vector().get<session::CapabilityField::chunkBytes>().value},
+            budget));
+    case ResourceMessageKind::catalogEnd:
+        return CatalogEnd{get(decodeDigest(bytes))};
+    case ResourceMessageKind::gameStart:
+        return get(decodeGameStart(bytes));
+    case ResourceMessageKind::modMessage:
+        return get(decodeModMessage(bytes, modContext(context, route, budget)));
+    case ResourceMessageKind::moduleState:
+        return get(decodeFrameObject(bytes, stateContext(context, budget)));
+    case ResourceMessageKind::fatal:
+        break;
+    }
+    fail();
+}
+auto decodeFrameRecord(std::span<const std::byte> bytes, Route route, const CodecContext &context,
+                       RecordBudget budget) -> DataPayload {
+    if (hasKind(route, FrameKind::begin)) {
+        return get(decodeFrameBegin(bytes));
+    }
+    if (hasKind(route, FrameKind::object)) {
+        return get(decodeFrameObject(bytes, stateContext(context, budget)));
+    }
+    return get(decodeFrameEnd(bytes));
+}
+auto decodeServiceRecord(std::span<const std::byte> bytes, Route route, const CodecContext &context,
+                         RecordBudget budget) -> DataPayload {
+    switch (static_cast<Service>(route.opcode)) {
+    case Service::clientData:
+        return get(decodeFrameObject(bytes, stateContext(context, budget)));
+    case Service::sound:
+    case Service::staticSound:
+        return get(decodeSound(bytes, route, context.phase, soundContext(context, budget)));
+    case Service::event:
+    case Service::reliableEvent:
+        return get(decodeEvent(bytes, route, context.phase, eventContext(context, budget)));
+    case Service::effect:
+        return get(
+            decodeEffect(bytes, route.delivery, context.phase, effectContext(context, budget)));
+    case Service::decalName:
+        return get(decodeDecalName(bytes, catalog(context), budget));
+    default:
+        break;
+    }
+    fail();
+}
+auto decodeRecord(std::span<const std::byte> bytes, Route route, const CodecContext &context,
+                  RecordBudget budget) -> DataPayload {
+    if (route.kind == fatalKind) {
+        return FatalMessage{get(decodeFatal(bytes))};
+    }
+    if (route.direction == Direction::clientToServer) {
+        return decodeClientRecord(bytes, route, context, budget);
+    }
+    if (isService(route, Service::schema)) {
+        return decodeSchemaRecord(bytes, route, budget);
+    }
+    if (isService(route, Service::resource)) {
+        return decodeResourceRecord(bytes, route, context, budget);
+    }
+    if (isFrame(route)) {
+        return decodeFrameRecord(bytes, route, context, budget);
+    }
+    return decodeServiceRecord(bytes, route, context, budget);
+}
 } // namespace
 auto authorizeMessage(Route route, const CodecContext &context) noexcept -> Result<RecordBudget> {
     return detail::protect([&] {
@@ -259,87 +360,7 @@ auto decodeBody(std::span<const std::byte> bytes, Route route, const CodecContex
     return detail::protect([&]() -> DataPayload {
         const auto budget = get(authorizeMessage(route, context));
         within(add(envelopeBytes, bytes.size()), budget.messageBytes.value);
-        auto decode = [&]() -> DataPayload {
-            if (route.kind == fatalKind) {
-                return FatalMessage{get(decodeFatal(bytes))};
-            }
-            if (route.direction == Direction::clientToServer) {
-                switch (static_cast<ClientKind>(route.kind)) {
-                case ClientKind::consistencyPage:
-                    return get(decodeConsistencyPage(bytes, budget));
-                case ClientKind::consistencyEnd:
-                    return get(decodeConsistencyEnd(bytes));
-                case ClientKind::assetsReady:
-                    return get(decodeAssetsReady(bytes));
-                case ClientKind::gameplayAck:
-                    return GameplayAck{get(decodeFrameAck(bytes))};
-                case ClientKind::frameAck:
-                    return get(decodeFrameAck(bytes));
-                case ClientKind::resyncRequest:
-                    return ResyncRequest{get(decodeResyncRequest(bytes))};
-                case ClientKind::modMessage:
-                    return get(decodeModMessage(bytes, modContext(context, route, budget)));
-                case ClientKind::fatal:
-                    break;
-                }
-            } else if (isService(route, Service::schema)) {
-                if (hasKind(route, SchemaKind::schema)) {
-                    return get(decodeSchema(bytes, budget));
-                }
-                return SchemaSetEnd{get(decodeDigest(bytes))};
-            } else if (isService(route, Service::resource)) {
-                switch (static_cast<ResourceMessageKind>(route.kind)) {
-                case ResourceMessageKind::catalogBegin:
-                    return get(decodeCatalogBegin(bytes));
-                case ResourceMessageKind::catalogChunk:
-                    return get(decodeChunk(bytes,
-                                           {context.selected.vector()
-                                                .get<session::CapabilityField::chunkBytes>()
-                                                .value},
-                                           budget));
-                case ResourceMessageKind::catalogEnd:
-                    return CatalogEnd{get(decodeDigest(bytes))};
-                case ResourceMessageKind::gameStart:
-                    return get(decodeGameStart(bytes));
-                case ResourceMessageKind::modMessage:
-                    return get(decodeModMessage(bytes, modContext(context, route, budget)));
-                case ResourceMessageKind::moduleState:
-                    return get(decodeFrameObject(bytes, stateContext(context, budget)));
-                case ResourceMessageKind::fatal:
-                    break;
-                }
-            } else if (isFrame(route)) {
-                if (hasKind(route, FrameKind::begin)) {
-                    return get(decodeFrameBegin(bytes));
-                }
-                if (hasKind(route, FrameKind::object)) {
-                    return get(decodeFrameObject(bytes, stateContext(context, budget)));
-                }
-                return get(decodeFrameEnd(bytes));
-            } else {
-                switch (static_cast<Service>(route.opcode)) {
-                case Service::clientData:
-                    return get(decodeFrameObject(bytes, stateContext(context, budget)));
-                case Service::sound:
-                case Service::staticSound:
-                    return get(
-                        decodeSound(bytes, route, context.phase, soundContext(context, budget)));
-                case Service::event:
-                case Service::reliableEvent:
-                    return get(
-                        decodeEvent(bytes, route, context.phase, eventContext(context, budget)));
-                case Service::effect:
-                    return get(decodeEffect(bytes, route.delivery, context.phase,
-                                            effectContext(context, budget)));
-                case Service::decalName:
-                    return get(decodeDecalName(bytes, catalog(context), budget));
-                default:
-                    break;
-                }
-            }
-            fail();
-        };
-        auto payload = decode();
+        auto payload = decodeRecord(bytes, route, context, budget);
         std::visit(
             [&](const auto &value) {
                 require(matches(value, route));
