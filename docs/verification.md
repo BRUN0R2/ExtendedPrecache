@@ -155,3 +155,9 @@ As APIs e fronteiras implementadas estão em [dataCore.md](dataCore.md).
 Verificadores, vetores e resultados desta etapa permanecem em área local
 ignorada, conforme [RULES.md](RULES.md). Os registros históricos acima descrevem
 suas respectivas etapas e não são evidência de integração dos codecs com o motor.
+
+## Plugin Metamod
+
+O contrato e os limites do plugin inerte estão em [metamodPlugin.md](metamodPlugin.md).
+Sua verificação local e em host real, assim como seus resultados, permanece em área
+ignorada. Não é evidência de barreira, transporte ou suporte ao motor.

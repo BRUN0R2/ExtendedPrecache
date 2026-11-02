@@ -114,9 +114,10 @@ continua permitida; seu metadata pode permanecer alocado até a última liberaç
 `retired` exige referências desse owner zeradas. Caches persistentes de runtime
 não são destruídos apenas porque um mapa terminou.
 
-Quiescência desconhecida impede unload/realocação. O futuro plugin Metamod deve
-recusar unload (`busy`) enquanto houver callbacks, contextos, leases ou bindings
-retidos, inclusive por outros módulos. Remover entradas/hook registrations antes
+Quiescência desconhecida impede unload/realocação. O [plugin Metamod](metamodPlugin.md)
+recusa unload (`busy`) enquanto houver `RetainedUse`; cada callback, contexto, lease ou
+binding futuro precisa prender um, inclusive os retidos por outros módulos. Como o host
+pode ignorar a recusa, o plugin fixa o módulo nesse caso. Remover entradas/hook registrations antes
 de liberar seus owners; manter a DLL carregada enquanto existirem chamadas ou
 function pointers em uso. Não fazer esse trabalho em `DllMain`.
 

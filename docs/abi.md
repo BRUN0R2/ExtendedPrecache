@@ -1,7 +1,9 @@
 # ABI de diagnóstico — versão 1
 
-Único símbolo público: `extendedPrecacheQueryInfo`, com linkage C e convenção
-`cdecl` no Windows x86. O arquivo `.def` preserva o nome exportado sem decoração.
+Único símbolo público de `extendedPrecache.dll`: `extendedPrecacheQueryInfo`, com linkage C
+e convenção `cdecl` no Windows x86. O arquivo `.def` preserva o nome exportado sem decoração.
+As entradas de `extendedPrecacheServer.dll` são um contrato externo do host, documentado
+em [metamodPlugin.md](metamodPlugin.md); não fazem parte desta ABI e não a alteram.
 O cabeçalho é para consumidores C++; a fronteira binária contém somente ponteiros,
 inteiros de largura fixa, enums de base `uint8_t` e uma estrutura POD.
 

@@ -3,9 +3,9 @@
 Extensão em C++26 para ampliar o precache do Counter-Strike 1.6 e do HLDS/ReHLDS,
 com cliente e servidor trabalhando de forma coordenada.
 
-**Estado: fundação em desenvolvimento. A DLL ainda não amplia o precache do motor
-e ainda não é um plugin carregável pelo Metamod.** Não há versões do motor
-declaradas como suportadas nesta etapa.
+**Estado: fundação em desenvolvimento. Nenhum artefato amplia o precache do motor.**
+O [plugin Metamod](docs/metamodPlugin.md) já carrega no host, mas é inerte: não instala
+callbacks nem hooks. Não há versões do motor declaradas como suportadas nesta etapa.
 
 O validador de configuração, o codec de controle e a máquina de estados da
 negociação 1.0 estão implementados e testados em um núcleo C++26 isolado.
@@ -36,6 +36,7 @@ automaticamente resolvidos pelo precache.
 - [Protocolo de negociação 1.0](docs/negotiation.md)
 - [Bootstrap, barreira e limites de transporte](docs/transportBootstrap.md)
 - [API e ciclo de vida do núcleo de sessão](docs/sessionCore.md)
+- [Entradas e ciclo de vida do plugin Metamod](docs/metamodPlugin.md)
 - [Conversão de índices e namespaces](docs/indexMapping.md)
 - [Ownership e estabilidade dos endereços](docs/storageOwnership.md)
 - [Ciclo de mapa, conexão e reset](docs/mapLifecycle.md)
@@ -69,7 +70,8 @@ Execute em um ambiente de desenvolvimento x86 com Clang disponível no `PATH`.
 Veja [build.md](docs/build.md) para os pré-requisitos e as alternativas.
 
 O servidor será distribuído como plugin do Metamod; o cliente precisará de um
-componente complementar. A instalação final depende dos adaptadores ainda pendentes.
+componente complementar. A instalação final depende dos adaptadores ainda pendentes;
+a [instalação de diagnóstico](docs/metamodPlugin.md#instalação-de-diagnóstico) não amplia nada.
 Nenhum instalador ou patch dos arquivos originais está incluído.
 
 ## Contribuição

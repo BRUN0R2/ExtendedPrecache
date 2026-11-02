@@ -77,6 +77,11 @@ target_link_libraries(extendedPrecacheData PUBLIC extendedPrecacheSession
     PRIVATE extendedPrecacheDomain nlohmann_json::nlohmann_json)
 extendedPrecacheApplyOptions(extendedPrecacheData)
 
+add_library(extendedPrecacheMetamod STATIC src/metamod/lifecycle.cpp)
+target_include_directories(extendedPrecacheMetamod PUBLIC include)
+target_compile_features(extendedPrecacheMetamod PUBLIC cxx_std_26)
+extendedPrecacheApplyOptions(extendedPrecacheMetamod)
+
 if(WIN32)
     add_library(extendedPrecacheCrypto STATIC src/platform/windows/cngDigest.cpp
         src/platform/windows/cngStream.cpp)
@@ -127,6 +132,16 @@ if(extendedPrecacheBuildDll)
         PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
     extendedPrecacheApplyOptions(extendedPrecache)
     set_target_properties(extendedPrecache PROPERTIES PREFIX "")
+
+    add_library(extendedPrecacheServer SHARED
+        src/platform/windows/metamodEntry.cpp
+        src/platform/windows/extendedPrecacheServer.def
+    )
+    target_include_directories(extendedPrecacheServer PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/generated")
+    target_compile_definitions(extendedPrecacheServer PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX _WIN32_WINNT=0x0A00)
+    target_link_libraries(extendedPrecacheServer PRIVATE extendedPrecacheMetamod)
+    extendedPrecacheApplyOptions(extendedPrecacheServer)
+    set_target_properties(extendedPrecacheServer PROPERTIES PREFIX "")
 
     if(BUILD_TESTING)
         add_executable(extensionApiTests tests/extensionApiTests.cpp)

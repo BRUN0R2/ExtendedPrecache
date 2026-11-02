@@ -1,6 +1,6 @@
 # ExtendedPrecache — plano de trabalho
 
-Atualizado em: 27/10/2026.
+Atualizado em: 02/11/2026.
 
 Este arquivo é o registro de execução do projeto. Use `[ ]` para trabalho pendente
 e `[x]` somente para trabalho concluído e verificado. Evidências e impedimentos
@@ -42,7 +42,7 @@ devem acompanhar o item correspondente. As regras estão em [RULES.md](RULES.md)
 - [x] Projetar catálogo/consistência, deltas, áudio/eventos/efeitos, limites por bytes e demos em `dataCodecs.md` e contratos vinculados; definir schema fechado para mensagens de mods e módulos externos, sem aprovar um perfil final ou implementar codecs/adaptadores.
 - [x] Implementar os codecs de dados 2.0 e os preflights semânticos de aplicação isoladamente; API, ownership, orçamentos e fronteiras em `dataCore.md`. Verificadores, vetores e resultados permanecem locais fora do GitHub.
 - [ ] Comprovar a barreira anterior a `SV_SendServerinfo`, o bootstrap de user messages, o despacho de `clc_stringcmd`, drain/reset e reconexão nos hashes selecionados antes de habilitar o transporte. Investigação estática parcial em `transportBootstrap.md`; faltam binding e evidência em execução.
-- [ ] Implementar as entradas e o ciclo de vida do plugin Metamod do servidor.
+- [x] Implementar as entradas e o ciclo de vida do plugin Metamod do servidor: plugin inerte, sem hooks ou ampliação, contrato em `metamodPlugin.md`. Verificado localmente em host real; resultados permanecem fora do GitHub.
 - [ ] Implementar adaptador HLDS com detecção exata de versão e falha segura.
 - [ ] Implementar adaptador CS 1.6 com o mesmo contrato e ciclo de vida.
 - [ ] Integrar armazenamento e todos os produtores/consumidores de índices.
@@ -83,7 +83,9 @@ são artefatos de contrato; não há novo export, storage nativo ou adaptador
 implementado. A ABI diagnóstica 1 permanece inalterada. As 21 provas nativas
 inventariadas continuam pendentes e condicionam a aprovação de um perfil.
 
-A ampliação funcional e os adaptadores Metamod/cliente continuam pendentes.
+O [plugin Metamod](metamodPlugin.md) tem entradas e ciclo de vida próprios, mas é
+inerte: identifica-se como fundação e não instala callbacks nem hooks. A ampliação
+funcional e os adaptadores do servidor e do cliente continuam pendentes.
 Nenhum arquivo da instalação do jogo ou servidor foi alterado. O plano de dados
 2.0 possui um [núcleo C++26 isolado](dataCore.md): catálogo, schemas/valores,
 consistência, envelopes, deltas transacionais, áudio/eventos/efeitos, mensagens de
