@@ -24,8 +24,7 @@ using extendedPrecache::transport::ControlMessageId;
 
 constexpr auto foundationNotice =
     "foundation build attached: precache extension inactive, no engine hooks installed";
-constexpr auto transportNotice =
-    "transport installed: sign-on barrier ready, precache extension inactive";
+constexpr auto transportNotice = "transport installed: sign-on barrier ready";
 // The engine takes a terminated string, which a view does not promise.
 constexpr auto controlMessageText = "ExtPrecache";
 static_assert(extendedPrecache::session::controlMessageName ==
@@ -122,11 +121,16 @@ void startTransport() noexcept {
             reportError(describe(use.error()));
             return;
         }
-        installServerTransport(*engine, std::move(profile),
-                               {.report = report,
-                                .reportError = reportError,
-                                .registerControlMessage = registerControlMessage},
-                               std::move(*use));
+        const auto installed =
+            installServerTransport(*engine, std::move(profile),
+                                   {.report = report,
+                                    .reportError = reportError,
+                                    .registerControlMessage = registerControlMessage},
+                                   std::move(*use));
+        if (!installed) {
+            reportError("transport not installed: the engine's code could not be rewritten");
+            return;
+        }
         report(transportNotice);
     } catch (const std::bad_alloc &) {
         reportError("transport not installed: out of memory");

@@ -13,7 +13,9 @@ class ClientProfile {
   public:
     virtual ~ClientProfile() = default;
     [[nodiscard]] virtual auto policy() const noexcept -> session::ConnectionPolicy = 0;
-    [[nodiscard]] virtual auto open(session::SessionContext context)
+    // The preparer reserves the tables and stays alive for as long as the session.
+    [[nodiscard]] virtual auto open(session::SessionContext context,
+                                    session::SessionPreparer &preparer)
         -> std::expected<session::NegotiationSession, session::Rejection> = 0;
 };
 

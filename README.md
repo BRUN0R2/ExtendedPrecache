@@ -3,10 +3,11 @@
 Extensão em C++26 para ampliar o precache do Counter-Strike 1.6 e do HLDS/ReHLDS,
 com cliente e servidor trabalhando de forma coordenada.
 
-**Estado: fundação em desenvolvimento. Nenhum artefato amplia o precache do motor.**
+**Estado: fundação em desenvolvimento. Nenhum artefato publicado amplia o precache do motor.**
 O [plugin Metamod](docs/metamodPlugin.md) já carrega no host, mas é inerte: sem um perfil
 aprovado, e não há nenhum, não instala callbacks nem hooks. Não há versões do motor declaradas
-como suportadas nesta etapa.
+como suportadas nesta etapa. As [tabelas de modelos](docs/modelTables.md) já passam do limite
+nativo em testes locais com perfil sintético; os outros recursos seguem nos limites originais.
 
 O validador de configuração, o codec de controle e a máquina de estados da
 negociação 1.0 estão implementados e testados em um núcleo C++26 isolado.
@@ -39,6 +40,7 @@ automaticamente resolvidos pelo precache.
 - [API e ciclo de vida do núcleo de sessão](docs/sessionCore.md)
 - [Barreira do sign-on por conexão](docs/signonBarrier.md)
 - [Negociação no cliente](docs/clientNegotiator.md)
+- [Tabelas de modelos acima do limite nativo](docs/modelTables.md)
 - [Entradas e ciclo de vida do plugin Metamod](docs/metamodPlugin.md)
 - [Conversão de índices e namespaces](docs/indexMapping.md)
 - [Ownership e estabilidade dos endereços](docs/storageOwnership.md)

@@ -15,7 +15,7 @@ constexpr auto apiInterfaceName = "VREHLDS_HLDS_API_VERSION001";
 constexpr auto apiFactoryName = "CreateInterface";
 } // namespace
 
-auto openSelectedEngine() -> std::expected<rehlds::Api, EngineRefusal> {
+auto openSelectedEngine() -> std::expected<SelectedEngine, EngineRefusal> {
     auto *const module = GetModuleHandleW(engineModuleName);
     if (module == nullptr) {
         return std::unexpected{EngineRefusal::notDedicated};
@@ -35,7 +35,7 @@ auto openSelectedEngine() -> std::expected<rehlds::Api, EngineRefusal> {
     if (!api) {
         return std::unexpected{EngineRefusal::noApi};
     }
-    return *api;
+    return SelectedEngine{*api, reinterpret_cast<std::byte *>(module)};
 }
 
 auto describe(EngineRefusal refusal) noexcept -> const char * {

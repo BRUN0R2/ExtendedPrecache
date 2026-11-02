@@ -26,11 +26,12 @@ inline constexpr std::uint32_t maxControlCommands = session::maxFramesPerDirecti
 // must be closed: the session is gone, and any terminal frame that fitted has been queued.
 class ClientBarrier final {
   public:
-    // The owner keeps the source and the channel alive for as long as this barrier.
+    // The owner keeps the ports alive for as long as this barrier.
     ClientBarrier(ClientOptIn optIn, session::ConnectionBinding binding, ControlMessageId messageId,
-                  SessionSource &sessions, ReliableChannel &channel) noexcept
+                  SessionSource &sessions, const LegacyAdmission &legacy,
+                  ReliableChannel &channel) noexcept
         : optIn{optIn}, binding{binding}, messageId{messageId}, sessions{&sessions},
-          channel{&channel} {}
+          legacy{&legacy}, channel{&channel} {}
 
     [[nodiscard]] auto admit(SignonCommand command, session::MonotonicTime now)
         -> std::expected<CommandVerdict, session::Rejection>;
@@ -68,6 +69,7 @@ class ClientBarrier final {
     session::ConnectionBinding binding;
     ControlMessageId messageId;
     SessionSource *sessions;
+    const LegacyAdmission *legacy;
     ReliableChannel *channel;
     BarrierPhase currentPhase{BarrierPhase::idle};
     std::uint32_t commandsSeen{};

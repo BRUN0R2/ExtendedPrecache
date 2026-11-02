@@ -20,4 +20,11 @@ class SessionSource {
         -> std::expected<session::NegotiationSession, session::Rejection> = 0;
 };
 
+// Whether a client that did not opt in can follow the current map with the native protocol.
+class LegacyAdmission {
+  public:
+    virtual ~LegacyAdmission() = default;
+    [[nodiscard]] virtual auto admitLegacy() const -> std::expected<void, session::Rejection> = 0;
+};
+
 } // namespace extendedPrecache::transport

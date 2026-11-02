@@ -3,7 +3,9 @@
 Data: 27/10/2026. Parecer: **o protocolo original não comporta uma ampliação
 transparente por troca de constantes ou interceptação das funções de precache**.
 A auditoria dos artefatos abaixo está encerrada com os limites e as fronteiras
-registrados. Nenhum adaptador, hook, patch ou capacidade ampliada foi aprovado.
+registrados. Nenhum adaptador, hook, patch ou capacidade ampliada foi aprovado. A primeira
+capacidade implementada depois desta auditoria, ainda sem perfil aprovado, é a de modelos, em
+[modelTables.md](modelTables.md).
 
 ## Identidade e alcance
 

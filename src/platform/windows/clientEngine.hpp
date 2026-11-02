@@ -35,6 +35,10 @@ class ClientEngine final {
   public:
     explicit ClientEngine(void *base) noexcept : base{static_cast<std::byte *>(base)} {}
 
+    [[nodiscard]] auto image() const noexcept -> std::byte * {
+        return base;
+    }
+
     // Whether the tables hold what this build was verified to hold, so replacing is safe.
     [[nodiscard]] auto holdsVerifiedTables() const noexcept -> bool;
     [[nodiscard]] auto replaceService(Service service, ServiceParser replacement) const noexcept

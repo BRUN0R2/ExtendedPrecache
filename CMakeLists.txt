@@ -149,7 +149,10 @@ if(extendedPrecacheBuildDll)
         src/platform/windows/approvedProfile.cpp
         src/platform/windows/buildIdentity.cpp
         src/platform/windows/engineIdentity.cpp
+        src/platform/windows/imageRewrite.cpp
+        src/platform/windows/modelRelocation.cpp
         src/platform/windows/rehldsApi.cpp
+        src/platform/windows/serverModelTables.cpp
         src/platform/windows/serverTransport.cpp
         src/platform/windows/extendedPrecacheServer.def
     )
@@ -167,7 +170,10 @@ if(extendedPrecacheBuildDll)
         src/platform/windows/buildIdentity.cpp
         src/platform/windows/clientEngine.cpp
         src/platform/windows/clientLoadStatus.cpp
+        src/platform/windows/clientModelTables.cpp
         src/platform/windows/clientTransport.cpp
+        src/platform/windows/imageRewrite.cpp
+        src/platform/windows/modelRelocation.cpp
     )
     target_compile_definitions(extendedPrecacheClient PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX _WIN32_WINNT=0x0A00)
     target_link_libraries(extendedPrecacheClient PRIVATE extendedPrecacheTransport extendedPrecacheCrypto)

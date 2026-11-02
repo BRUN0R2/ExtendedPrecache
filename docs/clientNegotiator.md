@@ -37,9 +37,10 @@ recusa: uma nova conexão recomeça do zero e pode ter outro ID.
 A DLL não exporta nada. `DllMain` só cria uma thread, que roda quando o loader lock é liberado:
 ela espera o `hw.dll` ser mapeado, confere o SHA-256 contra o hash selecionado e instala o adaptador.
 
-**Nenhum código do motor é alterado.** O adaptador troca entradas de tabelas de dados do `hw.dll`,
-depois de conferir que todas contêm o que este build tem, e usa as funções que o motor entrega à
-ClientDLL:
+Para conduzir a negociação, o adaptador não altera código do motor. Ele troca entradas de tabelas de
+dados do `hw.dll`, depois de conferir que todas contêm o que este build tem, e usa as funções que o
+motor entrega à ClientDLL. O código só muda durante um mapa negociado acima do limite nativo, como
+descrito em [modelTables.md](modelTables.md).
 
 | Ponto | Origem | Papel |
 | --- | --- | --- |
@@ -106,9 +107,8 @@ O conjunto foi exercitado localmente com o `hw.dll` real contra o plugin real e 
 sintéticos, inclusive sem nenhuma instrumentação no cliente; as observações estão em
 [transportBootstrap.md](transportBootstrap.md#situação-em-execução). **Nunca foi testado contra um
 servidor com VAC real:** a guarda foi exercitada ligando o campo em memória, sem VAC envolvido, e a
-origem do valor é observação estática. Alterar tabelas do motor em memória é o tipo de coisa que um
-anti-cheat pode punir.
+origem do valor é observação estática. Alterar tabelas ou código do motor em memória é o tipo de
+coisa que um anti-cheat pode punir.
 
-O build em Debug depende do CRT de depuração, então ainda não há pacote de distribuição. Cliente
-legado em `preferExtended` segue sem a prova de `checkLegacyAdmission`, aceitável enquanto nada
-amplia limites. A reserva é sintética. Não amplia limites nem habilita transporte.
+O build em Debug depende do CRT de depuração, então ainda não há pacote de distribuição. A reserva
+real existe só para modelos, e os outros recursos continuam nos limites nativos.

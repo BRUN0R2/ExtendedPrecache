@@ -85,7 +85,14 @@ auto ClientBarrier::negotiating() noexcept -> NegotiationSession * {
 
 auto ClientBarrier::admit(SignonCommand command, MonotonicTime now)
     -> std::expected<CommandVerdict, Rejection> {
-    if (optIn == ClientOptIn::legacy || currentPhase == BarrierPhase::released) {
+    if (currentPhase == BarrierPhase::released) {
+        return CommandVerdict::forward;
+    }
+    if (optIn == ClientOptIn::legacy) {
+        // Each map decides anew, and native state beyond the limits would corrupt this client.
+        if (const auto admitted = legacy->admitLegacy(); !admitted) {
+            return refuse(admitted.error(), now);
+        }
         return CommandVerdict::forward;
     }
     // A native spawn with a stale count runs the connection body, so it opens a session as well.
