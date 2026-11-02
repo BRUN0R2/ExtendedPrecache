@@ -1,8 +1,8 @@
 # Bootstrap e barreira de transporte
 
-Estado: **investigação estática parcial** dos dois hashes de
-[engineAudit.md](engineAudit.md). Não há transporte, hook, perfil ou adaptador
-aprovado. Os endereços identificam observações nesses artefatos e não são uma
+Estado: **investigação parcial** dos dois hashes de [engineAudit.md](engineAudit.md):
+estática nos dois, e em execução somente do lado do servidor. Não há transporte, hook, perfil
+ou adaptador aprovado. Os endereços identificam observações nesses artefatos e não são uma
 interface de integração nem autorizam instalar patches.
 
 ## Servidor: entrada e retomada
@@ -44,10 +44,21 @@ barrar esse ramo, pois o protocolo de negociação pressupõe um cliente remoto.
 correspondência entre a fonte e esse ramo do binário ainda é estática. Chamadas indiretas
 continuam fora desse inventário: a tabela não prova ausência de ponteiros calculados.
 
+O serverinfo não é a única emissão da ativação. Em todos os modos, ela
+[escreve e fragmenta o registro de user messages](https://github.com/rehlds/ReHLDS/blob/196300131858d1e087267fb2fb60cb935f8f8873/rehlds/engine/sv_main.cpp#L6229)
+para os clientes já conectados, sem passar por `SV_New_f`. Na troca de mapa, esse bloco
+alcança um cliente parado na barreira. O registro privado do cliente precisa aceitá-lo sem
+tratá-lo como colisão, e o predicado de drain precisa esperar seus fragmentos.
+
 O núcleo de sessão concede `releaseSignon` no máximo uma vez por binding;
 repetições invalidam a sessão. Essa garantia não suspende nem retoma uma chamada
-nativa: o futuro binding ainda precisa demonstrar que associa essa autorização
-à continuação correta, sem duplicação ou reentrada.
+nativa: o binding ainda precisa associar essa autorização à continuação correta, sem
+duplicação ou reentrada.
+
+A continuação executa `SV_New_f` fora do parser de comandos, portanto não basta chamá-lo.
+O binding precisa selecionar o cliente em `host_client` e restaurar `cmd_source`: com
+`src_command`, o corpo [retorna em silêncio](https://github.com/rehlds/ReHLDS/blob/196300131858d1e087267fb2fb60cb935f8f8873/rehlds/engine/sv_main.cpp#L1528),
+sem erro e sem sign-on. Ambos voltam ao valor anterior depois da chamada.
 
 ## Registro e despacho no cliente
 
@@ -86,6 +97,12 @@ devem continuar corretos. A disponibilidade, ordem e segurança desse caminho
 precisam ser demonstradas no binário e em execução; a API não está aprovada
 como binding apenas por estar presente na fonte.
 
+O [limitador nativo](https://github.com/rehlds/ReHLDS/blob/196300131858d1e087267fb2fb60cb935f8f8873/rehlds/rehlds/rehlds_security.cpp#L147)
+conta os comandos, mas só age sobre clientes `active`. Durante a barreira o cliente ainda não
+é ativo, então nada limita a taxa de `epc1`; a sessão também não cobra quota de repetições
+idênticas. **Requisito:** o transporte precisa de um limite próprio de comandos `epc1` por
+conexão, recusando com `budgetExceeded`, em vez de contar com o motor ou com a sessão.
+
 ## Drenagem e reset
 
 `Netchan_Clear` em `0x04993dc0` descarta fragmentos e, quando há payload
@@ -119,25 +136,31 @@ não há predicado de drain aprovado por este documento.
 Os bundles completos ficam localmente em `.local/research`. Chamadas indiretas
 e limites de análise declarados pelo provedor permanecem desconhecidos; os
 resultados de fonte não são tratados como identidade automática com o binário.
-A tabela acima não inclui observação de execução. Ensaios instrumentados existem
-somente em área local; são protótipos, não uma implementação da barreira.
+A tabela de evidências acima não inclui observação de execução.
 
-Para concluir a etapa, provar nos dois hashes, de ponta a ponta com o [núcleo de
-sessão](sessionCore.md), e não com frames sintéticos:
+## Situação em execução
 
-1. **Continuação:** reter `SV_New_f` na primeira entrada e executar o corpo uma única
-   vez a partir do acordo, sem depender de outro comando `new` do cliente.
-2. **Bloqueio:** segurar `sendres` e `spawn` da mesma conexão até a liberação.
-3. **Bootstrap:** os 26 frames reais pelos transportes de controle, com registro privado
-   no cliente, sem callback nativo e sobrevivendo ao reset.
-4. **Despacho:** `epc1` tratado antes da GameDLL, com a contabilização de rate
-   preservada, inclusive em saturação.
-5. **Drain:** um predicado sobre mensagem, fragmentos, filas e confirmação, testado com
-   fragmentação e perda.
-6. **Invalidação:** desconexão, reconexão e troca de mapa encerram canal, sessão e
-   reserva. O endereço de `client_t` pode se repetir entre conexões, logo não identifica
-   a geração.
+Em laboratório local, o [núcleo de sessão](sessionCore.md) real rodou dentro do servidor
+selecionado, sob instrumentação, com um cliente sintético que fala o protocolo 48 e executa
+o papel de cliente do mesmo núcleo. Os frames são reais, trafegados pelo netchan do motor.
+Isso é observação em execução do **lado do servidor**, não um binding de produção nem uma
+conexão do `hw.dll`. Os resultados permanecem locais.
 
-Registrar as evidências localmente, sem alterar os originais ou publicar fixtures,
-traces e resultados. O [plugin Metamod](metamodPlugin.md) é o ponto de carga nativo
-desse trabalho; carregá-lo não comprova nenhum desses itens.
+| Ponto a provar | Servidor real | Cliente real (`hw.dll`) |
+| --- | --- | --- |
+| **Continuação:** corpo de `SV_New_f` executado uma única vez a partir do acordo, sem outro `new` do cliente | Observado | Não se aplica |
+| **Bloqueio:** `sendres`, `spawn` e `new` repetido retidos até a liberação | Observado | Não se aplica |
+| **Bootstrap:** os 26 frames pelos transportes de controle | Observado na emissão | Pendente: registro privado, sem callback nativo, sobrevivendo ao reset |
+| **Despacho:** `epc1` tratado antes da GameDLL | Observado, inclusive sob flood; falta o limite próprio acima | Pendente: emissão pelo cliente real |
+| **Drain:** predicado sobre mensagem, fragmentos e filas | Observado com dado pendente no commit e com perda | Não se aplica |
+| **Invalidação:** desconexão, conexão substituída e troca de mapa encerram a sessão | Observado | Pendente: reset, reserva e reconexão do cliente |
+
+Limites: um único cliente por vez; a instrumentação não é o caminho de produção; a reserva é
+sintética; a identidade usada para detectar conexão substituída (`connect_time`) e os
+endereços são observações deste hash, não uma interface aprovada. O endereço de `client_t` se
+repete entre conexões, logo não identifica a geração.
+
+Próximo passo: repetir os pontos pendentes com o `hw.dll` real e então levar a barreira do
+laboratório para o [plugin Metamod](metamodPlugin.md), que hoje é somente o ponto de carga.
+Registrar as evidências localmente, sem alterar os originais ou publicar fixtures, traces e
+resultados.
