@@ -49,7 +49,7 @@ auto CapabilityLimits::create(CapabilityVector values) noexcept
         const auto range = fieldRange(field);
         if (value < range.minimum || value > range.maximum) {
             return std::unexpected{
-                Rejection{RejectCode::invalidConfiguration, std::to_underlying(field), value,
+                Rejection{RejectCode::invalidConfiguration, field, value,
                           value < range.minimum ? range.minimum : range.maximum}};
         }
     }
@@ -88,8 +88,8 @@ auto admitRequirements(const MapRequirements &requirements,
         const auto needed = requirements.vector().wireValues()[fieldIndex(field)];
         const auto offered = selected.vector().wireValues()[fieldIndex(field)];
         if (needed > offered) {
-            return std::unexpected{Rejection{RejectCode::capacityInsufficient,
-                                             std::to_underlying(field), offered, needed}};
+            return std::unexpected{
+                Rejection{RejectCode::capacityInsufficient, field, offered, needed}};
         }
     }
     return {};
@@ -104,7 +104,7 @@ auto validateChunkBudget(const CapabilityLimits &limits, ByteCount framingBytes)
         const auto offered = limits.vector().wireValues()[fieldIndex(field)];
         if (required > offered) {
             return std::unexpected{Rejection{
-                RejectCode::invalidConfiguration, static_cast<std::uint8_t>(field), offered,
+                RejectCode::invalidConfiguration, field, offered,
                 static_cast<std::uint32_t>(std::min(required, std::uint64_t{signedMaximum}))}};
         }
     }

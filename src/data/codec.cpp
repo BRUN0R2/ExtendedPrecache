@@ -368,13 +368,12 @@ auto decodeMessage(std::span<const std::byte> bytes, Direction direction,
         return DecodedMessage{header, std::move(payload)};
     });
 }
-auto DataReceiver::create(SessionNonce nonce, MapEpoch epoch,
-                          std::array<std::uint32_t, 3> firstSequence) noexcept
+auto DataReceiver::create(SessionNonce nonce, MapEpoch epoch, FlowSequences firstSequence) noexcept
     -> Result<DataReceiver> {
     return detail::protect([&] {
         require(!nonce.isZero() && epoch.value != 0);
         for (const auto sequence : firstSequence) {
-            require(sequence <= maxSequence, ErrorCode::sequence);
+            require(sequence.value <= maxSequence, ErrorCode::sequence);
         }
         return DataReceiver{nonce, epoch, firstSequence};
     });

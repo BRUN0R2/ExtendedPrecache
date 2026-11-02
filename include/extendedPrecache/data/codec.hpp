@@ -107,14 +107,14 @@ class DataMessageBuilder final {
 class DataReceiver final {
   public:
     [[nodiscard]] static auto create(SessionNonce nonce, MapEpoch epoch,
-                                     std::array<std::uint32_t, 3> firstSequence = {}) noexcept
+                                     FlowSequences firstSequence = {}) noexcept
         -> Result<DataReceiver>;
     [[nodiscard]] auto receive(std::span<const std::byte> bytes, Direction direction,
                                const CodecContext &context) noexcept
         -> Result<std::optional<DecodedMessage>>;
 
   private:
-    DataReceiver(SessionNonce nonce, MapEpoch epoch, std::array<std::uint32_t, 3> first)
+    DataReceiver(SessionNonce nonce, MapEpoch epoch, FlowSequences first)
         : tracker{nonce, epoch, first}, epochValue{epoch} {}
     SequenceTracker tracker;
     MapEpoch epochValue;
