@@ -64,9 +64,8 @@ UCRT64 continua como referência local, mas não fixa a versão na CI: seus paco
 contínuos e o `pacman` instala a revisão vigente.
 
 A imagem também traz GCC 15.2.0. Por isso o job falha se `g++` não vier do arquivo
-fixado ou se a versão do compilador divergir. Ele não publica artefatos e não é
-exigido pela proteção de `main`; incluí-lo como check obrigatório depende de
-aprovação do mantenedor.
+fixado ou se a versão do compilador divergir. Ele não publica artefatos e, como
+`C++26 Windows x86`, é exigido pela proteção de `main`.
 
 ## Análise estática e formatação
 
