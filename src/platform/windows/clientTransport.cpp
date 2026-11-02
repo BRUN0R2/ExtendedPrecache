@@ -1,5 +1,7 @@
 #include "clientTransport.hpp"
 
+#include "clientModelTables.hpp"
+
 #include <extendedPrecache/platform/windows/cngDigest.hpp>
 #include <extendedPrecache/transport/clientBarrier.hpp>
 #include <extendedPrecache/transport/clientNegotiator.hpp>
@@ -75,16 +77,26 @@ auto readUnsigned(std::span<const std::byte> bytes) noexcept -> std::uint32_t {
     return value;
 }
 
-class ClientTransport final : public transport::SessionSource, public transport::ReliableChannel {
+class ClientTransport final : public transport::SessionSource,
+                              public transport::ReliableChannel,
+                              public session::SessionPreparer {
   public:
     ClientTransport(ClientEngine engine, std::unique_ptr<ClientProfile> profile,
                     ConnectionBinding binding) noexcept
         : engine{engine}, profile{std::move(profile)},
-          negotiator{this->profile->policy(), binding, *this, *this} {}
+          negotiator{this->profile->policy(), binding, *this, *this}, models{engine.image()} {}
 
     [[nodiscard]] auto open(session::SessionContext context)
         -> std::expected<NegotiationSession, Rejection> override {
-        return profile->open(context);
+        return profile->open(context, *this);
+    }
+    [[nodiscard]] auto prepare(const session::Configuration &configuration,
+                               const session::SessionAgreement &agreement)
+        -> std::expected<std::unique_ptr<session::PreparedSession>, Rejection> override {
+        if (const auto reserved = models.reserve(requiredModelEntries(agreement)); !reserved) {
+            return std::unexpected{reserved.error()};
+        }
+        return leaseModelTables(configuration, agreement, models.reservedBytes());
     }
     [[nodiscard]] auto state() const noexcept -> ChannelState override {
         return engine.status().connected ? ChannelState::pending : ChannelState::unavailable;
@@ -103,6 +115,8 @@ class ClientTransport final : public transport::SessionSource, public transport:
     void say(const char *text) const noexcept;
     void startPumping() noexcept;
     void reportOptIn() noexcept;
+    // The engine's code goes back to the original before anything else can happen on this client.
+    void connectionLost() noexcept;
     // True while the connection belongs to a secure server, which this client must not stay on.
     [[nodiscard]] auto leavingSecureServer() noexcept -> bool;
 
@@ -125,6 +139,7 @@ class ClientTransport final : public transport::SessionSource, public transport:
     ClientEngine engine;
     std::unique_ptr<ClientProfile> profile;
     ClientNegotiator negotiator;
+    ClientModelTables models;
     ServiceParser nativeRegistration{};
     ServiceParser nativeServerInfo{};
     VariableRegistration nativeVariable{};
@@ -199,9 +214,14 @@ auto ClientTransport::leavingSecureServer() noexcept -> bool {
         secureRefused = true;
         say(secureServerRefusal);
         engine.clientCommand(disconnectCommand);
-        negotiator.connectionLost();
+        connectionLost();
     }
     return true;
+}
+
+void ClientTransport::connectionLost() noexcept {
+    negotiator.connectionLost();
+    models.leave();
 }
 
 void ClientTransport::onRegistration() noexcept {
@@ -254,6 +274,11 @@ void ClientTransport::onServerInfo() noexcept {
         engine.skipMessage();
         return;
     }
+    if (!models.enterMap()) {
+        refuse({RejectCode::storageUnavailable});
+        engine.skipMessage();
+        return;
+    }
     nativeServerInfo();
 }
 
@@ -273,7 +298,7 @@ void ClientTransport::onFrame(double time) noexcept {
         return;
     }
     if (!current.connected || current.connectionTime < lastConnectionTime) {
-        negotiator.connectionLost();
+        connectionLost();
     }
     lastConnectionTime = current.connected ? current.connectionTime : 0.0;
     std::ignore = settle([&] { return negotiator.pump(monotonicNow()); });

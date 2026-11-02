@@ -1,5 +1,8 @@
 #include "serverTransport.hpp"
 
+#include "modelRelocation.hpp"
+#include "serverModelTables.hpp"
+
 #include <extendedPrecache/platform/windows/cngDigest.hpp>
 #include <extendedPrecache/transport/clientBarrier.hpp>
 
@@ -74,9 +77,10 @@ class EngineChannel final : public transport::ReliableChannel {
 struct ClientSlot final {
     ClientSlot(rehlds::Api api, rehlds::GameClient client, ClientOptIn optIn,
                ConnectionBinding binding, ControlMessageId messageId,
-               transport::SessionSource &sessions) noexcept
+               transport::SessionSource &sessions,
+               const transport::LegacyAdmission &legacy) noexcept
         : client{client}, channel{api, client},
-          barrier{optIn, binding, messageId, sessions, channel} {}
+          barrier{optIn, binding, messageId, sessions, legacy, channel} {}
     ClientSlot(const ClientSlot &) = delete;
     auto operator=(const ClientSlot &) -> ClientSlot & = delete;
 
@@ -85,15 +89,27 @@ struct ClientSlot final {
     ClientBarrier barrier;
 };
 
-class ServerTransport final : public transport::SessionSource {
+class ServerTransport final : public transport::SessionSource,
+                              public transport::LegacyAdmission,
+                              public session::SessionPreparer {
   public:
-    ServerTransport(rehlds::Api api, std::unique_ptr<TransportProfile> profile, TransportHost host,
+    ServerTransport(rehlds::Api api, std::unique_ptr<TransportProfile> profile,
+                    std::unique_ptr<ServerModelTables> models, TransportHost host,
                     metamod::RetainedUse use) noexcept
-        : api{api}, profile{std::move(profile)}, host{host}, use{std::move(use)} {}
+        : api{api}, profile{std::move(profile)}, models{std::move(models)}, host{host},
+          use{std::move(use)} {}
 
     [[nodiscard]] auto open(session::SessionContext context)
         -> std::expected<NegotiationSession, Rejection> override {
-        return profile->open(context, {static_cast<std::uint32_t>(api.spawnCount())});
+        return profile->open(context, currentMap(), *this);
+    }
+    [[nodiscard]] auto admitLegacy() const -> std::expected<void, Rejection> override {
+        return profile->admitLegacy(currentMap());
+    }
+    [[nodiscard]] auto prepare(const session::Configuration &configuration,
+                               const session::SessionAgreement &agreement)
+        -> std::expected<std::unique_ptr<session::PreparedSession>, Rejection> override {
+        return leaseModelTables(configuration, agreement, models->movedBytes());
     }
 
     void onNetCommand(void *chain, rehlds::GameClient client, std::uint8_t opcode) noexcept;
@@ -105,6 +121,9 @@ class ServerTransport final : public transport::SessionSource {
     void onFrame(void *chain) noexcept;
 
   private:
+    [[nodiscard]] auto currentMap() const noexcept -> MapFacts {
+        return {{static_cast<std::uint32_t>(api.spawnCount())}, models->entriesInUse()};
+    }
     [[nodiscard]] auto slotOf(rehlds::GameClient client) noexcept -> std::optional<ClientSlot> *;
     [[nodiscard]] auto liveSlot(rehlds::GameClient client) noexcept -> ClientSlot *;
     [[nodiscard]] auto peekCommandText() const noexcept -> std::optional<std::string_view>;
@@ -134,6 +153,7 @@ class ServerTransport final : public transport::SessionSource {
 
     rehlds::Api api;
     std::unique_ptr<TransportProfile> profile;
+    std::unique_ptr<ServerModelTables> models;
     TransportHost host;
     metamod::RetainedUse use;
     std::optional<ControlMessageId> messageId;
@@ -267,7 +287,7 @@ void ServerTransport::openSlot(rehlds::GameClient client) noexcept {
         return;
     }
     slot->emplace(api, client, *optIn, ConnectionBinding{*connection, *peer, generation},
-                  *messageId, *this);
+                  *messageId, *this, *this);
 }
 
 void ServerTransport::onClientConnected(void *chain, rehlds::GameClient client) noexcept {
@@ -344,16 +364,22 @@ void frameHook(void *chain) {
 }
 } // namespace
 
-void installServerTransport(rehlds::Api api, std::unique_ptr<TransportProfile> profile,
-                            TransportHost host, metamod::RetainedUse use) {
-    activeTransport =
-        std::make_unique<ServerTransport>(api, std::move(profile), host, std::move(use));
-    api.install({.netCommand = netCommandHook,
-                 .stringCommand = stringCommandHook,
-                 .clientConnected = clientConnectedHook,
-                 .dropClient = dropClientHook,
-                 .activateServer = activateServerHook,
-                 .frame = frameHook});
+auto installServerTransport(SelectedEngine engine, std::unique_ptr<TransportProfile> profile,
+                            TransportHost host, metamod::RetainedUse use)
+    -> std::expected<void, RewriteRefusal> {
+    auto models = ServerModelTables::install(engine.image, profile->modelEntries());
+    if (!models) {
+        return std::unexpected{models.error()};
+    }
+    activeTransport = std::make_unique<ServerTransport>(engine.api, std::move(profile),
+                                                        std::move(*models), host, std::move(use));
+    engine.api.install({.netCommand = netCommandHook,
+                        .stringCommand = stringCommandHook,
+                        .clientConnected = clientConnectedHook,
+                        .dropClient = dropClientHook,
+                        .activateServer = activateServerHook,
+                        .frame = frameHook});
+    return {};
 }
 
 } // namespace extendedPrecache::platform::windows

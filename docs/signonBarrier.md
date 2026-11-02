@@ -15,6 +15,7 @@ ID alocado da mensagem de controle e duas portas, que precisam viver tanto quant
 | --- | --- |
 | `ReliableChannel` | Informa o estado do canal e enfileira uma mensagem inteira, ou nada |
 | `SessionSource` | Abre a sessão com o contrato e o mapa locais, que este módulo não conhece |
+| `LegacyAdmission` | Diz se um cliente sem opt-in acompanha o mapa atual com o protocolo nativo |
 
 `parseClientOptIn` lê o `userinfo` como o motor: chave ausente é legado, valor `1` é opt-in,
 chave repetida é `malformedFrame` e outro valor é `unsupportedVersion`. `ControlMessageId` só
@@ -25,7 +26,7 @@ bytes do SVC 39 e da mensagem variável; o canal não interpreta nada.
 
 | Fase | `new` e `spawn` | `sendres` | `epc1` |
 | --- | --- | --- | --- |
-| Legado, sem opt-in | Segue | Segue | Conta e ignora |
+| Legado, sem opt-in | Segue, ou recusa se o mapa exige a extensão | Igual | Conta e ignora |
 | `idle` | Retém e abre a sessão | Retém | Conta e ignora |
 | `negotiating` | Retém | Retém | Conta e entrega à sessão |
 | `released` | Segue | Segue | Conta e ignora |
@@ -102,7 +103,6 @@ com `storageUnavailable`.
 
 O binding foi exercitado localmente com um perfil sintético injetado na hora de linkar, com o
 `hw.dll` real e com um cliente sintético; as observações estão em
-[transportBootstrap.md](transportBootstrap.md#situação-em-execução). A admissão legada de
-`checkLegacyAdmission` não é aplicada: sem opt-in, o sign-on nativo segue. A reserva é sintética,
-o cliente não tem adaptador de produção e não há perfil aprovado. Não amplia limites nem
-habilita transporte.
+[transportBootstrap.md](transportBootstrap.md#situação-em-execução). A reserva real e a admissão
+legada existem só para modelos, em [modelTables.md](modelTables.md), e não há perfil aprovado, então
+os artefatos publicados não habilitam transporte.
