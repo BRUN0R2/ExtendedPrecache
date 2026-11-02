@@ -56,6 +56,7 @@ devem acompanhar o item correspondente. As regras estão em [RULES.md](RULES.md)
 - [ ] Criar cenário de integração com recursos reais acima dos limites originais.
 - [ ] Validar modelos, sprites, sons, genéricos, eventos e decals ponta a ponta.
 - [ ] Medir uso de memória e estabilidade em sessões prolongadas.
+- [ ] Observar o adaptador contra o VAC real, em conta de teste e servidor próprio, sem declarar segurança: não ser banido não prova nada, e o aviso público permanece.
 - [ ] Documentar instalação e matriz de versões efetivamente suportadas.
 - [x] Adotar MIT para o código original e manter fontes de pesquisa fora do produto; incorporação de terceiros exige licença comprovada.
 - [x] Configurar remoto GitHub e assinatura SSH específica, com geração e registro autorizados pelo mantenedor.

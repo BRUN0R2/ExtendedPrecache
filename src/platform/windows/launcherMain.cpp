@@ -8,7 +8,6 @@
 #include <array>
 #include <cstdint>
 #include <cstdio>
-#include <cwchar>
 #include <filesystem>
 #include <optional>
 #include <span>
@@ -30,9 +29,10 @@ constexpr auto clientModule = L"extendedPrecacheClient.dll";
 constexpr auto gameDirectoryOption = std::wstring_view{L"--game-dir"};
 constexpr auto passThroughOption = std::wstring_view{L"--"};
 constexpr auto defaultArguments = L"-game cstrike";
-constexpr auto steamKey = L"Software\\Valve\\Steam";
-constexpr auto steamPathValue = L"SteamPath";
-constexpr auto steamGameDirectory = L"steamapps/common/Half-Life";
+constexpr auto vacWarning =
+    "ExtendedPrecache: WARNING: this program changes the memory of the running game, and VAC may "
+    "ban the Steam account that uses it. VAC bans cannot be appealed. Never use it on VAC-secured "
+    "servers or on your main account, and use a copy of the game outside the Steam folder.";
 constexpr DWORD reportTimeoutMs = 120000;
 constexpr DWORD longestPath = 32768;
 
@@ -74,17 +74,6 @@ auto parseOptions(std::span<wchar_t *const> arguments) -> std::optional<Options>
         options.gameDirectory = std::filesystem::path{arguments[++index]};
     }
     return options;
-}
-
-auto steamGamePath() -> std::optional<std::filesystem::path> {
-    auto text = std::wstring(longestPath, L'\0');
-    auto bytes = DWORD{longestPath} * DWORD{sizeof(wchar_t)};
-    if (RegGetValueW(HKEY_CURRENT_USER, steamKey, steamPathValue, RRF_RT_REG_SZ, nullptr,
-                     text.data(), &bytes) != ERROR_SUCCESS) {
-        return std::nullopt;
-    }
-    text.resize(std::wcslen(text.c_str()));
-    return std::filesystem::path{text} / steamGameDirectory;
 }
 
 auto launcherDirectory() -> std::optional<std::filesystem::path> {
@@ -205,18 +194,17 @@ auto startGame(const GameStart &start) -> ExitCode {
 }
 
 auto run(std::span<wchar_t *const> arguments) -> ExitCode {
+    std::fprintf(stderr, "%s\n", vacWarning);
     const auto options = parseOptions(arguments);
-    if (!options) {
+    // Never defaults to Steam's own folder: the copy this runs on has to be a deliberate choice.
+    const auto directory = options ? options->gameDirectory : std::nullopt;
+    if (!directory) {
         return fail(ExitCode::badArguments,
-                    "usage: extendedPrecacheLauncher [--game-dir <path>] [-- <game arguments>]");
+                    "usage: extendedPrecacheLauncher --game-dir <path> [-- <game arguments>]");
     }
     if (!client::approvedClientProfile()) {
         return fail(ExitCode::noApprovedProfile,
                     "no contract profile has been approved, so there is nothing to negotiate");
-    }
-    const auto directory = options->gameDirectory ? options->gameDirectory : steamGamePath();
-    if (!directory) {
-        return fail(ExitCode::gameNotFound, "Steam was not found; pass --game-dir");
     }
     const auto launcher = verifyFileBuild(*directory / gameExecutable, selectedLauncherSha256);
     const auto engine = verifyFileBuild(*directory / engineModule, client::selectedEngineSha256);

@@ -79,7 +79,8 @@ pede `disconnect`, sem negociar nem chegar ao serverinfo.
 **Isso reduz o risco, mas não o elimina.** O `connect` sai na mesma chamada em que a resposta de
 challenge é tratada, antes do próximo frame, e nenhuma tabela permite agir antes disso. O
 adaptador só recusa depois, então a conexão a um servidor seguro chega a começar. Por isso, não
-use o inicializador para abrir servidores com VAC.
+use o inicializador para abrir servidores com VAC, como diz o
+[aviso de risco](../README.md#extendedprecache), que ele também imprime a cada execução.
 
 `-insecure` não ajuda aqui: no `hw.dll`, seus dois usos ficam na ativação do servidor Steam, como
 em [`CSteam3Server::Activate`](https://github.com/rehlds/ReHLDS/blob/196300131858d1e087267fb2fb60cb935f8f8873/rehlds/engine/sv_steam3.cpp#L260).
@@ -88,11 +89,12 @@ Ele afeta um servidor hospedado pelo próprio jogo, não o cliente que entra em 
 ## Inicializador
 
 ```text
-extendedPrecacheLauncher [--game-dir <pasta>] [-- <argumentos do jogo>]
+extendedPrecacheLauncher --game-dir <pasta> [-- <argumentos do jogo>]
 ```
 
-Sem `--game-dir`, usa a pasta padrão da Steam. O inicializador confere o SHA-256 de `hl.exe` e
-`hw.dll` e abre o jogo suspenso, com a pasta dele como diretório atual e `-game cstrike`. A carga
+`--game-dir` é obrigatório e deve apontar para uma cópia separada do jogo, fora da pasta da Steam:
+o inicializador nunca escolhe a pasta da Steam por conta própria. Ele confere o SHA-256 de `hl.exe`
+e `hw.dll` e abre o jogo suspenso, com a pasta dele como diretório atual e `-game cstrike`. A carga
 de `extendedPrecacheClient.dll`, que precisa estar ao lado dele, é a primeira coisa que a thread
 principal faz, antes do ponto de entrada do jogo. Nenhum arquivo da instalação é alterado, e fechar
 o jogo desfaz tudo.
