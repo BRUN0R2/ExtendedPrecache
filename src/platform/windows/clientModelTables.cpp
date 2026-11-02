@@ -43,7 +43,7 @@ constexpr auto modelTableBounds = std::to_array<CapacityBound>({
 
 auto ClientModelTables::reserve(std::uint32_t entries) -> std::expected<void, Rejection> {
     reserved.reset();
-    const auto slots = ModelSlots::forEntries(entries);
+    const auto slots = ModelSlots::forEntries(entries, slotLimit);
     if (!slots) {
         return std::unexpected{Rejection{.code = RejectCode::capacityInsufficient,
                                          .fieldId = CapabilityField::modelEntries}};

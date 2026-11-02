@@ -16,24 +16,27 @@ namespace extendedPrecache::platform::windows {
 
 // Slot zero of a model table is reserved, so the contract counts one entry fewer than the slots.
 inline constexpr std::uint32_t nativeModelSlots = 512;
-// The largest table verified end to end. Both engines keep 1,024 descriptors of known models, which
-// this relocation does not move; on the client they also hold sprites, 49 in the verified game.
-inline constexpr std::uint32_t provenModelSlots = 900;
+// The game's delta.lst writes a model index in 10 bits, so no table can use more than this.
+inline constexpr std::uint32_t wireModelSlots = 1024;
+// The most a client can take while its 1,024 descriptors of known models stay in place. They also
+// hold what the client loads by itself, 49 in the verified game.
+inline constexpr std::uint32_t slotsWithNativeDescriptors = 900;
 
 class ModelSlots final {
   public:
-    // Empty when the entries exceed what has been verified.
-    [[nodiscard]] static constexpr auto forEntries(std::uint32_t entries) noexcept
+    // Empty when the entries need more slots than the limit.
+    [[nodiscard]] static constexpr auto forEntries(std::uint32_t entries,
+                                                   std::uint32_t limit) noexcept
         -> std::optional<ModelSlots> {
-        if (entries >= provenModelSlots) {
+        if (entries >= limit) {
             return std::nullopt;
         }
         return ModelSlots{entries + 1};
     }
-    // A table the engine already fills in its code: it never shrinks, and never exceeds the proof.
+    // A table the engine already fills in its code: it never shrinks, and never exceeds the wire.
     [[nodiscard]] static constexpr auto atMostEntries(std::uint32_t entries) noexcept
         -> ModelSlots {
-        return ModelSlots{std::clamp(entries, nativeModelSlots - 1, provenModelSlots - 1) + 1};
+        return ModelSlots{std::clamp(entries, nativeModelSlots - 1, wireModelSlots - 1) + 1};
     }
     [[nodiscard]] static constexpr auto native() noexcept -> ModelSlots {
         return ModelSlots{nativeModelSlots};
@@ -74,6 +77,8 @@ struct ModelRelocation final {
     ModelSlots slots;
 };
 
+void appendTableMoves(const std::byte *image, std::span<const TablePlacement> placements,
+                      std::vector<OperandRewrite> &rewrites);
 // The rewrites that move each table to its storage and size every bound for the slots.
 [[nodiscard]] auto planModelRelocation(const std::byte *image, const ModelRelocation &relocation)
     -> std::vector<OperandRewrite>;

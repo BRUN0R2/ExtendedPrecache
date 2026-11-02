@@ -34,13 +34,16 @@ recusa: uma nova conexão recomeça do zero e pode ter outro ID.
 
 ## Adaptador no `hw.dll`
 
-A DLL não exporta nada. `DllMain` só cria uma thread, que roda quando o loader lock é liberado:
-ela espera o `hw.dll` ser mapeado, confere o SHA-256 contra o hash selecionado e instala o adaptador.
+A DLL não exporta nada. `DllMain` só agenda uma chamada na própria thread, a principal do jogo, que
+roda antes do ponto de entrada e sem o loader lock. Essa chamada confere o SHA-256 do `hw.dll`,
+registra a notificação do loader e cria a thread que instala o adaptador quando o motor é mapeado.
+Como tudo isso termina antes de o jogo começar, a notificação nunca perde o carregamento do motor.
 
 Para conduzir a negociação, o adaptador não altera código do motor. Ele troca entradas de tabelas de
 dados do `hw.dll`, depois de conferir que todas contêm o que este build tem, e usa as funções que o
-motor entrega à ClientDLL. O código só muda durante um mapa negociado acima do limite nativo, como
-descrito em [modelTables.md](modelTables.md).
+motor entrega à ClientDLL. O código só muda para ampliar os modelos: durante um mapa negociado acima
+do limite nativo e, se a configuração pedir mais descritores, durante todo o processo, como descrito
+em [modelTables.md](modelTables.md).
 
 | Ponto | Origem | Papel |
 | --- | --- | --- |

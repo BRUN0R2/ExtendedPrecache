@@ -1,11 +1,16 @@
 #include "buildIdentity.hpp"
 #include "clientEngine.hpp"
 #include "clientLoadStatus.hpp"
+#include "clientModelDescriptors.hpp"
 #include "clientTransport.hpp"
+#include "modelRelocation.hpp"
 
 #include <windows.h>
 
+#include <filesystem>
+#include <memory>
 #include <new>
+#include <string>
 #include <utility>
 
 namespace {
@@ -13,6 +18,7 @@ using namespace extendedPrecache::platform::windows;
 
 constexpr auto engineModuleName = L"hw.dll";
 constexpr ULONG dllLoadedReason = 1;
+constexpr DWORD longestPath = 32768;
 
 // ntdll exports these entries without declaring them in a public header.
 struct CountedText final {
@@ -32,48 +38,40 @@ using RegisterDllEvents = LONG(NTAPI *)(ULONG flags, DllEventHandler handler, vo
                                         void **cookie);
 using UnregisterDllEvents = LONG(NTAPI *)(void *cookie);
 
-// Runs under the loader lock, so it only compares a name and signals.
+template <typename Function> auto ntdllEntry(const char *name) noexcept -> Function {
+    return reinterpret_cast<Function>(GetProcAddress(GetModuleHandleW(L"ntdll.dll"), name));
+}
+
+// Never destroyed: the engine's code keeps pointing at the descriptors until the process ends.
+struct EngineWatch final {
+    std::unique_ptr<client::ClientProfile> profile;
+    std::unique_ptr<client::ClientModelDescriptors> descriptors;
+    HANDLE loaded{};
+    void *cookie{};
+    bool descriptorsMoved{};
+};
+
+// Runs under the loader lock, on the thread loading the module and before any of its code runs.
 void NTAPI onDllEvent(ULONG reason, const DllEvent *event, void *context) {
     if (reason != dllLoadedReason) {
         return;
     }
     const auto &name = *event->baseName;
     const auto characters = static_cast<int>(name.length) / static_cast<int>(sizeof(wchar_t));
-    if (CompareStringOrdinal(name.text, characters, engineModuleName, -1, TRUE) == CSTR_EQUAL) {
-        SetEvent(static_cast<HANDLE>(context));
+    if (CompareStringOrdinal(name.text, characters, engineModuleName, -1, TRUE) != CSTR_EQUAL) {
+        return;
     }
+    auto &watch = *static_cast<EngineWatch *>(context);
+    if (watch.descriptors) {
+        watch.descriptorsMoved =
+            watch.descriptors->moveInto(reinterpret_cast<std::byte *>(event->base));
+    }
+    SetEvent(watch.loaded);
 }
 
-template <typename Function> auto ntdllEntry(const char *name) noexcept -> Function {
-    return reinterpret_cast<Function>(GetProcAddress(GetModuleHandleW(L"ntdll.dll"), name));
-}
-
-// Blocks until the engine is mapped; it stays blocked in a game that never loads this engine.
-auto waitForEngine() noexcept -> HMODULE {
-    const auto registerEvents = ntdllEntry<RegisterDllEvents>("LdrRegisterDllNotification");
-    const auto unregisterEvents = ntdllEntry<UnregisterDllEvents>("LdrUnregisterDllNotification");
-    auto *const loaded = CreateEventW(nullptr, TRUE, FALSE, nullptr);
-    void *cookie = nullptr;
-    const auto watching = registerEvents != nullptr && unregisterEvents != nullptr &&
-                          loaded != nullptr && registerEvents(0, onDllEvent, loaded, &cookie) == 0;
-    if (watching && GetModuleHandleW(engineModuleName) == nullptr) {
-        WaitForSingleObject(loaded, INFINITE);
-    }
-    if (watching) {
-        unregisterEvents(cookie);
-    }
-    if (loaded != nullptr) {
-        CloseHandle(loaded);
-    }
-    return GetModuleHandleW(engineModuleName);
-}
-
-auto attach(HMODULE engine) -> client::AttachResult {
+auto attach(EngineWatch &watch) -> client::AttachResult {
     using client::AttachResult;
-    auto profile = client::approvedClientProfile();
-    if (!profile) {
-        return AttachResult::noApprovedProfile;
-    }
+    auto *const engine = GetModuleHandleW(engineModuleName);
     if (engine == nullptr) {
         return AttachResult::engineUnreadable;
     }
@@ -81,8 +79,12 @@ auto attach(HMODULE engine) -> client::AttachResult {
         return verified.error() == BuildRefusal::unknownBuild ? AttachResult::engineUnknownBuild
                                                               : AttachResult::engineUnreadable;
     }
-    const auto installed =
-        client::installClientTransport(client::ClientEngine{engine}, std::move(profile));
+    if (watch.descriptors && !watch.descriptorsMoved) {
+        return AttachResult::unexpectedTables;
+    }
+    const auto slotLimit = watch.descriptors ? wireModelSlots : slotsWithNativeDescriptors;
+    const auto installed = client::installClientTransport(client::ClientEngine{engine},
+                                                          std::move(watch.profile), slotLimit);
     if (!installed) {
         return installed.error() == client::TransportRefusal::noBinding
                    ? AttachResult::noBinding
@@ -91,28 +93,83 @@ auto attach(HMODULE engine) -> client::AttachResult {
     return AttachResult::installed;
 }
 
-auto attachWhenLoaded() noexcept -> client::AttachResult {
-    try {
-        return attach(waitForEngine());
-    } catch (const std::bad_alloc &) {
-        return client::AttachResult::outOfMemory;
-    }
+auto WINAPI attachThread(void *context) -> DWORD {
+    auto &watch = *static_cast<EngineWatch *>(context);
+    // It stays blocked in a game that never loads this engine.
+    WaitForSingleObject(watch.loaded, INFINITE);
+    ntdllEntry<UnregisterDllEvents>("LdrUnregisterDllNotification")(watch.cookie);
+    CloseHandle(watch.loaded);
+    client::publishAttachResult([&] {
+        try {
+            return attach(watch);
+        } catch (const std::bad_alloc &) {
+            return client::AttachResult::outOfMemory;
+        }
+    }());
+    return 0;
 }
 
-auto WINAPI attachThread(void *) -> DWORD {
-    client::publishAttachResult(attachWhenLoaded());
-    return 0;
+auto engineFile() -> std::filesystem::path {
+    auto text = std::wstring(longestPath, L'\0');
+    text.resize(GetModuleFileNameW(nullptr, text.data(), longestPath));
+    return std::filesystem::path{text}.parent_path() / engineModuleName;
+}
+
+// Registers before the engine can load and returns to the game only when that is done, which is
+// what lets the descriptors move before the engine makes its first one.
+auto watchEngine() -> client::AttachResult {
+    using client::AttachResult;
+    auto profile = client::approvedClientProfile();
+    if (!profile) {
+        return AttachResult::noApprovedProfile;
+    }
+    if (const auto verified = verifyFileBuild(engineFile(), client::selectedEngineSha256);
+        !verified) {
+        return verified.error() == BuildRefusal::unknownBuild ? AttachResult::engineUnknownBuild
+                                                              : AttachResult::engineUnreadable;
+    }
+    const auto registerEvents = ntdllEntry<RegisterDllEvents>("LdrRegisterDllNotification");
+    const auto unregisterEvents = ntdllEntry<UnregisterDllEvents>("LdrUnregisterDllNotification");
+    auto *const loaded = CreateEventW(nullptr, TRUE, FALSE, nullptr);
+    if (registerEvents == nullptr || unregisterEvents == nullptr || loaded == nullptr) {
+        return AttachResult::engineUnreadable;
+    }
+    auto descriptors = client::ClientModelDescriptors::reserve(profile->knownModelEntries());
+    auto *const watch = new EngineWatch{std::move(profile), std::move(descriptors), loaded};
+    if (registerEvents(0, onDllEvent, watch, &watch->cookie) != 0) {
+        return AttachResult::engineUnreadable;
+    }
+    // Not under the launcher, the engine may be there already, and then it is too late to move.
+    if (GetModuleHandleW(engineModuleName) != nullptr) {
+        SetEvent(loaded);
+    }
+    auto *const thread = CreateThread(nullptr, 0, attachThread, watch, 0, nullptr);
+    if (thread == nullptr) {
+        return AttachResult::engineUnreadable;
+    }
+    CloseHandle(thread);
+    return AttachResult::pending;
+}
+
+// Runs on the game's main thread, ahead of its entry point and with the loader lock released.
+void WINAPI prepareGame(ULONG_PTR) {
+    const auto result = [] {
+        try {
+            return watchEngine();
+        } catch (const std::bad_alloc &) {
+            return client::AttachResult::outOfMemory;
+        }
+    }();
+    if (result != client::AttachResult::pending) {
+        client::publishAttachResult(result);
+    }
 }
 } // namespace
 
-// Everything else runs on its own thread, which starts once the loader lock is released.
 auto WINAPI DllMain(HINSTANCE module, DWORD reason, void *) -> BOOL {
     if (reason == DLL_PROCESS_ATTACH) {
         DisableThreadLibraryCalls(module);
-        auto *const thread = CreateThread(nullptr, 0, attachThread, nullptr, 0, nullptr);
-        if (thread != nullptr) {
-            CloseHandle(thread);
-        }
+        QueueUserAPC(prepareGame, GetCurrentThread(), 0);
     }
     return TRUE;
 }

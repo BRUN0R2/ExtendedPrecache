@@ -170,6 +170,7 @@ if(extendedPrecacheBuildDll)
         src/platform/windows/buildIdentity.cpp
         src/platform/windows/clientEngine.cpp
         src/platform/windows/clientLoadStatus.cpp
+        src/platform/windows/clientModelDescriptors.cpp
         src/platform/windows/clientModelTables.cpp
         src/platform/windows/clientTransport.cpp
         src/platform/windows/imageRewrite.cpp
