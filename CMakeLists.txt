@@ -48,6 +48,7 @@ extendedPrecacheApplyOptions(extendedPrecacheSession)
 add_library(extendedPrecacheTransport STATIC
     src/transport/controlChannel.cpp
     src/transport/clientBarrier.cpp
+    src/transport/clientNegotiator.cpp
 )
 target_include_directories(extendedPrecacheTransport PUBLIC include)
 target_compile_features(extendedPrecacheTransport PUBLIC cxx_std_26)

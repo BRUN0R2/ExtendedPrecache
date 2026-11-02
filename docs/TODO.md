@@ -96,8 +96,8 @@ de `docs/data` permanecem indisponíveis, sem módulos finais aprovados.
 Verificadores, vetores e resultados novos permanecem locais em área ignorada.
 
 A [barreira do sign-on](signonBarrier.md) tem núcleo próprio, com o limite de `epc1`, e binding
-no plugin pela API do ReHLDS, sem endereços de função. Próximo trabalho: o adaptador de produção
-do cliente e a reserva concreta. Os dois lados já foram observados em execução; a situação e os
+no plugin pela API do ReHLDS, sem endereços de função. O cliente tem [núcleo próprio](clientNegotiator.md),
+ainda sem binding. Próximo trabalho: o adaptador de produção do cliente e a reserva concreta. Os dois lados já foram observados em execução; a situação e os
 limites estão em [transportBootstrap.md](transportBootstrap.md). Nada disso amplia limites nem
 habilita transporte: ainda não existe servidor nem cliente acima de 512.
 
