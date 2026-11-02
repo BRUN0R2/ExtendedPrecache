@@ -41,6 +41,39 @@ auto classifySignonCommand(std::string_view name) noexcept -> std::optional<Sign
     return std::nullopt;
 }
 
+auto refusalReason(RejectCode code) noexcept -> const char * {
+    switch (code) {
+    case RejectCode::malformedFrame:
+        return "ExtendedPrecache: malformed negotiation data";
+    case RejectCode::unsupportedVersion:
+        return "ExtendedPrecache: unsupported negotiation version";
+    case RejectCode::unexpectedMessage:
+    case RejectCode::unexpectedSequence:
+        return "ExtendedPrecache: negotiation out of order";
+    case RejectCode::unsupportedContract:
+        return "ExtendedPrecache: no contract in common";
+    case RejectCode::capacityInsufficient:
+        return "ExtendedPrecache: this map exceeds the negotiated limits";
+    case RejectCode::invalidConfiguration:
+        return "ExtendedPrecache: invalid negotiation configuration";
+    case RejectCode::storageUnavailable:
+        return "ExtendedPrecache: not enough memory for this map";
+    case RejectCode::transcriptMismatch:
+        return "ExtendedPrecache: negotiation data does not match";
+    case RejectCode::deadlineExceeded:
+        return "ExtendedPrecache: negotiation timed out";
+    case RejectCode::mapChanged:
+        return "ExtendedPrecache: the map changed during negotiation";
+    case RejectCode::legacyIncompatible:
+        return "ExtendedPrecache: this map requires the extension";
+    case RejectCode::transportUnavailable:
+        return "ExtendedPrecache: negotiation channel unavailable";
+    case RejectCode::budgetExceeded:
+        return "ExtendedPrecache: too much negotiation traffic";
+    }
+    return "ExtendedPrecache: negotiation refused";
+}
+
 auto ClientBarrier::context(MonotonicTime now) const noexcept -> session::SessionContext {
     return {binding, now, channel->state()};
 }

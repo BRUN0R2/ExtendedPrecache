@@ -41,7 +41,7 @@ devem acompanhar o item correspondente. As regras estão em [RULES.md](RULES.md)
 - [x] Especificar conversão zero/um, ownership estável, ciclo de mapa e ABI versionada, resolvendo as restrições de `engineAudit.md` antes dos adaptadores; contratos em `indexMapping.md`, `storageOwnership.md`, `mapLifecycle.md` e `integrationAbi.md`, matriz e verificações em `integrationVerification.md`.
 - [x] Projetar catálogo/consistência, deltas, áudio/eventos/efeitos, limites por bytes e demos em `dataCodecs.md` e contratos vinculados; definir schema fechado para mensagens de mods e módulos externos, sem aprovar um perfil final ou implementar codecs/adaptadores.
 - [x] Implementar os codecs de dados 2.0 e os preflights semânticos de aplicação isoladamente; API, ownership, orçamentos e fronteiras em `dataCore.md`. Verificadores, vetores e resultados permanecem locais fora do GitHub.
-- [ ] Comprovar a barreira anterior a `SV_SendServerinfo`, o bootstrap de user messages, o despacho de `clc_stringcmd`, drain/reset e reconexão nos hashes selecionados antes de habilitar o transporte. Entradas diretas do servidor fechadas estaticamente, e os dois lados observados localmente em execução com o núcleo de sessão real, inclusive com o `hw.dll` real; situação ponto a ponto em `transportBootstrap.md`. O núcleo da barreira, com o limite próprio de `epc1`, está em `signonBarrier.md`. Faltam a reserva concreta e o binding de produção.
+- [ ] Comprovar a barreira anterior a `SV_SendServerinfo`, o bootstrap de user messages, o despacho de `clc_stringcmd`, drain/reset e reconexão nos hashes selecionados antes de habilitar o transporte. Entradas diretas do servidor fechadas estaticamente, e os dois lados observados localmente em execução com o núcleo de sessão real, inclusive com o `hw.dll` real; situação ponto a ponto em `transportBootstrap.md`. A barreira, com o limite próprio de `epc1` e o binding do servidor pela API do ReHLDS, está em `signonBarrier.md`, inativa sem perfil aprovado e observada localmente com perfil sintético. Faltam a reserva concreta e o binding de produção do cliente.
 - [x] Implementar as entradas e o ciclo de vida do plugin Metamod do servidor: plugin inerte, sem hooks ou ampliação, contrato em `metamodPlugin.md`. Verificado localmente em host real; resultados permanecem fora do GitHub.
 - [ ] Implementar adaptador HLDS com detecção exata de versão e falha segura.
 - [ ] Implementar adaptador CS 1.6 com o mesmo contrato e ciclo de vida.
@@ -83,9 +83,9 @@ são artefatos de contrato; não há novo export, storage nativo ou adaptador
 implementado. A ABI diagnóstica 1 permanece inalterada. As 21 provas nativas
 inventariadas continuam pendentes e condicionam a aprovação de um perfil.
 
-O [plugin Metamod](metamodPlugin.md) tem entradas e ciclo de vida próprios, mas é
-inerte: identifica-se como fundação e não instala callbacks nem hooks. A ampliação
-funcional e os adaptadores do servidor e do cliente continuam pendentes.
+O [plugin Metamod](metamodPlugin.md) tem entradas e ciclo de vida próprios, e o build publicado
+é inerte: identifica-se como fundação e, sem perfil aprovado, não instala callbacks nem hooks. A
+ampliação funcional e os adaptadores do servidor e do cliente continuam pendentes.
 Nenhum arquivo da instalação do jogo ou servidor foi alterado. O plano de dados
 2.0 possui um [núcleo C++26 isolado](dataCore.md): catálogo, schemas/valores,
 consistência, envelopes, deltas transacionais, áudio/eventos/efeitos, mensagens de
@@ -95,11 +95,11 @@ local; não reservam armazenamento nativo nem habilitam um perfil. Os descritore
 de `docs/data` permanecem indisponíveis, sem módulos finais aprovados.
 Verificadores, vetores e resultados novos permanecem locais em área ignorada.
 
-A [barreira do sign-on](signonBarrier.md) tem núcleo próprio, com o limite de `epc1`, ainda
-sem binding. Próximo trabalho: ligar esse núcleo ao plugin pela API do ReHLDS. Os dois lados
-já foram observados em execução; a situação e os limites estão em
-[transportBootstrap.md](transportBootstrap.md). Nada disso amplia limites nem habilita
-transporte.
+A [barreira do sign-on](signonBarrier.md) tem núcleo próprio, com o limite de `epc1`, e binding
+no plugin pela API do ReHLDS, sem endereços de função. Próximo trabalho: o adaptador de produção
+do cliente e a reserva concreta. Os dois lados já foram observados em execução; a situação e os
+limites estão em [transportBootstrap.md](transportBootstrap.md). Nada disso amplia limites nem
+habilita transporte: ainda não existe servidor nem cliente acima de 512.
 
 Publicação: repositório público
 [`BRUN0R2/ExtendedPrecache`](https://github.com/BRUN0R2/ExtendedPrecache) criado.
