@@ -4,8 +4,9 @@
 #include <memory>
 
 namespace extendedPrecache::session {
+inline constexpr char selectionHashLabel[] = "ExtendedPrecache/selection/1";
 inline constexpr std::size_t transcriptHashPrefixBytes =
-    sizeof("ExtendedPrecache/selection/1") + 2 * Digest{}.bytes.size();
+    sizeof(selectionHashLabel) + 2 * Digest{}.bytes.size();
 inline constexpr std::size_t transcriptHashWorkspaceBytes =
     maxTranscriptBytes + transcriptHashPrefixBytes;
 

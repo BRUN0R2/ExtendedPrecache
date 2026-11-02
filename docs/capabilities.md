@@ -195,7 +195,7 @@ a geração do mapa até terminar a negociação.
 Os IDs 1–12 são estáveis e tipados pelo campo; contagens, bytes, hashes,
 gerações e durações não podem compartilhar wrappers de domínio por terem o
 mesmo inteiro subjacente. Valores recebidos só entram no modelo após validação.
-Esses DTOs futuros são internos C++26; não alteram a [ABI pública](abi.md).
+Esses DTOs são internos C++26; não alteram a [ABI pública](abi.md).
 
 ## Sessão legada
 
@@ -224,7 +224,7 @@ IDs atuais do mapa são pequenos. O catálogo/IDs do servidor permanece o mesmo.
 ## Aplicação e mudanças
 
 Validar arquivo, campos, dependências, perfil, orçamento e preparo nessa ordem,
-antes de alterar o motor. Erros informam código estável, campo e limites; não
+antes de alterar o motor. Erros informam código estável, campo e offset lexical; não
 há coerção, clamp ou ignoração de erro. O leitor e os validadores independentes
 estão implementados; cotação real, módulos e consumidores do motor permanecem
 responsabilidade dos perfis e adaptadores futuros.

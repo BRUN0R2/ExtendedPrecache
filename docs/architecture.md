@@ -17,8 +17,8 @@ O domínio não depende de Windows, Metamod, SDKs do jogo ou offsets. Os adaptad
 traduzirão as regras reais de cada motor para esse domínio. O transporte deverá
 aplicar os contratos de capacidade e negociação, provando o bootstrap auditado.
 
-Não há interfaces abstratas especulativas: os adaptadores e o protocolo serão
-introduzidos quando existirem consumidores e evidências suficientes.
+Não há interfaces abstratas especulativas: os adaptadores serão introduzidos quando
+existirem consumidores e evidências suficientes.
 
 ## Código presente
 

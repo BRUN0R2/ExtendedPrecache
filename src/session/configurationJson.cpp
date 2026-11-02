@@ -8,10 +8,11 @@ namespace extendedPrecache::session {
 namespace {
 using Json = nlohmann::json;
 constexpr auto maximumObjectDepth = std::size_t{3};
-constexpr auto signedMaximum = std::uint32_t{2147483647};
-constexpr auto modelCacheMaximum = std::uint32_t{5478274};
-constexpr auto soundCacheMaximum = std::uint32_t{29826161};
-constexpr auto hudMaximum = std::uint32_t{178956970};
+constexpr auto supportedSchemaVersion = std::uint32_t{1};
+constexpr auto numberOutOfRangeError = 406;
+constexpr auto modelCacheMaximum = static_cast<std::uint32_t>(signedMaximum / modelDescriptorBytes);
+constexpr auto soundCacheMaximum = static_cast<std::uint32_t>(signedMaximum / soundDescriptorBytes);
+constexpr auto hudMaximum = static_cast<std::uint32_t>(signedMaximum / hudDescriptorBytes);
 
 // SAX stops at a lexical violation instead of building a lossy DOM first.
 class ConfigurationSax final : public nlohmann::json_sax<Json> {
@@ -84,13 +85,17 @@ class ConfigurationSax final : public nlohmann::json_sax<Json> {
     auto parse_error(std::size_t position, const std::string &, const Json::exception &error)
         -> bool override {
         failure.offset = position;
-        const auto text = std::string_view{error.what()};
-        if (text.find("UTF-8") != std::string_view::npos ||
-            text.find("surrogate") != std::string_view::npos) {
+        // The library has no structured reason and quotes the input after this marker.
+        constexpr auto quotedInputMarker = std::string_view{"; last read:"};
+        const auto whole = std::string_view{error.what()};
+        const auto reason = whole.substr(0, whole.find(quotedInputMarker));
+        if (reason.find("UTF-8") != std::string_view::npos ||
+            reason.find("surrogate") != std::string_view::npos) {
             failure.code = ConfigurationError::invalidEncoding;
-        } else if (position > 0 && position <= source.size() &&
-                   (source.substr(position - 1).starts_with("NaN") ||
-                    source.substr(position - 1).starts_with("Infinity"))) {
+        } else if (error.id == numberOutOfRangeError ||
+                   (position > 0 && position <= source.size() &&
+                    (source.substr(position - 1).starts_with("NaN") ||
+                     source.substr(position - 1).starts_with("Infinity")))) {
             failure.code = ConfigurationError::invalidNumberToken;
         }
         return false;
@@ -162,11 +167,15 @@ auto decodeConfiguration(const Json &root) -> std::expected<Configuration, Confi
     if (const auto valid = closedObject(root, requiredRoot, optionalRoot, ""); !valid) {
         return std::unexpected{valid.error()};
     }
-    if (!unsignedValue(root, "schemaVersion", 1, 1, "schemaVersion")) {
+    if (!unsignedValue(root, "schemaVersion", supportedSchemaVersion, supportedSchemaVersion,
+                       "schemaVersion")) {
         return schemaFailure("schemaVersion");
     }
-    if (!root.at("role").is_string() || !root.at("connectionPolicy").is_string()) {
+    if (!root.at("role").is_string()) {
         return schemaFailure("role");
+    }
+    if (!root.at("connectionPolicy").is_string()) {
+        return schemaFailure("connectionPolicy");
     }
     const auto &roleName = root.at("role").get_ref<const std::string &>();
     const auto &policyName = root.at("connectionPolicy").get_ref<const std::string &>();

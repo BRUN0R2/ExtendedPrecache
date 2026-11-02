@@ -6,11 +6,7 @@
 
 namespace extendedPrecache::session {
 namespace {
-constexpr auto signedMaximum = std::uint32_t{2147483647};
-constexpr auto modelDescriptorBytes = std::uint64_t{392};
 constexpr auto modelCrcBytes = std::uint64_t{12};
-constexpr auto soundDescriptorBytes = std::uint64_t{72};
-constexpr auto hudDescriptorBytes = std::uint64_t{12};
 constexpr auto eventDescriptorBytes = std::uint64_t{16};
 constexpr auto resourceDescriptorBytes = std::uint64_t{136};
 constexpr auto consistencyDescriptorBytes = std::uint64_t{44};
@@ -125,14 +121,14 @@ auto Configuration::create(ConfigurationValues input)
 
 auto referenceMetadataBytes(const Configuration &configuration) noexcept -> MetadataBytes {
     const auto &config = configuration.values();
-    const auto &values = config.limits.vector().wireValues();
-    auto models = std::uint64_t{values[fieldIndex(CapabilityField::modelEntries)]} + 1;
-    auto sounds = std::uint64_t{values[fieldIndex(CapabilityField::soundEntries)]} + 1;
-    auto events = std::uint64_t{values[fieldIndex(CapabilityField::eventEntries)]} + 1;
-    auto generics = std::uint64_t{values[fieldIndex(CapabilityField::genericEntries)]};
-    auto decals = std::uint64_t{values[fieldIndex(CapabilityField::decalEntries)]};
-    auto resources = std::uint64_t{values[fieldIndex(CapabilityField::resourceEntries)]};
-    auto consistency = std::uint64_t{values[fieldIndex(CapabilityField::consistencyEntries)]};
+    const auto &limits = config.limits.vector();
+    auto models = std::uint64_t{limits.get<CapabilityField::modelEntries>().value} + 1;
+    auto sounds = std::uint64_t{limits.get<CapabilityField::soundEntries>().value} + 1;
+    auto events = std::uint64_t{limits.get<CapabilityField::eventEntries>().value} + 1;
+    auto generics = std::uint64_t{limits.get<CapabilityField::genericEntries>().value};
+    auto decals = std::uint64_t{limits.get<CapabilityField::decalEntries>().value};
+    auto resources = std::uint64_t{limits.get<CapabilityField::resourceEntries>().value};
+    auto consistency = std::uint64_t{limits.get<CapabilityField::consistencyEntries>().value};
     auto known = std::uint64_t{config.storage.knownModels.value};
     auto audio = std::uint64_t{config.storage.soundDescriptors.value};
     auto hud = std::uint64_t{config.storage.hudSprites.value};

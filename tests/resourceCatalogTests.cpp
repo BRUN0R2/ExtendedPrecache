@@ -24,13 +24,13 @@ constexpr auto testLimits =
 static_assert(!CatalogLimits::create(ResourceCapacity{0},
                                      ResourcePathByteLimit{legacyPathByteLimit}));
 static_assert(!CatalogLimits::create(ResourceCapacity{1}, ResourcePathByteLimit{0}));
-static_assert(!IndexEncoding::create(0));
-static_assert(!IndexEncoding::create(33));
-static_assert(!IndexEncoding::create(256));
-static_assert(IndexEncoding::create(1)->maxValue() == 1);
-static_assert(IndexEncoding::create(9)->maxValue() == 511);
-static_assert(IndexEncoding::create(12)->maxValue() == 4095);
-static_assert(IndexEncoding::create(32)->maxValue() == std::numeric_limits<std::uint32_t>::max());
+static_assert(!IndexEncoding::create({0}));
+static_assert(!IndexEncoding::create({33}));
+static_assert(!IndexEncoding::create({256}));
+static_assert(IndexEncoding::create({1})->maxValue() == 1);
+static_assert(IndexEncoding::create({9})->maxValue() == 511);
+static_assert(IndexEncoding::create({12})->maxValue() == 4095);
+static_assert(IndexEncoding::create({32})->maxValue() == std::numeric_limits<std::uint32_t>::max());
 static_assert(!std::is_constructible_v<ResourceIndex<ResourceKind::model>, std::uint32_t>);
 static_assert(!std::equality_comparable_with<ResourceIndex<ResourceKind::model>,
                                              ResourceIndex<ResourceKind::sound>>);
@@ -52,10 +52,10 @@ template <ResourceKind kind> void testCategory(TestSuite &suite) {
 
 void testCapacityAndEncoding(TestSuite &suite) {
     ResourceCatalog<ResourceKind::model> catalog{testLimits};
-    const auto legacyEncoding = IndexEncoding::create(9).value();
+    const auto legacyEncoding = IndexEncoding::create({9}).value();
     constexpr auto legacyFirstUnrepresentableIndex = 512U;
 
-    for (std::uint32_t index = 1; index <= testLimits.entryCapacity(); ++index) {
+    for (std::uint32_t index = 1; index <= testLimits.entryCapacity().value; ++index) {
         const auto path = "models/example" + std::to_string(index) + ".mdl";
         const auto registered = catalog.intern(path);
         if (!suite.check(registered.has_value(), "register up to configured capacity")) {
@@ -70,12 +70,12 @@ void testCapacityAndEncoding(TestSuite &suite) {
     const auto overflow = catalog.intern("models/overflow.mdl");
     static_cast<void>(suite.check(!overflow && overflow.error() == ResourceError::capacityReached,
                                   "reject overflow explicitly"));
-    static_cast<void>(
-        suite.check(catalog.size() == testLimits.entryCapacity(), "overflow preserves catalog"));
+    static_cast<void>(suite.check(catalog.size() == testLimits.entryCapacity().value,
+                                  "overflow preserves catalog"));
     static_cast<void>(suite.check(catalog.intern("models/example1.mdl")->value() == 1,
                                   "deduplicate even when full"));
 
-    const auto resourceListEncoding = IndexEncoding::create(12).value();
+    const auto resourceListEncoding = IndexEncoding::create({12}).value();
     static_cast<void>(suite.check(resourceListEncoding.canRepresent(4095), "12-bit upper bound"));
     static_cast<void>(
         suite.check(!resourceListEncoding.canRepresent(4096), "12 bits cannot encode count 4096"));
