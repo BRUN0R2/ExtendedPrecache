@@ -11,6 +11,7 @@ constexpr auto wireMajor = std::uint8_t{1};
 constexpr auto wireMinor = std::uint16_t{0};
 constexpr auto bitsPerByte = 8U;
 constexpr auto commandPrefix = std::string_view{"epc1 "};
+static_assert(commandPrefix.starts_with(controlCommandName));
 constexpr auto offerBytes = 24U;
 constexpr auto rejectionBytes = 12U;
 

@@ -5,7 +5,8 @@ namespace extendedPrecache::data {
 namespace {
 using namespace detail;
 auto isFrame(Route route) -> bool {
-    return route.opcode == 22 || route.opcode == 40 || route.opcode == 41;
+    return isService(route, Service::initialFrame) || isService(route, Service::fullFrame) ||
+           isService(route, Service::deltaFrame);
 }
 auto catalog(const CodecContext &context) -> const Catalog & {
     require(context.catalog && context.catalog->digest() == context.catalogIdentity &&
@@ -50,56 +51,63 @@ auto modContext(const CodecContext &context, Route route, RecordBudget budget) -
 }
 template <typename T> auto matches(const T &payload, Route route) -> bool {
     const auto server = route.direction == Direction::serverToClient;
-    const auto resource = server && route.opcode == 43;
+    const auto resource = server && isService(route, Service::resource);
+    const auto schemas = server && isService(route, Service::schema);
+    const auto client = !server && route.opcode == clientDataOpcode;
+    const auto single = route.kind == singleRecordKind;
     if constexpr (std::is_same_v<T, Schema>) {
-        return server && route.opcode == 14 && route.kind == 1;
+        return schemas && hasKind(route, SchemaKind::schema);
     } else if constexpr (std::is_same_v<T, SchemaSetEnd>) {
-        return server && route.opcode == 14 && route.kind == 2;
+        return schemas && hasKind(route, SchemaKind::setEnd);
     } else if constexpr (std::is_same_v<T, CatalogBegin>) {
-        return resource && route.kind == 1;
+        return resource && hasKind(route, ResourceMessageKind::catalogBegin);
     } else if constexpr (std::is_same_v<T, ChunkView>) {
-        return resource && route.kind == 2;
+        return resource && hasKind(route, ResourceMessageKind::catalogChunk);
     } else if constexpr (std::is_same_v<T, CatalogEnd>) {
-        return resource && route.kind == 3;
+        return resource && hasKind(route, ResourceMessageKind::catalogEnd);
     } else if constexpr (std::is_same_v<T, GameStart>) {
-        return resource && route.kind == 4;
+        return resource && hasKind(route, ResourceMessageKind::gameStart);
     } else if constexpr (std::is_same_v<T, ModMessage>) {
-        return server ? resource && route.kind == 5 : route.opcode == 7 && route.kind == 7;
+        return server ? resource && hasKind(route, ResourceMessageKind::modMessage)
+                      : client && hasKind(route, ClientKind::modMessage);
     } else if constexpr (std::is_same_v<T, FrameBegin>) {
-        return server && isFrame(route) && route.kind == 1 &&
-               ((payload.base.value != 0) == (route.opcode == 41));
+        return server && isFrame(route) && hasKind(route, FrameKind::begin) &&
+               ((payload.base.value != 0) == isService(route, Service::deltaFrame));
     } else if constexpr (std::is_same_v<T, FrameEnd>) {
-        return server && isFrame(route) && route.kind == 3;
+        return server && isFrame(route) && hasKind(route, FrameKind::end);
     } else if constexpr (std::is_same_v<T, FrameObject>) {
         if (payload.key.kind == ObjectKind::client || payload.key.kind == ObjectKind::weapon) {
-            return server && route.opcode == 15 && route.kind == 2;
+            return server && isService(route, Service::clientData) &&
+                   hasKind(route, FrameKind::object);
         }
         if (payload.key.kind == ObjectKind::module) {
-            return resource && route.kind == 6;
+            return resource && hasKind(route, ResourceMessageKind::moduleState);
         }
-        return server && isFrame(route) && route.kind == 2;
+        return server && isFrame(route) && hasKind(route, FrameKind::object);
     } else if constexpr (std::is_same_v<T, Sound>) {
-        return server && (route.opcode == 6 || route.opcode == 29) && route.kind == 1;
+        return server && single &&
+               (isService(route, Service::sound) || isService(route, Service::staticSound));
     } else if constexpr (std::is_same_v<T, Event>) {
-        return server && (route.opcode == 3 || route.opcode == 21) && route.kind == 1;
+        return server && single &&
+               (isService(route, Service::event) || isService(route, Service::reliableEvent));
     } else if constexpr (std::is_same_v<T, EffectMessage>) {
-        return server && route.opcode == 23 && route.kind == 1;
+        return server && single && isService(route, Service::effect);
     } else if constexpr (std::is_same_v<T, DecalName>) {
-        return server && route.opcode == 36 && route.kind == 1;
+        return server && single && isService(route, Service::decalName);
     } else if constexpr (std::is_same_v<T, ConsistencyPage>) {
-        return !server && route.opcode == 7 && route.kind == 1;
+        return client && hasKind(route, ClientKind::consistencyPage);
     } else if constexpr (std::is_same_v<T, ConsistencyEnd>) {
-        return !server && route.opcode == 7 && route.kind == 2;
+        return client && hasKind(route, ClientKind::consistencyEnd);
     } else if constexpr (std::is_same_v<T, AssetsReady>) {
-        return !server && route.opcode == 7 && route.kind == 3;
+        return client && hasKind(route, ClientKind::assetsReady);
     } else if constexpr (std::is_same_v<T, GameplayAck>) {
-        return !server && route.opcode == 7 && route.kind == 4;
+        return client && hasKind(route, ClientKind::gameplayAck);
     } else if constexpr (std::is_same_v<T, FrameAck>) {
-        return !server && route.opcode == 7 && route.kind == 5;
+        return client && hasKind(route, ClientKind::frameAck);
     } else if constexpr (std::is_same_v<T, ResyncRequest>) {
-        return !server && route.opcode == 7 && route.kind == 6;
+        return client && hasKind(route, ClientKind::resyncRequest);
     } else {
-        return route.kind == 255 && (resource || (!server && route.opcode == 7));
+        return route.kind == fatalKind && (resource || client);
     }
 }
 void semantic(const Schema &schema, const CodecContext &context) {
@@ -200,15 +208,21 @@ auto authorizeMessage(Route route, const CodecContext &context) noexcept -> Resu
         require(policy && policy->mode == ServiceMode::data2 &&
                     policy->phases[static_cast<std::size_t>(context.phase)],
                 ErrorCode::wrongPhase);
+        const auto server = route.direction == Direction::serverToClient;
+        const auto resource = isService(route, Service::resource);
         const auto metadata =
-            route.direction == Direction::serverToClient &&
-            (route.opcode == 14 || route.opcode == 22 || (route.opcode == 43 && route.kind <= 4));
-        const auto clientLoading = route.direction == Direction::clientToServer && route.kind <= 4;
-        const auto initialObjects = route.direction == Direction::serverToClient &&
-                                    (route.opcode == 15 || (route.opcode == 43 && route.kind == 6));
+            server &&
+            (isService(route, Service::schema) || isService(route, Service::initialFrame) ||
+             (resource && kindWithin(route, ResourceMessageKind::catalogBegin,
+                                     ResourceMessageKind::gameStart)));
+        const auto clientLoading =
+            !server && kindWithin(route, ClientKind::consistencyPage, ClientKind::gameplayAck);
+        const auto initialObjects =
+            server && (isService(route, Service::clientData) ||
+                       (resource && hasKind(route, ResourceMessageKind::moduleState)));
         if (metadata || clientLoading) {
             require(context.phase == Phase::loading, ErrorCode::wrongPhase);
-        } else if (!initialObjects && route.kind != 255) {
+        } else if (!initialObjects && route.kind != fatalKind) {
             require(context.phase == Phase::gameplay, ErrorCode::wrongPhase);
         }
         if (initialObjects && context.phase == Phase::loading) {
@@ -246,7 +260,7 @@ auto decodeBody(std::span<const std::byte> bytes, Route route, const CodecContex
         const auto budget = get(authorizeMessage(route, context));
         within(add(envelopeBytes, bytes.size()), budget.messageBytes.value);
         auto decode = [&]() -> DataPayload {
-            if (route.kind == 255) {
+            if (route.kind == fatalKind) {
                 return FatalMessage{get(decodeFatal(bytes))};
             }
             if (route.direction == Direction::clientToServer) {
@@ -268,12 +282,12 @@ auto decodeBody(std::span<const std::byte> bytes, Route route, const CodecContex
                 case ClientKind::fatal:
                     break;
                 }
-            } else if (route.opcode == 14) {
-                if (route.kind == 1) {
+            } else if (isService(route, Service::schema)) {
+                if (hasKind(route, SchemaKind::schema)) {
                     return get(decodeSchema(bytes, budget));
                 }
                 return SchemaSetEnd{get(decodeDigest(bytes))};
-            } else if (route.opcode == 43) {
+            } else if (isService(route, Service::resource)) {
                 switch (static_cast<ResourceMessageKind>(route.kind)) {
                 case ResourceMessageKind::catalogBegin:
                     return get(decodeCatalogBegin(bytes));
@@ -295,10 +309,10 @@ auto decodeBody(std::span<const std::byte> bytes, Route route, const CodecContex
                     break;
                 }
             } else if (isFrame(route)) {
-                if (route.kind == 1) {
+                if (hasKind(route, FrameKind::begin)) {
                     return get(decodeFrameBegin(bytes));
                 }
-                if (route.kind == 2) {
+                if (hasKind(route, FrameKind::object)) {
                     return get(decodeFrameObject(bytes, stateContext(context, budget)));
                 }
                 return get(decodeFrameEnd(bytes));
