@@ -35,10 +35,10 @@ void objectRoute(Route route, Route begin, ObjectKind kind) {
         require(route.opcode == begin.opcode);
     }
 }
-auto maxFrameObjects(ObjectLimits limits) -> std::uint64_t {
+auto maxFrameObjects(const StateContext &context) -> std::uint64_t {
+    const auto &limits = context.objects;
     return add(add(limits.entityEntries, limits.clientEntries),
-               add(add(limits.weaponEntries, limits.staticEntries),
-                   std::numeric_limits<std::uint16_t>::max()));
+               add(add(limits.weaponEntries, limits.staticEntries), context.moduleEntries));
 }
 } // namespace
 auto FrameReceiver::failure(Failure error) noexcept -> std::unexpected<Failure> {
@@ -67,7 +67,7 @@ auto FrameReceiver::begin(Route route, FrameBegin frame) noexcept -> Result<Fram
         require(!prior || route.opcode != static_cast<std::uint8_t>(Service::initialFrame),
                 ErrorCode::wrongPhase);
         within(frame.changeBytes.value, contextValue.frameBytes.value);
-        within(frame.changeCount, maxFrameObjects(contextValue.objects));
+        within(frame.changeCount, maxFrameObjects(contextValue));
         require(multiply(frame.changeCount, frameObjectHeaderBytes) <= frame.changeBytes.value);
         Pending next{frame, route, {}, 0, prior && frame.id.value <= prior->begin.id.value, false};
         next.ownedBytes = multiply(frame.changeCount, sizeof(FrameObject));
@@ -156,7 +156,7 @@ auto FrameReceiver::end(Route route, FrameEnd frame) noexcept -> Result<FrameDis
         const auto index = flow(route);
         get(encodeFrameEnd(frame));
         frameMessageRoute(route, FrameKind::end);
-        within(frame.changeCount, maxFrameObjects(contextValue.objects));
+        within(frame.changeCount, maxFrameObjects(contextValue));
         const auto prior = current();
         if (index == 0 && prior && frame.id.value <= prior->begin.id.value) {
             if (pending[index] && pending[index]->begin.id == frame.id) {
@@ -193,6 +193,8 @@ auto FrameReceiver::end(Route route, FrameEnd frame) noexcept -> Result<FrameDis
             recoveryNeeded = true;
             return FrameDisposition::needsRecovery;
         }
+        // The other flow may have advanced the clock after this frame began staging.
+        require(!prior || stage.begin.serverTime >= prior->begin.serverTime);
         const StateSnapshot *base{};
         if (stage.begin.base.value != 0) {
             const auto found = std::ranges::find_if(retained, [&](const auto &snapshot) {

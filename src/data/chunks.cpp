@@ -27,6 +27,15 @@ auto decodeCatalogBegin(std::span<const std::byte> bytes) noexcept -> Result<Cat
         return result;
     });
 }
+auto verifyCatalogBegin(CatalogBegin begin, const Catalog &catalog) noexcept -> Result<void> {
+    return detail::protect([&] {
+        const auto &data = catalog.data();
+        detail::require(begin.totalBytes.value == catalog.bytes().size() &&
+                        begin.resourceCount == data.resources.size() &&
+                        begin.assetCount == data.assets.size() &&
+                        begin.consistencyCount == data.rules.size());
+    });
+}
 auto encodeChunk(ChunkView chunk, ByteCount maxPayload, RecordBudget budget) noexcept
     -> Result<Bytes> {
     return detail::protect([&] {

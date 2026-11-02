@@ -21,6 +21,10 @@ void validateApplicationDefinition(const ApplicationDefinition &app,
                                    const DigestProvider &provider) {
     const auto schemaBytes = get(encodeSchemaSet(app.schemas, app.limits.schemaSetBytes));
     require(hash(schemaBytes, provider) == app.schemaSetHash, ErrorCode::digestMismatch);
+    std::set<std::string_view> schemaNames;
+    for (const auto &schema : app.schemas) {
+        require(schemaNames.insert(schema.name).second, ErrorCode::invalidSchema);
+    }
     std::set<ModuleId> moduleIds;
     std::set<std::string_view> moduleNames;
     std::set<std::string_view> nativeNames;

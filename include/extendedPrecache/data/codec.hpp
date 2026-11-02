@@ -9,6 +9,25 @@ namespace extendedPrecache::data {
 struct SchemaSetEnd final {
     Digest digest;
 };
+// Tracks the reliable SVC 14 stream: every approved schema in order, then its matching end.
+// The approved schemas must outlive the receiver.
+class SchemaSetReceiver final {
+  public:
+    SchemaSetReceiver(std::span<const Schema> approved, Digest approvedSet) noexcept
+        : schemas{approved}, setHash{approvedSet} {}
+    [[nodiscard]] auto accept(const Schema &schema) noexcept -> Result<void>;
+    [[nodiscard]] auto finish(SchemaSetEnd end) noexcept -> Result<void>;
+    [[nodiscard]] auto complete() const noexcept -> bool {
+        return finished;
+    }
+
+  private:
+    std::span<const Schema> schemas;
+    Digest setHash;
+    std::size_t received{};
+    bool finished{};
+    bool failed{};
+};
 struct CatalogEnd final {
     Digest digest;
 };

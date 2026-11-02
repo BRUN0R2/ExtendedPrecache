@@ -63,7 +63,9 @@ corpo completo e continuam sujeitas a 192 bytes.
 Congelar o catálogo com `Catalog::create`, ou usar `Catalog::decode` com digest
 esperado obrigatório. O decoder verifica tamanho e identidade antes de produzir
 a visão estável. Valida ordem densa, primeiro uso dos assets, caminhos, referências,
-parentesco de inline models, world model e consistência. O objeto possui dados,
+parentesco de inline models, world model e consistência. Sons não usam o prefixo `!`
+de sentença; `*n` identifica somente inline models, com uma única grafia para cada n.
+Comparação sem distinguir caixa continua a cargo do perfil. O objeto possui dados,
 bytes canônicos e digest por `shared_ptr<const Storage>`; cópias compartilham
 ownership imutável. `resolve` empresta uma referência válida enquanto uma cópia
 do catálogo permanecer viva. Nenhum objeto é uma arena nativa do motor.
@@ -74,6 +76,12 @@ ferramentas; isoladamente não autorizam uma transição de sessão. A fase em
 `CodecContext` deve vir do controlador autorizado. Readiness, gameStart e ACK
 codificam e conferem identidades, mas a prova de assets realmente carregados e a
 liberação dos gates continuam externas.
+
+`SchemaSetReceiver` confere o fluxo do SVC 14 inteiro, na ordem aprovada, antes de
+aceitar `schemaSetEnd`; o digest sozinho não prova que nenhum schema faltou. Depois de
+decodificar o manifesto, `verifyCatalogBegin` liga as contagens de `catalogBegin` a ele.
+`leadingEnvelopeBytes` delimita o primeiro registro de um buffer composto por
+`DataMessageBuilder`; cada fatia passa então pelo `DataReceiver`, que exige um registro.
 
 `DataReceiver` adiciona sequência e contexto por conexão/mapa. Depois de verificar
 o framing, descarta nonce antigo e mensagens não confiáveis obsoletas antes de
